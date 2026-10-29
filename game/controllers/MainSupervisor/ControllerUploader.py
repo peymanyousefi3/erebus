@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# Erebus customizations by Peyman Yousefi; original RoboCupJunior credits retained.
 """Controller Uploader v0.1
 Modified by Ryo Unemoto
 
@@ -22,8 +23,47 @@ import shutil
 import mimetypes
 import re
 from io import BytesIO
-import glob
 import stat
+from pathlib import Path
+from tempfile import NamedTemporaryFile
+
+CONTROLLER_EXTENSIONS = ('', '.py', '.exe', '.class', '.jar', '.bsg', '.m')
+
+
+def controller_files(directory):
+    """Return real controller entrypoints, not caches or similarly named files."""
+    directory = Path(directory).resolve()
+    return [directory / (directory.name + extension) for extension in CONTROLLER_EXTENSIONS
+            if (directory / (directory.name + extension)).is_file()]
+
+
+def install_controller(file_name, content, directory):
+    """Install the single program accepted by Load, also used by path refresh."""
+    if Path(file_name).name != file_name:
+        raise ValueError('Select a single controller file.')
+    extension = Path(file_name).suffix.lower()
+    if extension not in CONTROLLER_EXTENSIONS:
+        raise ValueError('Use a file supported by Load. Compile C/C++ to an executable first.')
+    if not content:
+        raise ValueError('The controller file is empty. Choose a non-empty controller program.')
+    directory = Path(directory).resolve()
+    destination = directory / (directory.name + extension)
+    temporary = None
+    try:
+        # Prepare a complete copy before replacing the previous program.
+        with NamedTemporaryFile(dir=directory, prefix='.controller-upload-', delete=False) as output:
+            temporary = Path(output.name)
+            output.write(content)
+        temporary.chmod(temporary.stat().st_mode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
+        os.replace(temporary, destination)
+        for previous in directory.glob(directory.name + '*'):
+            if previous.is_file() and not os.path.samefile(previous, destination):
+                previous.unlink()
+        return destination
+    finally:
+        if temporary is not None:
+            temporary.unlink(missing_ok=True)
+
 
 class SimpleHTTPRequestHandler(http.server.BaseHTTPRequestHandler):
 
@@ -86,10 +126,7 @@ class SimpleHTTPRequestHandler(http.server.BaseHTTPRequestHandler):
         remainbytes -= len(line)
         if not boundary in line:
             return (False, "Content NOT begin with boundary")
-        ##Clear Destination Directory
         path = self.translate_path(self.path)
-        for file in glob.glob(os.path.join(path, os.path.basename(path)) + '*'):
-            os.remove(file)
 
         while remainbytes > 0:
             line = self.rfile.readline()
@@ -99,40 +136,35 @@ class SimpleHTTPRequestHandler(http.server.BaseHTTPRequestHandler):
             if not fn:
                 return (False, line.decode())
                 #return (False, "Can't find out file name...")
-            fn = os.path.join(path, fn[0])
+            filename = fn[0]
             line = self.rfile.readline()
             remainbytes -= len(line)
             line = self.rfile.readline()
             remainbytes -= len(line)
-            try:
-                out = open(fn, 'wb')
-            except IOError:
-                return (False, "Can't create file to write, do you have permission to write?")
-            else:
-                with out:
-                    preline = self.rfile.readline()
-                    remainbytes -= len(preline)
-                    while remainbytes > 0:
-                        line = self.rfile.readline()
-                        remainbytes -= len(line)
-                        if boundary in line:
+            with BytesIO() as output:
+                preline = self.rfile.readline()
+                remainbytes -= len(preline)
+                while remainbytes > 0:
+                    line = self.rfile.readline()
+                    remainbytes -= len(line)
+                    if boundary in line:
+                        preline = preline[0:-1]
+                        if preline.endswith(b'\r'):
                             preline = preline[0:-1]
-                            if preline.endswith(b'\r'):
-                                preline = preline[0:-1]
-                            out.write(preline)
-                            uploaded_files.append(fn)
-                            break
-                        else:
-                            out.write(preline)
-                            preline = line
+                        output.write(preline)
+                        uploaded_files.append((filename, output.getvalue()))
+                        break
+                    output.write(preline)
+                    preline = line
         if len(uploaded_files) == 0:
             return (False, "No file selected.")
         if len(uploaded_files) == 1:
-            newpath = os.path.join(os.path.dirname(uploaded_files[0]), os.path.basename(os.path.dirname(uploaded_files[0]))  + os.path.splitext(uploaded_files[0])[1])
-            os.rename(uploaded_files[0],newpath)
-            currentPermissions = os.stat(newpath).st_mode
-            os.chmod(newpath, currentPermissions | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
-            return (True, "OK")
+            filename, content = uploaded_files[0]
+            try:
+                install_controller(filename, content, path)
+                return (True, "OK")
+            except (OSError, ValueError) as error:
+                return (False, str(error))
         return (False, "Built-in compilation is not supported at this time. Select only one file to be executed.")
 
     def send_head(self):

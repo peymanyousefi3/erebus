@@ -1,3 +1,4 @@
+# Erebus customizations by Peyman Yousefi; original RoboCupJunior credits retained.
 # Auto install any pip modules used throughout the code base
 import AutoInstall
 AutoInstall._import("np", "numpy")
@@ -7,12 +8,14 @@ AutoInstall._import("overrides", "overrides")
 AutoInstall._import("PIL", "PIL", "pillow")
 
 import os
+from pathlib import Path
 import shutil
 import struct
 from threading import Thread
 import shutil
 import json
 import time
+from datetime import datetime as MatchDateTime
 import subprocess
 import requests as req
 import re
@@ -23,6 +26,7 @@ from controller import Emitter
 from controller import Receiver
 
 import MapScorer
+import MapReview
 import ControllerUploader
 
 from Tools import *
@@ -36,6 +40,7 @@ from Tile import *
 from Victim import *
 from Robot import *
 from Recorder import Recorder
+from MatchAnimation import MatchAnimation
 from Test import TestRunner
 from RobotWindowSender import RWSender
 from ThumbnailWriter import export_map_to_img
@@ -60,10 +65,14 @@ class Erebus(Supervisor):
 
     def __init__(self):
         super().__init__()
+        self._match_animation = MatchAnimation(self, Console.log_info, Console.log_err)
+        self._map_review = None
+        self._submitted_map = None
+        self._match_folder = None
 
         # Version info
         self._stream = 26
-        self.version = "26.0.1"
+        self.version = "26.2"
 
         # Start controller uploader
         uploader: Thread = Thread(target=ControllerUploader.start, daemon=True)
@@ -143,7 +152,7 @@ class Erebus(Supervisor):
         self.robot_obj.update_config(self.config)
         self.robot_obj.controller.reset_file()
         self.robot_obj.reset_proto()
-        
+
         # Calculate the solution arrays for the map layout
         self._map_ans = MapAnswer.from_supervisor(self)
         map_ans: Optional[list[list]] = self._map_ans.generateAnswer()
@@ -177,6 +186,7 @@ class Erebus(Supervisor):
         self.rws.send("currentWorld", self._get_current_world())
 
         self.rws.send("update", f"0,0,{self.max_time},0")
+        Recorder.update_hud(self)
 
     def load_cognitive_targets(self):
         targets = self.getFromDef('TARGETGROUP').getField("children")
@@ -273,9 +283,8 @@ class Erebus(Supervisor):
         """Initialises Erebus' initial game state. This should be run on the 
         first frame of simulation run time.
         """
-        # If recording
-        if self.config.recording:
-            Recorder.start_recording(self)
+        # One start-time folder shared by this match's recording and map exports.
+        self._match_folder = self._match_animation.root / MatchDateTime.now().astimezone().strftime('%Y-%m-%d_%H-%M-%S-%f')
 
         # Get the robot node by DEF name
         robot_node: Optional[Node] = self.getFromDef("ROBOT0")
@@ -296,13 +305,16 @@ class Erebus(Supervisor):
         if self.config.automatic_camera and self._camera.wb_viewpoint_node:
             self._camera.follow(self.robot_obj, Erebus.ROBOT_NAME)
 
-        if self.config.recording:
-            Recorder.reset_countdown(self)
-            
         # Enqueue warning if debug mode is on when game the starts
         if Console.DEBUG_MODE:
             self.robot_obj.history.enqueue("WARNING: Debug mode is on. This "
                                            "should not be on during competitions.")
+
+        # HTML replay only; the setting applies when the match starts.
+        Recorder.update_hud(self)
+        if self.config.recording:
+            self.step(0)  # Apply the initial HUD before scene and preview export.
+            self._match_animation.start(self._match_folder / 'recording')
 
         self._last_time = self.getTime()
         self._first_frame = False
@@ -353,6 +365,16 @@ class Erebus(Supervisor):
             time_up (bool): Whether the cause of the robot quit is due to the 
             timer running out 
         """
+        # Capture the same terminal event in the replay summary and match log.
+        if self.robot_obj.in_simulation and not time_up:
+            self.robot_obj.history.enqueue("Successful Exit")
+        # Finalize HTML replay before deletion discards Webots animation state.
+        self._match_animation.stop(
+            final_score=self.robot_obj.get_score(),
+            elapsed_seconds=self.time_elapsed,
+            max_seconds=self.max_time,
+            history=self.robot_obj.get_log_str(),
+        )
         # Quit robot if present
         if self.robot_obj.in_simulation:
             # Remove webots node
@@ -360,9 +382,6 @@ class Erebus(Supervisor):
             self.robot_obj.in_simulation = False
             # Send message to robot window to update quit button
             self.rws.send("robotNotInSimulation0")
-            # Update history event whether its manual or via exit message
-            if not time_up:
-                self.robot_obj.history.enqueue("Successful Exit")
             # Write to a log file to write game events to file
             Logger.write_log(self.robot_obj, self.rws, self.max_time)
 
@@ -428,15 +447,25 @@ class Erebus(Supervisor):
         score_change: float = self.robot_obj.get_score() * self.robot_obj.map_score_percent * 1.2
         self.robot_obj.increase_score("Map Bonus", score_change)
 
-    def _process_robot_json(self, json_data: str) -> None:
+    def _process_robot_json(self, json_data: str) -> bool:
         """Process custom robot json data to generate a new robot proto file.
         
         The custom robot proto file is used when importing the robot at game 
         start
         """
-        robot_json: dict = json.loads(json_data)
-        if generate_robot_proto(robot_json):
+        try:
+            robot_json = json.loads(json_data)
+            if not isinstance(robot_json, dict):
+                raise ValueError('Robot JSON must contain an object.')
+            if not generate_robot_proto(robot_json):
+                raise ValueError('Robot JSON was rejected by the robot generator.')
             self.rws.send("loaded1")
+            return True
+        except Exception as error:
+            message = f'Robot JSON could not be loaded: {error}'
+            Console.log_err(message)
+            self.rws.send('sourceFileError', message)
+            return False
 
     def wait(self, sec: float) -> None:
         """Waits for x amount of seconds, while still stepping the Webots
@@ -691,10 +720,18 @@ class Erebus(Supervisor):
                     f"Map Correctness {str(round(map_score * 100,2))}%"
                 )
 
+                # Retain the accepted array for the manual button, even when auto-save is off.
+                review_map = self.robot_obj.map_data
+
                 # Add percent
                 self.robot_obj.map_score_percent = map_score
                 self.robot_obj.sent_maps = True
                 self.robot_obj.map_data = np.array([])
+
+                self._submitted_map = (review_map, map_score, self.time_elapsed)
+                self.wwiSendText('mapReviewAvailable,')
+                if self.config.map_review:
+                    self._save_and_open_map_review()
 
             except Exception as e:
                 Console.log_err("Map scoring error, please check your code.")
@@ -721,6 +758,67 @@ class Erebus(Supervisor):
         elif self.robot_obj.time_stopped() >= 1.0:
             self._detect_victim(robot_message)
 
+    def _save_and_open_map_review(self) -> None:
+        """The automatic option and manual button share the same saved result."""
+        if self._submitted_map is None:
+            self.wwiSendText('mapReviewError,No evaluated map is available for this match.')
+            return
+        try:
+            if self._map_review is None:
+                matrix, score, elapsed = self._submitted_map
+                self._map_review = MapReview.build_review(self._map_sol, matrix, score, elapsed)
+            folder = MapReview.save_review(self._map_review, self._match_folder / 'map')
+            self.wwiSendText('mapReviewSaved,' + str(folder))
+            Console.log_info(f"Map review saved: {folder}")
+            MapReview.open_review(folder / 'map-review.html')
+        except Exception as error:
+            self.wwiSendText('mapReviewError,Could not save or open the map result: ' + str(error))
+            Console.log_err(f"Map review failed: {error}")
+
+    def _clear_controller_source(self) -> None:
+        """Remove clears the optional controller source address."""
+        data = Path(self.config.path).read_text().strip().split(',')
+        while len(data) < 10:
+            data.append('')
+        data[8] = ''
+        Path(self.config.path).write_text(','.join(data), encoding='utf-8')
+        self.config.controller_source = ''
+        self.rws.send('sourcePath', '0,')
+
+    def _prepare_match(self) -> bool:
+        """Check loaded inputs and optionally refresh the selected controller file."""
+        if self._remote_enabled:
+            return True
+        try:
+            game_root = Path(__file__).resolve().parents[2]
+            directory = game_root / 'controllers/robot0Controller'
+            if self.config.auto_reload_sources:
+                if not self.config.controller_source.strip():
+                    raise ValueError('Enter the original controller file path in Settings, or disable controller reload.')
+                source = Path(self.config.controller_source.strip()).expanduser()
+                if not source.is_absolute():
+                    source = game_root.parent / source
+                if not source.is_file():
+                    raise ValueError('No controller file was found at the entered address. Check the address in Settings.')
+                ControllerUploader.install_controller(source.name, source.read_bytes(), directory)
+                self.rws.send('loaded0')
+            controllers = ControllerUploader.controller_files(directory)
+            missing = []
+            if not any(path.stat().st_size > 0 for path in controllers):
+                missing.append('The controller program file is empty.' if controllers else 'No controller program is loaded.')
+            proto = game_root / 'protos/custom_robot.proto'
+            default = game_root / 'proto_defaults/E-puck-custom-default-FLU.proto'
+            if not proto.is_file() or proto.read_bytes() == default.read_bytes():
+                missing.append('No robot JSON is loaded.')
+            if missing:
+                raise ValueError(' '.join(missing) + ' Use the Load buttons before Run.')
+            return True
+        except Exception as error:
+            message = f'Match could not start: {error}'
+            Console.log_err(message)
+            self.rws.send('sourceReloadError', message)
+            return False
+
     def _process_rw_message(self, message: str) -> None:
         """Processes messages received from the MainSupervisor's robot window
 
@@ -735,10 +833,15 @@ class Erebus(Supervisor):
             command: str = parts[0]
             self.rws.update_received_history(command, str(parts[1:]))
 
+            if command == 'showMapReview':
+                self._save_and_open_map_review()
+
             # Start running the match
             if command == "run":
+                if self._game_state == GameState.MATCH_NOT_STARTED and not self._prepare_match():
+                    return
                 self._game_state = GameState.MATCH_RUNNING
-                self.rws.update_history("runPressed")
+                self.rws.send("runPressed")
                 
             # Run tests
             if command == 'runTest':
@@ -750,23 +853,33 @@ class Erebus(Supervisor):
 
             # Start running the match using a docker controller
             if command == "runDocker":
+                if self._game_state != GameState.MATCH_NOT_STARTED:
+                    return
+                project_path = message.split(',', 1)[1].strip() if ',' in message else ''
+                if not project_path:
+                    self.rws.send('dockerError', 'Enter a Docker project folder before starting Docker.')
+                    return
                 Console.log_info("Running docker helper script (this may take "
                                  "a few minutes depending on project size)")
                 self.step(Erebus.TIME_STEP)
-                self._docker_process = run_docker_container(self, parts[1])
-                if self._docker_process != None:
+                try:
+                    self._docker_process = run_docker_container(self, project_path)
+                except Exception as error:
+                    self.rws.send('dockerError', f'Could not start Docker: {error}')
+                    return
+                if self._docker_process is not None:
                     self._remote_enabled = True
-                    # Start running the match
                     self._game_state = GameState.MATCH_RUNNING
                     self.rws.update_history("runDockerPressed")
                     self.rws.send("dockerSuccess")
                 else:
                     self.step(Erebus.TIME_STEP)
+                    self.rws.send('dockerError', 'Docker did not start. Check the Webots console for the Docker or project error.')
 
             # Pause the match
             if command == "pause":
                 self._game_state = GameState.MATCH_PAUSED
-                self.rws.update_history("pausedPressed")
+                self.rws.send("pausedPressed")
 
             # Reset the simulation (reload the world)
             if command == "reset":
@@ -789,6 +902,7 @@ class Erebus(Supervisor):
             if command == "robot0Unload":
                 if self._game_state == GameState.MATCH_NOT_STARTED:
                     self.robot_obj.controller.reset()
+                    self._clear_controller_source()
 
             # Unload the custom robot json
             if command == "robot1Unload":
@@ -832,6 +946,7 @@ class Erebus(Supervisor):
                 # Enqueue warning when config is updated when the game is running
                 if self._game_state == GameState.MATCH_RUNNING:
                     self.robot_obj.history.enqueue("WARNING: Erebus config updated")
+                Recorder.update_hud(self)
 
                 with open(self.config.path, 'w') as f:
                     f.write(','.join(message.split(",")[1:]))
@@ -849,21 +964,18 @@ class Erebus(Supervisor):
             # achieve the same state it was previously in
             if command == 'rw_reload':
                 self.rws.send_all()
+                if self._submitted_map is not None:
+                    self.wwiSendText('mapReviewAvailable,')
                 config_file_path = get_file_path(
                     "controllers/MainSupervisor/config.txt",
                     "config.txt"
                 )
                 self.config = self._get_config(config_file_path)
 
-            # Robot controller ui button was pressed 
-            if command == 'loadControllerPressed':
+            # Restore successful uploads on page refresh, never picker clicks.
+            if command == 'controllerUploaded' and parts[1:] == ['0']:
                 if self._game_state == GameState.MATCH_NOT_STARTED:
-                    self.rws.update_history("loadControllerPressed,", parts[1])
-
-            # Robot unload controller ui button was pressed
-            if command == 'unloadControllerPressed':
-                if self._game_state == GameState.MATCH_NOT_STARTED:
-                    self.rws.update_history("unloadControllerPressed,", parts[1])
+                    self.rws.update_history("loaded0")
 
             # Enable remote controller
             if command == 'remoteEnable':
@@ -921,8 +1033,6 @@ class Erebus(Supervisor):
         if self._last_frame == True:
             self._last_frame = None
             self._game_state = GameState.MATCH_FINISHED
-            if self.config.recording:
-                Recorder.stop_recording(self)
 
         # The first frame of the game running only
         if self._first_frame and self._game_state == GameState.MATCH_RUNNING:
@@ -1001,8 +1111,7 @@ class Erebus(Supervisor):
                 self._last_sent_score = current_score
                 self._last_sent_time = int(self.time_elapsed)
                 self._last_sent_real_time = int(self._real_time_elapsed)
-                if self.config.recording:
-                    Recorder.update(self)
+                Recorder.update_hud(self)
 
             # If the time is up
             if ((self.time_elapsed >= self.max_time or

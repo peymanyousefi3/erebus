@@ -60,7 +60,7 @@ def check():
         with ZipFile(archive) as package:
             assert package.testzip() is None
             assert not any(name.endswith('.zip') for name in package.namelist())
-            expected = {str(p.relative_to(first.parent.parent)) for p in first.parent.rglob('*') if p.is_file() and p != archive}
+            expected = {p.relative_to(first.parent.parent).as_posix() for p in first.parent.rglob('*') if p.is_file() and p != archive}
             assert {n for n in package.namelist() if not n.endswith('/')} == expected
             result = json.loads(package.read(f'{first.parent.name}/match-result.json'))
             assert result['final_score'] == 12.5

@@ -1,3 +1,21 @@
+# Fork changelog
+
+## Erebus Match Studio 26.2 (unreleased)
+
+Independent changes by Peyman Yousefi, based on official Erebus v26.1. See [release notes](docs/releases/26.2-studio.1.md) and [attribution](NOTICE.md).
+
+- Add a first-checkout preparation command that preserves existing robot models.
+- Add automatic HTML replay recording and per-match ZIPs; remove the MP4 recording path.
+- Add saved score breakdowns and playback-synchronized timestamped events.
+- Add configurable score/time/event HUD and interactive submitted-map review.
+- Redesign the supervisor panel and add chronological Match Events CSV export.
+- Add optional controller-path refresh, missing-file guards and recoverable upload/JSON errors.
+- Preserve Remote mode during unrelated setting changes; repair Docker path transport and pending-start handling.
+
+---
+
+## Upstream changelog
+
 # Changelog
 All notable changes to this project will be documented in this file
 

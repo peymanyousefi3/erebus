@@ -1,238 +1,175 @@
 <!DOCTYPE html>
-<html>
-	<head>
-		<script type="module" src="MainSupervisorWindow.js"></script>
-		<link rel="icon" type="image/png" href="https://cyberbotics.com/assets/images/webots.png">
-		<link rel="stylesheet" type="text/css" href="MainSupervisorWindow.css">
-		<link rel="stylesheet" type="text/css" href="simple-grid.css">
-		<link rel="icon" type="image/x-icon" href="erebus.png">
-	</head>
-	<body>
-		<div class="wrapper">
-			<div class = "smallSection rowType1">
-				<div class="row center">
-					<div class="col-12">
-						<img src="robocup.png" style="max-width:100%;max-height:50px;"/>
-						<p><b>Erebus Rescue Simulator 2026</b></p>
-						<span id="versionInfo"></span><br>
-						<span id="newVersion"></span>
-					</div>
-					<div class="col-6">
-						<div class="row-6">
-							<form id="robot0Form" enctype="multipart/form-data" method="post" action="http://127.0.0.1:60520/controllers/robot0Controller/" style="margin:0;">
-								<input type="file" class="hidden" onchange="fileOpened('robot0Controller', '[\'py\', \'exe\', \'class\', \'jar\', \'bsg\', \'m\']', 'controllers/robot0Controller', 0)" id="robot0Controller" />
-							</form>
-							<img src="program.png" style="max-width:100%;height:40px;"/><br>
-							<button class="button buttonLoad" onclick="openLoadController(0)" style="display:inline-block;" id="load0">Load</button>
-							<button class="button buttonUnload" onclick="unloadPressed(0)" style="display:none;" id="unload0">Remove</button>
-						</div>
-						<div class="col-12 remoteWrapper">
-							<div>
-								<button class="button buttonLoad" onclick="enableRemotePressed()" style="display:inline-block;" id="enableRemote">Toggle Remote</button>
-								<button class="button buttonUnload" onclick="disableRemotePressed()" style="display:none;" id="disableRemote">Toggle Remote</button>
-							</div>
-							<div>
-								<div class="tooltip">
-									<div class="tooltipmark">?</div>
-									<span class="tooltiptext">Enable webots remote extern controllers. See console for extra instructions.
-										Find out more <a href="https://erebus.rcj.cloud/docs/tutorials/remotecontroller/" target="_blank">here</a>
-										<br>NOTE: Webots will wait for a controller to connect, and will halt the program until one is found.
-										 Failing to do so will cause you to have to manually reset the Webots world (CTRL+SHIFT+R) to use Erebus again.</span>
-								</div>
-							</div>
-						</div>
-						<div>
-							<span style="line-height: 2em;">Docker path:</span>
-							<input class="dockerInput" id="dockerPath" onchange="configChanged()"/>
-						</div>
-					</div>
-					<div class="col-6">
-						<input type="file" class="hidden" onchange="openJsonFile()" id="robot1Controller" />
-						<img src="robot.png" style="max-width:100%;height:40px;"/><br>
-						<button class="button buttonLoad" onclick="openLoadController(1)" style="display:inline-block;" id="load1">Load</button>
-						<button class="button buttonUnload" onclick="unloadPressed(1)" style="display:none;" id="unload1">Unload</button>
-					</div>
-				</div>
-				<div class="row center" style="background-color: #7f8fa6;">
-					<div class="col-4" style="margin: 0.5em 0;width: 25%;">
-						<label class="btn-settings tab" for="settings">Settings</label>
-					</div>
-					<div class="col-4" style="margin: 0.5em 0;width: 25%;">
-						<label class="btn-worlds tab" for="worlds">Worlds</label>
-					</div>
-					<div class="col-4" style="margin: 0.5em 0;width: 25%;">
-						<label class="btn-reset tab" for="reset">Reset</label>
-    					<input type="button" onclick="resetPressed()" style="display:none;" id="reset"/>
-					</div>
-					<div class="col-4" style="margin: 0.5em 0;width: 25%;">
-						<label class="btn-giveupD tab" for="quit0" id="giveupB">Give up!</label>
-    					<input type="button" onclick="giveupPressed()" style="display:none;" id="quit0"/>
-					</div>
-				</div>
-				<div class="hidden_box row center">
-					<input type="checkbox" id="settings"/>
-					<div class="hidden_show">
-						<div class="col-12">
-							<span>Changelog <a href="https://github.com/robocup-junior/erebus/blob/master/CHANGELOG.md" target="_blank">link</a></span><br>
-							<span>World Generator <a href="http://rescuesim.uai.edu.ar/home" target="_blank">link</a></span><br>
-							<span>Robot Customiser <a href="https://v25.robot.erebus.rcj.cloud/" target="_blank">link</a></span>
-						</div>
-						<hr>
-						<div class="col-2"></div>
-						<div class="col-4">
-							<div class="col-12">
-								<span>Keep controller/robot files</span>
-								<div class="switch">
-									<label class="switch__label">
-										<input type="checkbox" class="switch__input" id="autoRemoveFiles" onchange="configChanged()"/>
-										<span class="switch__content"></span>
-										<span class="switch__circle"></span>
-									</label>
-								</div>
-							</div>
-							<div class="col-12">
-									<span>Disable automatic LoP (For debugging purposes)</span>
-									<div class="switch">
-										<label class="switch__label">
-											<input type="checkbox" class="switch__input" id="autoLoP" onchange="configChanged()"/>
-											<span class="switch__content"></span>
-											<span class="switch__circle"></span>
-										</label>
-									</div>
-							</div>
-							<div class="col-12">
-								<span>Automatic camera</span>
-								<div class="switch">
-									<label class="switch__label">
-										<input type="checkbox" class="switch__input" id="autoCam" onchange="configChanged()"/>
-										<span class="switch__content"></span>
-										<span class="switch__circle"></span>
-									</label>
-								</div>
-							</div>
-							
+<!-- Erebus interface customizations by Peyman Yousefi. -->
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Erebus — Match supervisor</title><link rel="icon" href="erebus.png" type="image/png">
+<link rel="stylesheet" href="MainSupervisorWindow.css?v=26.2.eventcsv"><script type="module" src="MainSupervisorWindow.js?v=26.2.eventcsv"></script></head>
+<body><svg xmlns="http://www.w3.org/2000/svg" class="icon-library" aria-hidden="true" focusable="false"><symbol id="i-earth" viewBox="0 0 24 24">
+  <path d="M21.54 15H17a2 2 0 0 0-2 2v4.54"></path>
+  <path d="M7 3.34V5a3 3 0 0 0 3 3a2 2 0 0 1 2 2c0 1.1.9 2 2 2a2 2 0 0 0 2-2c0-1.1.9-2 2-2h3.17"></path>
+  <path d="M11 21.95V18a2 2 0 0 0-2-2a2 2 0 0 1-2-2v-1a2 2 0 0 0-2-2H2.05"></path>
+  <circle cx="12" cy="12" r="10"></circle>
+</symbol><symbol id="i-chevron-down" viewBox="0 0 24 24">
+  <path d="m6 9 6 6 6-6"></path>
+</symbol><symbol id="i-map" viewBox="0 0 24 24">
+  <path d="M14.106 5.553a2 2 0 0 0 1.788 0l3.659-1.83A1 1 0 0 1 21 4.619v12.764a1 1 0 0 1-.553.894l-4.553 2.277a2 2 0 0 1-1.788 0l-4.212-2.106a2 2 0 0 0-1.788 0l-3.659 1.83A1 1 0 0 1 3 19.381V6.618a1 1 0 0 1 .553-.894l4.553-2.277a2 2 0 0 1 1.788 0z"></path>
+  <path d="M15 5.764v15"></path>
+  <path d="M9 3.236v15"></path>
+</symbol><symbol id="i-circle-alert" viewBox="0 0 24 24">
+  <circle cx="12" cy="12" r="10"></circle>
+  <line x1="12" x2="12" y1="8" y2="12"></line>
+  <line x1="12" x2="12.01" y1="16" y2="16"></line>
+</symbol><symbol id="i-x" viewBox="0 0 24 24">
+  <path d="M18 6 6 18"></path>
+  <path d="m6 6 12 12"></path>
+</symbol><symbol id="i-refresh-cw" viewBox="0 0 24 24">
+  <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"></path>
+  <path d="M21 3v5h-5"></path>
+  <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"></path>
+  <path d="M8 16H3v5"></path>
+</symbol><symbol id="i-settings" viewBox="0 0 24 24">
+  <path d="M9.671 4.136a2.34 2.34 0 0 1 4.659 0 2.34 2.34 0 0 0 3.319 1.915 2.34 2.34 0 0 1 2.33 4.033 2.34 2.34 0 0 0 0 3.831 2.34 2.34 0 0 1-2.33 4.033 2.34 2.34 0 0 0-3.319 1.915 2.34 2.34 0 0 1-4.659 0 2.34 2.34 0 0 0-3.32-1.915 2.34 2.34 0 0 1-2.33-4.033 2.34 2.34 0 0 0 0-3.831A2.34 2.34 0 0 1 6.35 6.051a2.34 2.34 0 0 0 3.319-1.915"></path>
+  <circle cx="12" cy="12" r="3"></circle>
+</symbol><symbol id="i-bot" viewBox="0 0 24 24">
+  <path d="M12 8V4H8"></path>
+  <rect width="16" height="12" x="4" y="8" rx="2"></rect>
+  <path d="M2 14h2"></path>
+  <path d="M20 14h2"></path>
+  <path d="M15 13v2"></path>
+  <path d="M9 13v2"></path>
+</symbol><symbol id="i-plug" viewBox="0 0 24 24">
+  <path d="M12 22v-5"></path>
+  <path d="M15 8V2"></path>
+  <path d="M17 8a1 1 0 0 1 1 1v4a4 4 0 0 1-4 4h-4a4 4 0 0 1-4-4V9a1 1 0 0 1 1-1z"></path>
+  <path d="M9 8V2"></path>
+</symbol><symbol id="i-code" viewBox="0 0 24 24">
+  <path d="m16 18 6-6-6-6"></path>
+  <path d="m8 6-6 6 6 6"></path>
+</symbol><symbol id="i-flag" viewBox="0 0 24 24">
+  <path d="M4 22V4a1 1 0 0 1 .4-.8A6 6 0 0 1 8 2c3 0 5 2 7.333 2q2 0 3.067-.8A1 1 0 0 1 20 4v10a1 1 0 0 1-.4.8A6 6 0 0 1 16 16c-3 0-5-2-8-2a6 6 0 0 0-4 1.528"></path>
+</symbol><symbol id="i-container" viewBox="0 0 24 24">
+  <path d="M22 7.7c0-.6-.4-1.2-.8-1.5l-6.3-3.9a1.72 1.72 0 0 0-1.7 0l-10.3 6c-.5.2-.9.8-.9 1.4v6.6c0 .5.4 1.2.8 1.5l6.3 3.9a1.72 1.72 0 0 0 1.7 0l10.3-6c.5-.3.9-1 .9-1.5Z"></path>
+  <path d="M10 21.9V14L2.1 9.1"></path>
+  <path d="m10 14 11.9-6.9"></path>
+  <path d="M14 19.8v-8.1"></path>
+  <path d="M18 17.5V9.4"></path>
+</symbol><symbol id="i-trophy" viewBox="0 0 24 24">
+  <path d="M10 14.66V17a1 1 0 0 1-1 1 2 2 0 0 0-2 2v2"></path>
+  <path d="M14 14.66V17a1 1 0 0 0 1 1 2 2 0 0 1 2 2v2"></path>
+  <path d="M17.916 10H19.5A2.5 2.5 0 0 0 22 7.5V5a1 1 0 0 0-1-1h-3"></path>
+  <path d="M4 22h16"></path>
+  <path d="M6 9a6 6 0 0 0 12 0V3a1 1 0 0 0-1-1H7a1 1 0 0 0-1 1z"></path>
+  <path d="M6.084 10H4.5A2.5 2.5 0 0 1 2 7.5V5a1 1 0 0 1 1-1h3"></path>
+</symbol><symbol id="i-check" viewBox="0 0 24 24">
+  <path d="M20 6 9 17l-5-5"></path>
+</symbol><symbol id="i-rotate-ccw" viewBox="0 0 24 24">
+  <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path>
+  <path d="M3 3v5h5"></path>
+</symbol><symbol id="i-play" viewBox="0 0 24 24">
+  <path d="M5 5a2 2 0 0 1 3.008-1.728l11.997 6.998a2 2 0 0 1 .003 3.458l-12 7A2 2 0 0 1 5 19z"></path>
+</symbol><symbol id="i-unplug" viewBox="0 0 24 24">
+  <path d="m19 5 3-3"></path>
+  <path d="m2 22 3-3"></path>
+  <path d="M6.3 20.3a2.4 2.4 0 0 0 3.4 0L12 18l-6-6-2.3 2.3a2.4 2.4 0 0 0 0 3.4Z"></path>
+  <path d="M7.5 13.5 10 11"></path>
+  <path d="M10.5 16.5 13 14"></path>
+  <path d="m12 6 6 6 2.3-2.3a2.4 2.4 0 0 0 0-3.4l-2.6-2.6a2.4 2.4 0 0 0-3.4 0Z"></path>
+</symbol><symbol id="i-trash" viewBox="0 0 24 24">
+  <path d="M10 11v6"></path>
+  <path d="M14 11v6"></path>
+  <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"></path>
+  <path d="M3 6h18"></path>
+  <path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+</symbol><symbol id="i-clock-3" viewBox="0 0 24 24">
+  <circle cx="12" cy="12" r="10"></circle>
+  <path d="M12 6v6h4"></path>
+</symbol><symbol id="i-activity" viewBox="0 0 24 24">
+  <path d="M22 12h-2.48a2 2 0 0 0-1.93 1.46l-2.35 8.36a.25.25 0 0 1-.48 0L9.24 2.18a.25.25 0 0 0-.48 0l-2.35 8.36A2 2 0 0 1 4.49 12H2"></path>
+</symbol><symbol id="i-upload" viewBox="0 0 24 24">
+  <path d="M12 3v12"></path>
+  <path d="m17 8-5-5-5 5"></path>
+  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+</symbol><symbol id="i-pause" viewBox="0 0 24 24">
+  <rect x="14" y="3" width="5" height="18" rx="1"></rect>
+  <rect x="5" y="3" width="5" height="18" rx="1"></rect>
+</symbol><symbol id="i-locate-fixed" viewBox="0 0 24 24">
+  <line x1="2" x2="5" y1="12" y2="12"></line>
+  <line x1="19" x2="22" y1="12" y2="12"></line>
+  <line x1="12" x2="12" y1="2" y2="5"></line>
+  <line x1="12" x2="12" y1="19" y2="22"></line>
+  <circle cx="12" cy="12" r="7"></circle>
+  <circle cx="12" cy="12" r="3"></circle>
+</symbol><symbol id="i-flask-conical" viewBox="0 0 24 24">
+  <path d="M14 2v6a2 2 0 0 0 .245.96l5.51 10.08A2 2 0 0 1 18 22H6a2 2 0 0 1-1.755-2.96l5.51-10.08A2 2 0 0 0 10 8V2"></path>
+  <path d="M6.453 15h11.094"></path>
+  <path d="M8.5 2h7"></path>
+</symbol><symbol id="i-timer" viewBox="0 0 24 24">
+  <line x1="10" x2="14" y1="2" y2="2"></line>
+  <line x1="12" x2="15" y1="14" y2="11"></line>
+  <circle cx="12" cy="14" r="8"></circle>
+</symbol><symbol id="i-external-link" viewBox="0 0 24 24">
+  <path d="M15 3h6v6"></path>
+  <path d="M10 14 21 3"></path>
+  <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+</symbol><symbol id="i-download" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><path d="m7 10 5 5 5-5M12 15V3"></path></symbol></svg>
+<a class="skip-link" href="#match-controls">Skip to match controls</a>
+<header class="app-header"><div class="header-inner">
+<img class="brand-logo" src="robocup.png" width="400" height="115" alt="RoboCupJunior Rescue Simulation">
+<div class="app-title"><h1>Erebus</h1><p>Rescue Simulation 2026</p></div>
+<button type="button" id="openCompact" class="compact-button" onclick="openCompactWindow()" title="Open in a separate compact browser window" aria-label="Open compact window"><svg class="icon" aria-hidden="true"><use href="#i-external-link"></use></svg><span>Open compact window</span></button><div class="version-block"><span id="versionInfo">Ver. 26.2 — Match Studio</span><span id="newVersion"></span></div>
+</div></header>
+<main class="app-shell">
+<div class="match-heading"><div class="world-title"><svg class="icon" aria-hidden="true" focusable="false"><use href="#i-flag"></use></svg><div><h2 id="currentWorldName">Waiting for a world</h2></div></div><span id="matchState" class="match-state" data-state="connecting" role="status">Connecting</span></div>
+<section class="preparation" aria-label="Match setup" data-active=""><div class="preparation-tabs" role="group" aria-label="Setup panels"><button type="button" id="setup" class="preparation-tab" aria-expanded="false" aria-controls="setup-panel" onclick="togglePanel('setup')"><svg class="icon" aria-hidden="true"><use href="#i-bot"></use></svg><span>Robot setup</span><svg class="icon preparation-chevron" aria-hidden="true"><use href="#i-chevron-down"></use></svg></button><button type="button" id="advancedSetup" class="preparation-tab" aria-expanded="false" aria-controls="settings-panel" onclick="togglePanel('settings')"><svg class="icon" aria-hidden="true"><use href="#i-settings"></use></svg><span>Advanced setup</span><svg class="icon preparation-chevron" aria-hidden="true"><use href="#i-chevron-down"></use></svg></button><button type="button" id="worlds" class="preparation-tab" aria-expanded="false" aria-controls="worlds-panel" onclick="togglePanel('worlds')"><svg class="icon" aria-hidden="true"><use href="#i-earth"></use></svg><span>Worlds</span><svg class="icon preparation-chevron" aria-hidden="true"><use href="#i-chevron-down"></use></svg></button></div><div class="preparation-reveal" data-expanded="false"><div class="preparation-content"><section id="setup-panel" class="workspace-panel setup-panel" aria-labelledby="setup" inert="" hidden="">
+      <h2 id="setup-heading" class="visually-hidden">Robot setup</h2>
+      <p id="sourceReloadStatus" class="status-message" role="status" aria-live="polite"></p><div class="file-setup">
+        <section class="file-slot" aria-labelledby="controller-setup-title">
+          <h3 id="controller-setup-title"><svg class="icon" aria-hidden="true" focusable="false"><use href="#i-code"></use></svg>Controller</h3>
+          <p class="file-description">Python, compiled programs and other supported formats.</p>
+          <form id="robot0Form" enctype="multipart/form-data" method="post" action="http://127.0.0.1:60520/controllers/robot0Controller/"><input type="file" id="robot0Controller" onchange="fileOpened('robot0Controller', ['py', 'exe', 'class', 'jar', 'bsg', 'm'], 'controllers/robot0Controller', 0)" hidden=""></form>
+          <p id="controllerFileState" class="file-state" data-loaded="false" role="status">No controller loaded</p>
+          <div class="setup-actions"><button type="button" class="secondary-button" onclick="openLoadController(0)" id="load0" title="Load Python, compiled programs and other supported controller files" aria-label="Load file: controller program"><svg class="icon" aria-hidden="true" focusable="false"><use href="#i-upload"></use></svg>Load file</button><button type="button" class="remove-button" onclick="unloadPressed(0)" id="unload0" style="display:none" aria-label="Remove controller program"><svg class="icon" aria-hidden="true" focusable="false"><use href="#i-trash"></use></svg>Remove</button></div>
+        </section>
+        <section class="file-slot" aria-labelledby="robot-setup-title">
+          <h3 id="robot-setup-title"><svg class="icon" aria-hidden="true" focusable="false"><use href="#i-bot"></use></svg>Robot JSON</h3>
+          <p class="file-description">The custom robot model used by this controller.</p>
+          <input type="file" id="robot1Controller" accept=".json,application/json" onchange="openJsonFile()" hidden="">
+          <p id="robotFileState" class="file-state" data-loaded="false" role="status">No robot JSON loaded</p>
+          <div class="setup-actions"><button type="button" class="secondary-button" onclick="openLoadController(1)" id="load1" aria-label="Load file: robot JSON"><svg class="icon" aria-hidden="true" focusable="false"><use href="#i-upload"></use></svg>Load file</button><button type="button" class="remove-button" onclick="unloadPressed(1)" id="unload1" style="display:none" aria-label="Remove robot JSON"><svg class="icon" aria-hidden="true" focusable="false"><use href="#i-trash"></use></svg>Remove</button></div>
+        </section>
+      </div><section id="settings-files" class="setup-file-options" aria-label="Controller options"><div class="reload-options" role="group" aria-label="Reload controller from original file"><div class="setting-row file-retention"><div class="setting-control"><input class="switch__input" type="checkbox" role="switch" id="autoRemoveFiles" onchange="configChanged()"><div class="setting-copy"><label for="autoRemoveFiles">Keep files after Reset</label><p>Retain the loaded controller and robot JSON.</p></div></div></div><div class="setting-row reload-setting"><div class="setting-control"><input class="switch__input" type="checkbox" role="switch" id="autoReloadSources" onchange="configChanged()"><div class="setting-copy"><label for="autoReloadSources">Reload before Run</label></div></div></div><div class="field source-field"><label for="controllerSource">Original controller file</label><input type="text" id="controllerSource" name="controllerSource" autocomplete="off" placeholder="Controller file path…" spellcheck="false" aria-describedby="sourcePathHelp" onchange="configChanged()"><p id="sourcePathHelp">Path on the computer running Webots.</p></div></div><details class="field-help"><summary>How source reload works</summary><p>Run loads a fresh copy of the saved controller at this address, using the same formats as Load. C/C++ programs must already be compiled. The address refers to the computer running Webots; relative paths start in the Erebus folder. Pause/resume, remote controllers and Docker do not use this option. Load robot JSON with its normal Load button.</p></details></section>
+      <div class="connections" id="connections"><div class="connection-fields">
+        <div class="connection-mode"><h3>Remote controller</h3><div class="remote-controls"><div class="remote-option"><input type="checkbox" id="remoteMode" class="switch__input" role="switch" onchange="this.checked ? enableRemotePressed() : disableRemotePressed()"><label for="remoteMode">Remote mode</label></div><div class="remote-option remote-keep"><input type="checkbox" class="switch__input" role="switch" id="keepRemote" onchange="configChanged('keepRemote')" aria-label="Keep remote controller on after Reset"><label for="keepRemote">Keep on Reset</label></div></div><p>Connect a controller running outside Webots.</p>
+          <details class="field-help remote-help"><summary>Connection help</summary><p>Webots waits for an external controller to connect. Reset the world to return to local mode if no controller connects. See Remote Controller Guide in References below.</p></details>
+        </div>
+        <div class="field docker-field"><label for="dockerPath">Docker project path</label><input type="text" id="dockerPath" name="dockerPath" autocomplete="off" spellcheck="false" placeholder="Project folder…" title="Path on the computer running Webots" onchange="configChanged()"><button type="button" id="runDockerButton" class="secondary-button" onclick="runDockerPressed()" disabled=""><svg class="icon" aria-hidden="true" focusable="false"><use href="#i-container"></use></svg><span>Run Docker</span></button></div>
+      </div></div>
+    </section><section id="settings-panel" class="advanced-panel" aria-labelledby="advancedSetup" inert="" hidden=""><div class="settings-layout"><div class="settings-sections"><section id="settings-display" class="settings-content" aria-labelledby="settings-display-title"><div class="category-heading"><svg class="icon" aria-hidden="true" focusable="false"><use href="#i-activity"></use></svg><div><h3 id="settings-display-title">Display</h3><p>Score, events and the simulation view.</p></div></div><div class="category-options"><div class="setting-row"><div class="setting-control"><input type="checkbox" class="switch__input" role="switch" id="showHud" onchange="configChanged()" checked=""><div class="setting-copy"><label for="showHud">Show head-up display</label><p>Score, time and the latest three events in Webots.</p></div></div></div><div class="setting-row"><div class="setting-control"><input type="checkbox" class="switch__input" role="switch" id="autoCam" onchange="configChanged()"><div class="setting-copy"><label for="autoCam">Automatic camera</label></div></div></div></div></section><section id="settings-exports" class="settings-content" aria-labelledby="settings-exports-title"><div class="category-heading"><svg class="icon" aria-hidden="true" focusable="false"><use href="#i-map"></use></svg><div><h3 id="settings-exports-title">Exports</h3><p>Interactive replays and map results.</p></div></div><div class="category-options"><div class="setting-row"><div class="setting-control"><input type="checkbox" class="switch__input" role="switch" id="recording" onchange="configChanged()"><div class="setting-copy"><label for="recording">HTML replay recording</label><p>Interactive 3D replay and ZIP. Applies to the next match.</p></div></div></div><div class="setting-row"><div class="setting-control"><input type="checkbox" class="switch__input" role="switch" id="generateMapReview" onchange="configChanged()"><div class="setting-copy"><label for="generateMapReview">Automatic map result</label><p>Save and open the evaluated map when it is submitted.</p></div></div></div></div><p class="settings-help">Saved under match-results in the match’s date-time folder. Save map also works when automatic saving is off. Save before Reset.</p></section><section id="settings-advanced" class="settings-content" aria-labelledby="settings-advanced-title"><div class="category-heading"><svg class="icon" aria-hidden="true" focusable="false"><use href="#i-flask-conical"></use></svg><div><h3 id="settings-advanced-title">Diagnostics</h3><p>Simulation diagnostics and Erebus resources.</p></div></div><div class="category-options"><div class="setting-row"><div class="setting-control"><input type="checkbox" class="switch__input" role="switch" id="autoLoP" onchange="configChanged()"><div class="setting-copy"><label for="autoLoP">Disable automatic LoP</label><p>For debugging purposes.</p></div></div></div><div class="setting-row"><div class="setting-control"><input type="checkbox" class="switch__input" role="switch" id="enableDebugging" onchange="configChanged()"><div class="setting-copy"><label for="enableDebugging">Enable debugging</label></div></div></div></div><div id="dev-tests" class="settings-tests" hidden=""><button type="button" class="secondary-button" onclick="testPressed()" id="test"><svg class="icon" aria-hidden="true" focusable="false"><use href="#i-flask-conical"></use></svg>Run tests</button><p>Requires Keep controller/robot files to be off.</p></div></section></div></div><p class="save-hint"><svg class="icon" aria-hidden="true" focusable="false"><use href="#i-check"></use></svg> Changes are saved automatically.</p></section><section id="worlds-panel" class="workspace-panel" aria-labelledby="worlds" hidden="" inert=""><div class="world-picker-heading"><h2 id="workspace-title">Choose a world</h2><p id="workspace-description">Preview a field, select it, then load it into Webots.</p></div>
+<div class="world-picker-tools"><div class="field"><label for="worldSearch">Find a world</label><input type="search" id="worldSearch" name="worldSearch" autocomplete="off" placeholder="Search by world name" oninput="filterWorlds()"></div><button type="button" id="worldRefresh" class="secondary-button" onclick="getWorlds()"><svg class="icon" aria-hidden="true" focusable="false"><use href="#i-refresh-cw"></use></svg><span>Refresh list</span></button></div>
+<p id="worldResults" class="world-results" role="status">Waiting for the world list…</p><div id="worlds_div" class="worlds-grid"></div><p id="worldsEmpty" class="empty-worlds" hidden="">No worlds match your search. Try another name.</p>
+<div id="worldActionFooter" class="world-picker-footer"><div><span class="world-selection-label">Selected world</span><p id="selectedWorldName">Choose a world above</p></div><button type="button" id="loadSelectedWorld" class="load-world-button" onclick="loadSelectedWorld()" disabled=""><svg class="icon" aria-hidden="true" focusable="false"><use href="#i-play"></use></svg><span>Load world</span></button></div></section></div></div></section>
+<div class="live-workspace">
+<section id="match-console" class="match-console" aria-label="Score and time" tabindex="-1">
+<div class="score-readout"><div class="score-value"><span id="score0">0.00</span><div class="score-meta"><div class="readout-label"><span>Score</span></div><span class="score-unit">points</span></div></div></div>
+<div class="clock-heading"><svg class="icon" aria-hidden="true"><use href="#i-timer"></use></svg><h2>Simulation remaining</h2></div>
+<div class="combined-clock"><span id="timer" class="digital">--:--</span><div class="clock-allowance"><span id="allowanceLabel">Real-world allowance</span><span id="realWorldAllowance" class="digital" aria-labelledby="allowanceLabel">+--:--</span></div></div>
+<p class="clock-totals">Simulation <span id="simulationLimit">08:00 total</span> · Real world <span id="realWorldLimit">10:00 total</span></p>
+<span id="realWorldTimer" class="visually-hidden" aria-label="Real-world time remaining">--:--</span>
+<div class="battery-display" title="Display placeholder. Battery telemetry is not connected yet."><div class="battery-label"><label for="robotBattery">Robot battery</label><span>Display only</span></div><div class="battery-reading"><meter id="robotBattery" min="0" max="100" value="100" aria-label="Robot battery, display placeholder">100%</meter><output id="batteryPercentage">100%</output></div></div>
 
-						</div>
-						<div class="col-4">
-							<div class="col-12">
-								<div class="col-12">
-									<span>Recording</span>
-									<div class="switch">
-										<label class="switch__label">
-											<input type="checkbox" class="switch__input" id="recording" onchange="configChanged()"/>
-											<span class="switch__content"></span>
-											<span class="switch__circle"></span>
-										</label>
-									</div>
-								</div>
-								<span>Keep remote controller on</span>
-								<div class="switch">
-									<label class="switch__label">
-										<input type="checkbox" class="switch__input" id="keepRemote" onchange="configChanged()"/>
-										<span class="switch__content"></span>
-										<span class="switch__circle"></span>
-									</label>
-								</div>
-							</div>
-						</div>
-						<div class="col-12">
-							<hr><br>
-							<div id="dev-tests">
-								<span>Dev - Tests</span>
-								<div>
-									<button class="btn-test" type="button" onclick="testPressed()" id="test">Run Tests (must disable 'Keep controller')</button>
-								</div>
-							</div>
-							<div class="col-12">
-								<span>Enable debugging</span>
-								<div class="switch">
-									<label class="switch__label">
-										<input type="checkbox" class="switch__input" id="enableDebugging" onchange="configChanged()"/>
-										<span class="switch__content"></span>
-										<span class="switch__circle"></span>
-									</label>
-								</div>
-							</div>
-						</div>
-					</div>
-					
-				</div>
-				<div class="hidden_box_worlds row center">
-					<input type="checkbox" id="worlds"/>
-					<div class="hidden_show_worlds">
-						<div class="worlds_container">
-							<div id="worlds_div" class="col-10">
-								<div id="worldloader">
-									LOADING WORLDS
-								</div>
-							</div>
-							<div class="col-2 refreshContainer">
-								<label class="btn-refresh" for="worldRefresh"></label>
-								<input type="button" onclick="getWorlds()" style="display:none;" id="worldRefresh"/>
-							</div>
-						</div>
-					</div>
-				</div>
-			</div>
-			
-			<div class = "smallSection rowType2">
-				<br>
-				<table id="controlTable">
-				<tr>
+</section>
+<div id="match-controls" class="match-actions" role="group" aria-label="Match controls" tabindex="-1"><button type="button" id="runButton" class="run-button" onclick="runPressed()" disabled=""><svg class="icon" aria-hidden="true" focusable="false"><use href="#i-play"></use></svg><span>Run match</span></button><button type="button" id="pauseButton" class="console-button" onclick="pausePressed()" disabled=""><svg class="icon" aria-hidden="true" focusable="false"><use href="#i-pause"></use></svg><span>Pause</span></button><button type="button" id="lopButton" aria-label="Relocate robot" class="console-button relocate-button" onclick="relocate('0')" disabled=""><svg class="icon" aria-hidden="true" focusable="false"><use href="#i-locate-fixed"></use></svg><span>Relocate</span></button><button type="button" id="reset" class="reset-action" onclick="resetPressed()"><svg class="icon" aria-hidden="true" focusable="false"><use href="#i-rotate-ccw"></use></svg><span>Reset</span></button><button type="button" id="giveupB" class="btn-giveupD" onclick="giveupPressed()" disabled=""><svg class="icon" aria-hidden="true" focusable="false"><use href="#i-flag"></use></svg><span>Give up</span></button><button type="button" id="viewMapReview" aria-label="Save map result and open it" class="toolbar-button map-action" onclick="openMapReview()" title="Save and open map result" disabled=""><svg class="icon" aria-hidden="true" focusable="false"><use href="#i-map"></use></svg><span>Save map</span></button></div><section class="events-panel" aria-labelledby="events-heading"><div class="events-heading"><div class="events-title"><svg class="icon" aria-hidden="true" focusable="false"><use href="#i-activity"></use></svg><h2 id="events-heading">Match events</h2></div><div class="events-tools"><span id="eventCount">0 events</span><button type="button" id="exportEventCsv" class="secondary-button export-csv-button" onclick="exportEventCsv()" disabled title="Download all match events, oldest first"><svg class="icon" aria-hidden="true"><use href="#i-download"></use></svg><span>Export CSV</span></button></div><span id="eventScrollHint" class="history-hint" hidden=""><svg class="icon" aria-hidden="true"><use href="#i-chevron-down"></use></svg>Scroll for earlier events</span></div>
+<p id="mapReviewNotice" class="status-message map-review-status" role="status" aria-live="polite"></p><p id="historyEmpty" class="empty-state">No events yet.<span>The latest event will appear at the top when the match starts.</span></p>
+<div id="historyRegion" class="history-scroll" tabindex="0" hidden="" role="region" aria-label="Match event history"><table class="history-table"><caption class="visually-hidden">Match event history, latest first</caption><thead><tr><th scope="col">Time</th><th scope="col">Event</th></tr></thead><tbody id="history"></tbody></table></div>
+</section>
+</div>
 
-					<th class = "buttonRow">
-						
-						<button id="runButton" class="simulationStateButton" onclick="runPressed()" disabled>
-							<svg class="svg-button" width="30" height="30" viewBox="0 0 20 18">
-								<polygon points="6.33 3.69 6.33 16.39 16.39 10.33 6.33 3.69"/>
-							</svg>
-						</button>
-						
-						<button id="runDockerButton" class="simulationStateButton" onclick="runDockerPressed()" disabled>
-							<svg xmlns="http://www.w3.org/2000/svg" height="18px" viewBox="0 0 640 512"><!--! Font Awesome Free 6.4.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license (Commercial License) Copyright 2023 Fonticons, Inc. --><style>svg{fill:#000000}</style><path d="M349.9 236.3h-66.1v-59.4h66.1v59.4zm0-204.3h-66.1v60.7h66.1V32zm78.2 144.8H362v59.4h66.1v-59.4zm-156.3-72.1h-66.1v60.1h66.1v-60.1zm78.1 0h-66.1v60.1h66.1v-60.1zm276.8 100c-14.4-9.7-47.6-13.2-73.1-8.4-3.3-24-16.7-44.9-41.1-63.7l-14-9.3-9.3 14c-18.4 27.8-23.4 73.6-3.7 103.8-8.7 4.7-25.8 11.1-48.4 10.7H2.4c-8.7 50.8 5.8 116.8 44 162.1 37.1 43.9 92.7 66.2 165.4 66.2 157.4 0 273.9-72.5 328.4-204.2 21.4.4 67.6.1 91.3-45.2 1.5-2.5 6.6-13.2 8.5-17.1l-13.3-8.9zm-511.1-27.9h-66v59.4h66.1v-59.4zm78.1 0h-66.1v59.4h66.1v-59.4zm78.1 0h-66.1v59.4h66.1v-59.4zm-78.1-72.1h-66.1v60.1h66.1v-60.1z"/></svg>
-						</button>
-					</th>
-					
+<section id="references" class="references-panel" aria-labelledby="references-heading"><h2 id="references-heading">References</h2><nav class="references-links" aria-label="Erebus references"><a href="https://github.com/robocup-junior/erebus/blob/master/CHANGELOG.md" target="_blank" rel="noopener noreferrer"><span>Changelog</span><svg class="icon" aria-hidden="true"><use href="#i-external-link"></use></svg></a><a href="https://world.erebus.rcj.cloud" target="_blank" rel="noopener noreferrer"><span>World Editor</span><svg class="icon" aria-hidden="true"><use href="#i-external-link"></use></svg></a><a href="https://v25.robot.erebus.rcj.cloud/" target="_blank" rel="noopener noreferrer"><span>Robot Customiser</span><svg class="icon" aria-hidden="true"><use href="#i-external-link"></use></svg></a><a href="https://junior.robocup.org/rcj-rescue-sim/" target="_blank" rel="noopener noreferrer"><span>Competition Rules</span><svg class="icon" aria-hidden="true"><use href="#i-external-link"></use></svg></a><a href="https://erebus.rcj.cloud/" target="_blank" rel="noopener noreferrer"><span>Erebus Website</span><svg class="icon" aria-hidden="true"><use href="#i-external-link"></use></svg></a><a href="https://github.com/robocup-junior/erebus" target="_blank" rel="noopener noreferrer"><span>GitHub Repository</span><svg class="icon" aria-hidden="true"><use href="#i-external-link"></use></svg></a><a href="https://erebus.rcj.cloud/docs/" target="_blank" rel="noopener noreferrer"><span>Documentation</span><svg class="icon" aria-hidden="true"><use href="#i-external-link"></use></svg></a><a href="https://erebus.rcj.cloud/docs/tutorials/remotecontroller/" target="_blank" rel="noopener noreferrer"><span>Remote Controller Guide</span><svg class="icon" aria-hidden="true"><use href="#i-external-link"></use></svg></a></nav></section>
+<p id="compactWindowStatus" class="status-message" role="status" aria-live="polite"></p>
 
-					<th class = "buttonRow">
-						<button id="pauseButton" class="simulationStateButton" onclick="pausePressed()" disabled>
-							<svg class="svg-button" width="40" height="40" viewBox="0 0 20 20">
-							<rect width="2" height="10" x="12.5" y="6"/>
-							<rect width="2" height="10" x="5.5" y="6"/>
-							</svg>
-						</button>
-					</th>
 
-					<th class = "buttonRow">
-						<button id="lopButton" class="simulationStateButton" onclick="relocate('0')" disabled>
-							<svg class="svg-icon" width="30" height="30" viewBox="0 0 19 18">
-								<path d="M3.254,6.572c0.008,0.072,0.048,0.123,0.082,0.187c0.036,0.07,0.06,0.137,0.12,0.187C3.47,6.957,3.47,6.978,3.484,6.988c0.048,0.034,0.108,0.018,0.162,0.035c0.057,0.019,0.1,0.066,0.164,0.066c0.004,0,0.01,0,0.015,0l2.934-0.074c0.317-0.007,0.568-0.271,0.56-0.589C7.311,6.113,7.055,5.865,6.744,5.865c-0.005,0-0.01,0-0.015,0L5.074,5.907c2.146-2.118,5.604-2.634,7.971-1.007c2.775,1.912,3.48,5.726,1.57,8.501c-1.912,2.781-5.729,3.486-8.507,1.572c-0.259-0.18-0.618-0.119-0.799,0.146c-0.18,0.262-0.114,0.621,0.148,0.801c1.254,0.863,2.687,1.279,4.106,1.279c2.313,0,4.591-1.1,6.001-3.146c2.268-3.297,1.432-7.829-1.867-10.101c-2.781-1.913-6.816-1.36-9.351,1.058L4.309,3.567C4.303,3.252,4.036,3.069,3.72,3.007C3.402,3.015,3.151,3.279,3.16,3.597l0.075,2.932C3.234,6.547,3.251,6.556,3.254,6.572z"></path>
-							</svg>
-						</button>
-					</th>
 
-				</tr>
-				</table>
-				<br>
-			</div>
-			<div class = "largeSection rowType1">
-				<div class="row center">
-					<div class="col-6">
-						<img src="stopwatch.png" style="max-width:100%;height:40px;"/>
-						<p id="timer">00:00</p>
-						<span>(<span id="realWorldTimer">00:00</span>)</span>
-					</div>
-					<div class="col-6">
-						<img src="calculator.png" style="max-width:100%;height:40px;"/>
-						<p id="score0">0</p>
-					</div>
-				</div>
-			</div>
-			<img src="drip.png" width="100%">
-			<div class="historyArea">
-				<table id="history">
-				</table>
-			</div>
-		</div>
-	</body>
-</html>
+
+
+
+
+<footer class="app-footer"><span>Erebus Rescue Simulator 2026</span><span>Match Studio · 26.2</span></footer></main></body></html>

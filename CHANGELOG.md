@@ -1,5 +1,13 @@
 # Fork changelog
 
+## 26.2 Preview 2
+
+- Recover the missing initial node states in Webots R2023b streaming-mode HTML recordings using the exported scene.
+- Preserve later motion frames, labels, timing and the original simulation-step behavior.
+- Add regression checks for malformed initial update arrays and reject unrelated corruption without rewriting the source export.
+- Verify a real streaming match, recording ZIP, direct-file replay and forward/backward seeking on macOS.
+
+
 ## Erebus Match Studio 26.2 (unreleased)
 
 Independent changes by Peyman Yousefi, based on official Erebus v26.1. See [release notes](docs/releases/26.2-studio.1.md) and [attribution](NOTICE.md).

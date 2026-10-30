@@ -13,6 +13,75 @@ from pathlib import Path
 from Recorder import Recorder
 
 
+def read_animation(path):
+    """Restore the initial node states omitted by Webots R2023b streaming."""
+    path = Path(path)
+    text = path.read_text(encoding='utf-8')
+    try:
+        return json.loads(text)
+    except json.JSONDecodeError as error:
+        # Only recover the known recorder header and its first update array.
+        header = re.match(
+            r'\A\s*\{\s*"basicTimeStep"\s*:\s*[\d.]+\s*,\s*'
+            r'"labelsIds"\s*:\s*"(?:\\.|[^"\\])*"\s*,\s*'
+            r'"frames"\s*:\s*\[\s*\{\s*"time"\s*:\s*0(?:\.0)?\s*,\s*'
+            r'"updates"\s*:\s*\[', text)
+        if header is None:
+            raise
+        decoder = json.JSONDecoder()
+        whitespace = re.compile(r'\s*')
+        cursor = header.end()
+        entries = []
+        while cursor < len(text):
+            cursor = whitespace.match(text, cursor).end()
+            if cursor >= len(text):
+                raise error
+            if text[cursor] in ',]':
+                entries.append(None)
+            else:
+                entry, cursor = decoder.raw_decode(text, cursor)
+                if not isinstance(entry, dict) or not isinstance(entry.get('id'), int):
+                    raise error
+                entries.append(entry)
+            cursor = whitespace.match(text, cursor).end()
+            if cursor >= len(text):
+                raise error
+            if text[cursor] == ']':
+                break
+            if text[cursor] != ',':
+                raise error
+            cursor += 1
+        if cursor >= len(text) or not header.end() <= error.pos <= cursor:
+            raise error
+        updates = [entry for entry in entries if entry is not None]
+        holes = entries.count(None)
+        if not holes:
+            raise error
+        repaired = text[:header.end()] + json.dumps(updates)[1:-1] + text[cursor:]
+        data = json.loads(repaired)  # Other corruption must still fail validation.
+        existing = {entry['id'] for entry in updates}
+        fields = {}
+        for frame in data['frames'][1:]:
+            for update in frame.get('updates', []):
+                if update['id'] not in existing:
+                    fields.setdefault(update['id'], set()).update(set(update) - {'id'})
+        if len(fields) != holes:
+            raise ValueError('Missing animation states do not match the streaming export')
+        try:
+            scene = ET.parse(path.with_suffix('.x3d'))
+        except ET.ParseError as scene_error:
+            raise ValueError('Initial animation scene is invalid') from scene_error
+        nodes = {node.get('id'): node for node in scene.iter()}
+        for node_id, names in fields.items():
+            node = nodes.get(f'n{node_id}')
+            if node is None or not names <= node.attrib.keys():
+                raise ValueError(f'Initial animation state is unavailable for node {node_id}')
+            updates.append(dict(id=node_id, **{name: node.get(name) for name in sorted(names)}))
+        data['frames'][0]['updates'] = updates
+        path.write_text(json.dumps(data, ensure_ascii=False), encoding='utf-8')
+        return data
+
+
 
 EVENT_PLAYBACK_SCRIPT = r'''<script>
 (() => {
@@ -265,7 +334,7 @@ class MatchAnimation:
             # This synchronous call must finish while the robot still exists.
             if not self.supervisor.animationStopRecording():
                 raise RuntimeError('Webots reported an HTML animation export failure')
-            data = json.loads(target.with_suffix('.json').read_text(encoding='utf-8'))
+            data = read_animation(target.with_suffix('.json'))
             frames = data.get('frames', [])
             if not frames or not any(frame.get('time', 0) > 0 for frame in frames):
                 raise ValueError('The animation contains no recorded simulation steps')

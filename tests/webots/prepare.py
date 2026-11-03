@@ -25,7 +25,7 @@ if args.docker:
  shutil.copyfile(root/'docker/controller/start.sh',project/'start.sh')
  driver=Path(__file__).with_name('robot0Controller.py').read_text()
  driver=driver.replace("root=Path(__file__).resolve().parents[3]", "root=Path('/tmp/erebus-test');root.mkdir(exist_ok=True)")
- (project/'controller.py').write_text(driver)
+ (project/'robot_controller.py').write_text(driver)
 if args.only_mode:
  jobs=[job for job in jobs if job['mode']==args.only_mode]
  if not jobs:raise SystemExit('No checks matched --only-mode')

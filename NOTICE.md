@@ -8,7 +8,7 @@ Erebus and its original simulator, rules implementation, robot model generation,
 
 ## 2027 reference implementation
 
-The 2027 integration draws on the official Erebus `2027_WebotsR2025a` branch and the battery implementation supplied by [Sebastián Britez and contributors](https://github.com/sebybritez/Bater-a-PRUEBA/tree/Webots_2025a). Their existing code, field and asset contributions retain their original attribution. Competition behavior follows the September 2026 [2027 draft rules](https://junior.robocup.org/wp-content/uploads/2026/09/RCJRescueSimulation2027-draft.pdf), including the five-second contact-tile stop.
+The 2027 integration draws on the official Erebus `2027_WebotsR2025a` branch and the battery implementation supplied by [sebybritez/Bater-a-PRUEBA contributors](https://github.com/sebybritez/Bater-a-PRUEBA/tree/Webots_2025a). Their existing code, field and asset contributions retain their original attribution. Competition behavior follows the September 2026 [2027 draft rules](https://junior.robocup.org/wp-content/uploads/2026/09/RCJRescueSimulation2027-draft.pdf), including the five-second contact-tile stop.
 
 ## Fork modifications
 

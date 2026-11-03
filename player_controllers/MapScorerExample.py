@@ -23,9 +23,10 @@ while robot.step(timeStep) != -1:
     # 'g': Connection tile from 1 to 4 (and vice versa)
     # 'o': Connection tile from 1 to 3 (and vice versa)
     # 'y': Connection tile from 2 to 4 (and vice versa)
-    # 'H': Harmed victim
-    # 'S': Stable victim
-    # 'U': Unharmed victim
+    # 'k': Contact tile (battery replacement)
+    # 'H': Harmed victim (sad smiley)
+    # 'S': Stable victim (neutral smiley)
+    # 'U': Unharmed victim (happy smiley)
     # 'F': Flammable Gas
     # 'P': Poison
     # 'C': Corrosive

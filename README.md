@@ -38,6 +38,10 @@ Battery settings are organizer-owned in `game/controllers/MainSupervisor/sensorE
 
 The implementation uses the draft's explicit mapping formula, `1 + 1.2 × correctness` (section 5.6.10.b.viii). The draft's earlier description of a 1-to-2 range conflicts with that formula; the explicit formula and upstream implementation yield a maximum multiplier of 2.2.
 
+### Organizer graphics profile
+
+The draft specifies Ambient Occlusion **Low**, Texture Quality **Low**, Max Texture Filtering **4**, Shadows **Disabled**, and Anti-aliasing **Disabled**. Apply this profile through Webots preferences on competition machines. The server/client setup and judging procedures remain organizer responsibilities.
+
 ### Controller game-info packet
 
 A `G` request receives `struct.pack('c f i i f', b'G', score, simulated_seconds_remaining, real_seconds_remaining, battery_percent)`, a 20-byte packet. The first four values retain their meanings; battery percentage is appended by the reference 2027 interface. Update readers that require exactly 16 bytes. `player_controllers/GetGameInfo.py` accepts both packet sizes.
@@ -281,7 +285,7 @@ The suite covers every supplied world, real motor/sensor access, zero-camera and
 
 ### Docker controllers
 
-Use Docker Engine or Docker Desktop with a running daemon. `docker/controller/` contains an R2025a Linux/amd64 example: copy it, replace `controller.py`, and select that folder in Advanced Setup. Its Dockerfile downloads the official R2025a package. Older containers using R2023b libraries need updating.
+Use Docker Engine or Docker Desktop with a running daemon. `docker/controller/` contains an R2025a Linux/amd64 example: copy it, replace `robot_controller.py`, and select that folder in Advanced Setup. Its Dockerfile downloads the official R2025a package. Older containers using R2023b libraries need updating.
 
 The helper builds the selected project and supplies `EREBUS_SERVER`, `EREBUS_CONTROLLER_PORT` and `EREBUS_ROBOT_NAME`. The default host is `host.docker.internal` with the Docker host-gateway mapping. If Webots uses a non-default port, set `EREBUS_CONTROLLER_PORT` before starting Webots. `EREBUS_DOCKER_HOST` can override the host address. The default port is 1234. Docker build/daemon errors are shown by the supervisor.
 

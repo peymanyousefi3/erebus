@@ -7,6 +7,6 @@ RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates
     rm -rf /tmp/webots.deb /var/lib/apt/lists/*
 ENV WEBOTS_HOME=/usr/local/webots
 WORKDIR /controller
-COPY controller.py start.sh ./
+COPY robot_controller.py start.sh ./
 RUN chmod +x start.sh
 ENTRYPOINT ["/controller/start.sh"]

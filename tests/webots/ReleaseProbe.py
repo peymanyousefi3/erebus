@@ -92,6 +92,12 @@ try:
             assert s.time_elapsed <= 480.02
         assert s.time_elapsed >= 480 and s.robot_obj.battery.level > 98
         result['full_match_seconds'] = s.time_elapsed
+    elif mode=='real-time-limit':
+        s._real_time_elapsed=s._max_real_world_time
+        s.update()
+        assert not s.robot_obj.in_simulation and s._game_state==GameState.MATCH_FINISHED
+        assert s._real_time_elapsed==600 and s.time_elapsed<480
+        result['real_time_boundary_seconds']=s._real_time_elapsed
     elif mode=='scoring':
         from Test import TestRunner
         result['scored_tokens']=0
@@ -194,6 +200,7 @@ try:
     result['replay_files']=[str(p.relative_to(root)) for p in s._match_folder.rglob('*') if p.is_file()]
     assert any(p.endswith('.zip') for p in result['replay_files']),result
     assert any(p.endswith('.w3d' if result['engine']=='R2025a' else '.x3d') for p in result['replay_files'])
+    result.update(elapsed_seconds=s.time_elapsed, real_seconds=s._real_time_elapsed, battery_level=s.robot_obj.battery.level)
     result['passed']=True
 except Exception:
     result['error']=traceback.format_exc()

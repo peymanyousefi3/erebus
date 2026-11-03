@@ -16,11 +16,16 @@ for d in devices:
 (root/'device-info.json').write_text(json.dumps(info))
 r.setCustomData('0,0')
 e=r.getDevice('emitter');receiver=r.getDevice('receiver');receiver.enable(16)
-requested=False;last=''
+requested=False;last='';imaging_disabled=False
 while r.step(16)!=-1:
     text=r.getCustomData()
     if text in ('stop','run'):
         for w in wheels:w.setVelocity(0 if text=='stop' else 6.28)
+        # Images were sampled before these command-driven timing checks.
+        if not imaging_disabled:
+            for device in sensors:
+                if device.getNodeType() in (Node.CAMERA,Node.LIDAR):device.disable()
+            imaging_disabled=True
     elif text.startswith('{') and text!=last:
         last=text;cmd=json.loads(text)
         if 'report' in cmd:

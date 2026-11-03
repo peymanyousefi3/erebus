@@ -14,7 +14,7 @@ worlds=sorted(p.stem for p in (game/'worlds').glob('*.wbt') if p.stem!='window_c
 for name in worlds:
  p=game/'worlds'/(name+'.wbt');s=p.read_text().replace('controller "MainSupervisor"','controller "ReleaseProbe"').replace('window "MainSupervisorWindow"','window "<none>"');p.write_text(s)
 jobs=[dict(world=name,mode='load') for name in worlds]
-jobs += [dict(world='mapping_example_1_cyan_tiles',mode=mode) for mode in ['contact','four-wheels','no-camera','custom-camera','all-sensors','legacy-model','swamp','natural-depletion','remote-ipc','remote-tcp','full-match']]
+jobs += [dict(world='mapping_example_1_cyan_tiles',mode=mode) for mode in ['contact','four-wheels','no-camera','custom-camera','all-sensors','legacy-model','swamp','natural-depletion','remote-ipc','remote-tcp','full-match','real-time-limit']]
 jobs += [dict(world=name,mode='scoring') for name in ['2027_d1r1','2027_d1r2','2027_d2r1','2027_d2r2','world1']]
 # Exercise generated models and rules before the remaining field-loading checks.
 jobs = jobs[:1] + jobs[len(worlds):] + jobs[1:len(worlds)]

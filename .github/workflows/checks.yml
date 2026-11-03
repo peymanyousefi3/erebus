@@ -7,7 +7,7 @@ on:
       test_mode:
         description: Native test group
         type: choice
-        options: [all, portable-only, legacy-model, scoring, full-match, natural-depletion, remote-docker]
+        options: [all, portable-only, legacy-model, scoring, full-match, real-time-limit, natural-depletion, remote-docker]
         default: all
 env:
   PYTHONUTF8: '1'

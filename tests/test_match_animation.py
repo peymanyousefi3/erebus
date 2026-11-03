@@ -41,7 +41,7 @@ def check():
         def animationStopRecording(self):
             events.append('record-stop')
             self.file.with_suffix('.json').write_text(
-                json.dumps({'frames': [{'time': 0}, {'time': 32}]}) if self.valid else '{')
+                json.dumps({'labelsIds': '100;200', 'frames': [{'time': 0, 'labels': [{'id': 100, 'text': 'Current label'}]}, {'time': 32}]}) if self.valid else '{')
             return self.stop_ok
 
     with TemporaryDirectory() as folder:
@@ -54,6 +54,7 @@ def check():
         recorder.stop(final_score=12.5, elapsed_seconds=1, history='00:01 Successful Exit')
         recorder.stop()
         assert events == ['record-start', 'record-stop'] and not errors
+        assert json.loads(first.with_suffix('.json').read_text())['labelsIds'] == '100'
         assert first.parent.name == 'recording' and first.parent.parent.parent == Path(folder)
         archive = first.parent / f'{first.parent.parent.name}.zip'
         assert archive.is_file()

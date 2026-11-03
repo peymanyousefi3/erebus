@@ -68,11 +68,12 @@ class Erebus(Supervisor):
         self._match_animation = MatchAnimation(self, Console.log_info, Console.log_err)
         self._map_review = None
         self._submitted_map = None
+        self._map_bonus_applied = False
         self._match_folder = None
 
         # Version info
-        self._stream = 26
-        self.version = "26.2"
+        self._stream = 27
+        self.version = "27.0-draft.1"
 
         # Start controller uploader
         uploader: Thread = Thread(target=ControllerUploader.start, daemon=True)
@@ -428,14 +429,19 @@ class Erebus(Supervisor):
                                     rotation 0 1 0 0 
                                     name "{Erebus.ROBOT_NAME}"
                                     controller "{controller}"
-                                    camera_fieldOfView 1 
-                                    camera_width 64 
-                                    camera_height 40 
                                 }}
                             """
 
         # Get robot to insert into world
         root_children_field.importMFNodeFromString(-1, node_string)
+        robot = self.getFromDef("ROBOT0")
+        for name, value in (("camera_fieldOfView", 1.0), ("camera_width", 64), ("camera_height", 40)):
+            field = robot.getField(name)
+            if field is not None:
+                if name == "camera_fieldOfView":
+                    field.setSFFloat(value)
+                else:
+                    field.setSFInt32(value)
         # Update robot window to say robot is in simulation
         self.rws.send("robotInSimulation0")
         # Return the robot node
@@ -444,6 +450,9 @@ class Erebus(Supervisor):
     def _add_map_multiplier(self) -> None:
         """Apply the map multiplier from the robot's map score to the score
         """
+        if self._map_bonus_applied:
+            return
+        self._map_bonus_applied = True
         score_change: float = self.robot_obj.get_score() * self.robot_obj.map_score_percent * 1.2
         self.robot_obj.increase_score("Map Bonus", score_change)
 
@@ -543,7 +552,7 @@ class Erebus(Supervisor):
             self.rws.send("version", f"{self.version}")
             # Check updates
             url = "https://gitlab.com/api/v4/projects/22054848/releases"
-            response = req.get(url)
+            response = req.get(url, timeout=5)
             releases = response.json()
             releases = list(filter(lambda release: release['tag_name'].startswith(
                 f"v{self._stream}"), releases))
@@ -571,13 +580,12 @@ class Erebus(Supervisor):
         est_vic_pos = robot_message[0]
         est_vic_type = robot_message[1]
 
-        iterator: Sequence[VictimObject] = self.victim_manager.victims
+        iterator: Sequence[VictimObject] = self.victim_manager.victims + self.victim_manager.targets
         name: str = 'Victim'
         correct_type_bonus: int = 10
         misidentification: bool = True
 
         if est_vic_type.lower() in list(map(to_lower, CognitiveTarget.TARGET_TYPES)):
-            iterator = self.victim_manager.targets
             name = 'Target'
             correct_type_bonus = 20
 
@@ -587,7 +595,6 @@ class Erebus(Supervisor):
             if h.check_position(self.robot_obj.position) and
             h.check_position(est_vic_pos) and
             h.on_same_side(self.robot_obj) and
-            not h.identified and
             len(h.simple_victim_type) > 0 # Discard invalid targets
         ]
 
@@ -597,12 +604,12 @@ class Erebus(Supervisor):
             Console.log_debug(
                 f"Robot Position {self.robot_obj.position}")
             Console.log_debug(
-                f"Distance {h.get_distance(self.robot_obj.position)}/0.09")
+                f"Distance {h.get_distance(self.robot_obj.position)}/0.06")
             Console.log_debug(
                 f"In range: ({h.check_position(self.robot_obj.position)})")
             Console.log_debug(f"Est pos: {est_vic_pos}")
             Console.log_debug(
-                f"Est distance {h.get_distance(est_vic_pos)}/0.09")
+                f"Est distance {h.get_distance(est_vic_pos)}/0.06")
             Console.log_debug(
                 f"Est distance in range: {h.check_position(est_vic_pos)}")
             Console.log_debug(
@@ -628,6 +635,16 @@ class Erebus(Supervisor):
 
             nearby_issue: VictimObject = nearby_map_issues[np.argmin(
                 distances)]
+
+            # Select the nearest sign before considering its identified state.
+            # Repeating one report must not award another neighboring sign.
+            if nearby_issue.identified:
+                return
+            actual_target = nearby_issue.simple_victim_type in CognitiveTarget.TARGET_TYPES
+            reported_target = est_vic_type.lower() in list(map(to_lower, CognitiveTarget.TARGET_TYPES))
+            if actual_target != reported_target:
+                self.robot_obj.increase_score(f"Misidentification of {name}", -5)
+                return
 
             # Get points scored depending on the type of victim
             grid: int = self.tile_manager.coord2grid(
@@ -743,14 +760,15 @@ class Erebus(Supervisor):
         # Process game info commands
         elif robot_message[0] == 'G':
             # Send game info in format:
-            # (G, score, game time left, real time left)
+            # (G, score, game time left, real time left, battery percent)
             self.emitter.send(
                 struct.pack(
-                    "c f i i",
+                    "c f i i f",
                     bytes("G", "utf-8"),
                     round(self.robot_obj.get_score(), 2),
                     self.max_time - int(self.time_elapsed),
-                    self._max_real_world_time - int(self._real_time_elapsed)
+                    self._max_real_world_time - int(self._real_time_elapsed),
+                    round(self.robot_obj.battery.level, 2)
                 )
             )
 
@@ -1036,7 +1054,17 @@ class Erebus(Supervisor):
 
         # The first frame of the game running only
         if self._first_frame and self._game_state == GameState.MATCH_RUNNING:
-            self._game_init()
+            try:
+                self._game_init()
+            except (ValueError, OSError) as error:
+                node = self.getFromDef("ROBOT0")
+                if node is not None and not self.robot_obj.in_simulation:
+                    node.remove()
+                self._game_state = GameState.MATCH_NOT_STARTED
+                self.rws.send("unloaded1")
+                self.rws.send("sourceReloadError", f"Robot could not start: {error}. Load the robot JSON again.")
+                self.simulationSetMode(self.SIMULATION_MODE_PAUSE)
+                return
 
         if self._run_tests:
             self._test_runner.run()
@@ -1054,6 +1082,17 @@ class Erebus(Supervisor):
 
             self.tile_manager.check_checkpoints()
             self.tile_manager.check_swamps()
+            if self._game_state == GameState.MATCH_RUNNING:
+                self.robot_obj.update_battery(self.time_elapsed)
+                if self.robot_obj.battery.is_depleted:
+                    self.robot_obj.history.enqueue("Battery depleted")
+                    self._add_map_multiplier()
+                    self._robot_quit(True)
+                    self._game_state = GameState.MATCH_FINISHED
+                    self._last_frame = True
+                    self.rws.send("ended")
+                    return
+                self.tile_manager.check_contacts()
 
             # If receiver has got a message
             if self._receiver.getQueueLength() > 0:
@@ -1116,7 +1155,7 @@ class Erebus(Supervisor):
             # If the time is up
             if ((self.time_elapsed >= self.max_time or
                  self._real_time_elapsed >= self._max_real_world_time) and
-                    self._last_frame != None):
+                    self._game_state == GameState.MATCH_RUNNING):
                 self._add_map_multiplier()
                 self._robot_quit(True)
 
@@ -1151,8 +1190,7 @@ class Erebus(Supervisor):
             self._last_real_time = time.time()
             # Get the time since the last frame
             frameTime = self.getTime() - self._last_time
-            # Scale frame time by countdown time multiplier (used for swamps)
-            frameTime *= self._time_muliplier
+            # 2027: swamp penalties consume battery, not simulation time.
             # Add to the elapsed time
             self.time_elapsed += frameTime
             # Get the current time

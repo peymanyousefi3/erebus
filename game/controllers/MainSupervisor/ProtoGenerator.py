@@ -1,3 +1,5 @@
+import json
+import re
 from Tools import *
 from ConsoleLog import Console
 
@@ -39,6 +41,7 @@ def generate_robot_proto(robot_json: dict) -> bool:
     }
 
     component_counts: dict[str, int] = {}
+    energy_sensors = ["Receiver", "Emitter"]
     
     close_bracket: str = "\n\t\t}\n"
 
@@ -125,6 +128,9 @@ def generate_robot_proto(robot_json: dict) -> bool:
             gen_err = True
             break
 
+        if robot_json[component]["name"] != "Wheel":
+            energy_sensors.append(robot_json[component]["name"].replace(" ", ""))
+
         if robot_json[component].get("name") == "Wheel":
             Console.log_info((
                 f"Adding motor... {robot_json[component].get('dictName')} "
@@ -185,7 +191,7 @@ def generate_robot_proto(robot_json: dict) -> bool:
                 resolution 0.00628  # (2 * pi) / 1000
                 }}
             ]
-            endPoint Solid {{
+            endPoint DEF EREBUS_WHEEL_{component_count} Solid {{
                 translation 0 0 0
                 rotation 0.707388 0 -0.707388 3.14
                 children [
@@ -498,6 +504,10 @@ def generate_robot_proto(robot_json: dict) -> bool:
             ]
             }}"""
 
+    # Supervisor-owned inventory; no unused Webots interface parameter.
+    proto_code = proto_code.replace('PROTO custom_robot [',
+        "# energy_sensors: " + json.dumps(energy_sensors) + "\nPROTO custom_robot [")
+
     proto_code += """DEF EPUCK_RING SolidPipe {
     translation 0 0.0393 0
     rotation -0.5773502691896258 0.5773502691896258 0.5773502691896258 2.0943951023931953
@@ -544,6 +554,17 @@ def generate_robot_proto(robot_json: dict) -> bool:
     """
     proto_code += "\n}"
     proto_code += close_bracket
+
+    header, body = proto_code.split("]\n{", 1)
+    header = re.sub(
+        r"^.*\bfield\s+\w+\s+(camera_\w+)\b.*\n",
+        lambda match: match[0] if re.search(r"\bIS\s+" + match[1] + r"\b", body) else "",
+        header, flags=re.MULTILINE)
+    proto_code = header + "]\n{" + body
+
+    if not re.search(r"endPoint DEF EREBUS_WHEEL_\d+", proto_code):
+        Console.log_err("The robot needs at least one powered wheel.")
+        return False
 
     if not gen_err:
         Console.log_succ("Your custom robot has been successfully generated!")

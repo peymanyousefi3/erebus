@@ -165,8 +165,8 @@ def check():
     # All match-end callers must use the same stop-before-removal path.
     calls = [n for n in ast.walk(tree) if isinstance(n, ast.Call) and isinstance(n.func, ast.Attribute)]
     assert sum(n.func.attr == 'remove_node' for n in calls) == 1
-    assert sum(n.func.attr == '_robot_quit' for n in calls) == 4
-    print('PASS: HTML recording on/off, no video calls, no export/delay when off, start ordering, and stop before deletion for all four ending paths.')
+    assert sum(n.func.attr == '_robot_quit' for n in calls) == 5
+    print('PASS: HTML recording on/off, no video calls, no export/delay when off, start ordering, and stop before deletion for all five ending paths (including battery depletion).')
 
 
 if __name__ == '__main__':

@@ -7,7 +7,7 @@
     let report = null, turns = 0, scale = 24, fitScale = 24, panX = 0, panY = 0;
     let width = 0, height = 0, selected = null, pointer = null;
     const labels = ['Incorrect', 'Correct', 'Ignored by scoring', 'Unscored / outside comparison'];
-    const palette = {'0':'#e2e8ef','1':'#263b60','2':'#323b4a','3':'#af813d','4':'#7d91ad','5':'#008c81','b':'#4267c7','y':'#b69a18','g':'#4c9664','p':'#8a59aa','o':'#c4783e','r':'#b85d5d'};
+    const palette = {'k':'#00a2a2','0':'#e2e8ef','1':'#263b60','2':'#323b4a','3':'#af813d','4':'#7d91ad','5':'#008c81','b':'#4267c7','y':'#b69a18','g':'#4c9664','p':'#8a59aa','o':'#c4783e','r':'#b85d5d'};
     function dimensions() {
         const h = report.values.length, w = report.values[0].length;
         return turns % 2 ? [h, w] : [w, h];
@@ -90,7 +90,7 @@
         panX=x-(x-panX)*ratio;panY=y-(y-panY)*ratio;scale=next;draw();
     }
     function rotate(direction) { if(report){turns=(turns+direction+4)%4;fit();} }
-    const names={'0':'Normal floor','1':'Wall','2':'Hole','3':'Swamp','4':'Checkpoint','5':'Start tile','20':'Ignored cell','H':'Victim marker','S':'Victim marker','U':'Victim marker'};
+    const names={'k':'Contact tile','0':'Normal floor','1':'Wall','2':'Hole','3':'Swamp','4':'Checkpoint','5':'Start tile','20':'Ignored cell','H':'Victim marker','S':'Victim marker','U':'Victim marker'};
     function description(value) { return value===null ? 'Missing cell' : `${names[value] || 'Map code'} (${value})`; }
     function closePopup(focus=false) {
         $('cellPopup').hidden=true;selected=null;$('selection').textContent='';draw();

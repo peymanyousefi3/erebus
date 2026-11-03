@@ -45,4 +45,10 @@ with TemporaryDirectory() as folder:
         else:
             raise AssertionError('Unavailable initial state accepted')
         assert path.read_bytes() == before
-print('PASS: streaming first-frame recovery, exact scene poses, later motion/labels, idempotence and fail-closed corruption guards.')
+    # R2025a uses W3D for the same recovery contract.
+    xml.unlink()
+    path.with_suffix('.w3d').write_text(scene.replace('X3D', 'W3D'), encoding='utf-8')
+    path.write_text(header+'[,]}'+tail, encoding='utf-8')
+    data = read_animation(path)
+    assert {u['id']:u for u in data['frames'][0]['updates']}[1]['translation']=='1000 1000 1000'
+print('PASS: X3D/W3D streaming first-frame recovery, exact scene poses, later motion/labels, idempotence and fail-closed corruption guards.')

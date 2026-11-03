@@ -20,6 +20,8 @@ from Recorder import Recorder
 from Tile import Checkpoint, StartTile, TileManager, Swamp
 from Config import Config
 from ErebusObject import ErebusObject
+from battery import Battery, WheelSpeedMonitor, sensor_types_from_proto
+from Tools import get_file_path
 
 
 
@@ -110,6 +112,8 @@ class Robot(ErebusObject):
         """
         super().__init__(erebus)
         
+        self.battery = Battery(0, self._erebus.rws)
+        self._wheel_monitor = None
         self._wb_node: Node
         self.wb_translationField: Field
         self.wb_rotationField: Field
@@ -166,6 +170,7 @@ class Robot(ErebusObject):
         """Stops the inertia of the robot and its descendants.
         """
         self._wb_node.resetPhysics()
+        self.battery.contact(None, False, self._erebus.time_elapsed)
         
     def remove_node(self) -> None:
         """Removes the robot from the Webots scene tree
@@ -181,6 +186,10 @@ class Robot(ErebusObject):
         self._wb_node: Node = node
         self.wb_translationField: Field = self._wb_node.getField('translation')
         self.wb_rotationField: Field = self._wb_node.getField('rotation')
+        self._wheel_monitor = WheelSpeedMonitor(node)
+        sensor_types = sensor_types_from_proto(get_file_path(
+            'protos/custom_robot.proto', '../../protos/custom_robot.proto'))
+        self.battery.reset(self._erebus.time_elapsed, sensor_types)
 
     def set_max_velocity(self, vel: float) -> None:
         """Set the max angular velocity the robot can move at.
@@ -458,24 +467,16 @@ class Robot(ErebusObject):
                                 multiplier=TileManager.ROOM_MULT[room_num])
 
     def update_in_swamp(self, in_swamp: Swamp, default_multiplier: float) -> None:
-        """Updates the game's timer countdown multiplier when in a swamp.
-
-        Args:
-            in_swamp (Swamp): A Swamp object if the robot has entered a swamp, None otherwise
-            default_multiplier (float): Default time multiplier
-        """
-        # Check if robot is in swamp
-        if self.in_swamp != in_swamp:
+        """Swamps affect battery drain, never the 2027 match clock."""
+        if self.in_swamp is not in_swamp:
             self.in_swamp = in_swamp
-            if self.in_swamp is not None:
-                # Update time multiplier 
-                self._erebus.set_time_multiplier(in_swamp.multiplier)
-                # Update history
-                self.history.enqueue(f"Entered swamp (multiplier: {in_swamp.multiplier})")
-                # Increment swamp multiplier
-                in_swamp.increment_multiplier()
-            else:
-                # Reset time multiplier
-                self._erebus.set_time_multiplier(default_multiplier)
-                # Update history
-                self.history.enqueue("Exited swamp,")
+            self.history.enqueue("Entered swamp" if in_swamp else "Exited swamp")
+
+    def update_battery(self, time_elapsed: float) -> None:
+        self._measured_wheel_speeds = self._wheel_monitor.speeds()
+        self.battery.update(time_elapsed, self._measured_wheel_speeds,
+                            self.in_swamp is not None)
+
+    def update_in_contact(self, tile) -> None:
+        if self.battery.contact(tile, self._is_stopped(), self._erebus.time_elapsed):
+            self.history.enqueue("Battery replaced")

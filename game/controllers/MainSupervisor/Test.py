@@ -259,7 +259,7 @@ class TestVictim(Test):
                                  f"(Internal {self._erebus.robot_obj.time_stopped()})")
             return self._erebus.robot_obj.get_score() == self._start_score
 
-        if self._offset > 0.093:
+        if self._offset > 0.063:
             self.set_test_report((
                 f"Expected score: {self._start_score - 5}, "
                 f"but was: {self._erebus.robot_obj.get_score()}"
@@ -692,7 +692,7 @@ class TestRunner(ErebusObject):
         init += [TestVictim(self._erebus, i, offset, angle,
                             self._erebus.victim_manager.victims)
                  for i in range(len(self._erebus.victim_manager.victims))
-                 for offset in np.linspace(0.03, 0.089, 6)
+                 for offset in np.linspace(0.03, 0.055, 6)
                  for angle in np.linspace(-80, 80, 5)]        
         # Tests for victim misidentification
         init += [TestVictim(self._erebus, i, offset, 0,
@@ -700,7 +700,7 @@ class TestRunner(ErebusObject):
                  for offset in np.linspace(0.05, 0.07, 2)
                  for i in range(len(self._erebus.victim_manager.victims))]
         # Tests for victim delays
-        init += [TestVictim(self._erebus, i, 0.06, 0,
+        init += [TestVictim(self._erebus, i, 0.055, 0,
                             self._erebus.victim_manager.victims, 
                             delay=int(delay))
                  for delay in np.linspace(0, 5, 5)
@@ -718,7 +718,7 @@ class TestRunner(ErebusObject):
         init += [TestVictim(self._erebus, i, offset, angle,
                             self._erebus.victim_manager.targets)
                  for i in range(len(self._erebus.victim_manager.targets))
-                 for offset in np.linspace(0.03, 0.089, 6)
+                 for offset in np.linspace(0.03, 0.055, 6)
                  for angle in np.linspace(-80, 80, 5)]        
         # Tests for victim misidentification
         init += [TestVictim(self._erebus, i, offset, 0,
@@ -726,7 +726,7 @@ class TestRunner(ErebusObject):
                  for offset in np.linspace(0.05, 0.07, 2)
                  for i in range(len(self._erebus.victim_manager.targets))]
         # Tests for victim delays
-        init += [TestVictim(self._erebus, i, 0.06, 0,
+        init += [TestVictim(self._erebus, i, 0.055, 0,
                             self._erebus.victim_manager.targets, 
                             delay=int(delay))
                  for delay in np.linspace(0, 5, 5)
@@ -796,7 +796,7 @@ class TestRunner(ErebusObject):
         # Rounding to simulate rounding precision errors found due to only
         # being able to send cm positions for estimated victim positions
         rounded_pos: list[float] = [int(new_position[0] * 100) / 100, 0, int(new_position[2] * 100) / 100]
-        if (victim.get_distance(rounded_pos) > 0.09):
+        if (victim.get_distance(rounded_pos) > 0.06):
             return False
         
         robot.position = new_position

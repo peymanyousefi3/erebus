@@ -1,41 +1,49 @@
-#VRML_SIM R2022b utf8
+#VRML_SIM R2025a utf8
+# template language: javascript
 PROTO curvedWall [
-	field SFInt32 rot 1 
+	field SFInt32 rot 1
 	field SFBool isHalf FALSE
 	field SFFloat xScale 1.0
 	field SFFloat zScale 1.0
 	field SFFloat yScale 1.0
 ]
 {
+%<
+// Preserve the original model geometry precision after template conversion.
+function modelNumber(value) {
+  return typeof value === "number" ? Number(value.toPrecision(14)) : value;
+}
+>%
+
 	Solid {
 
-		%{
-			local rotVal = {1.57, 0, 4.71, 3.14}
-			y_shift = -.075
-			scaleX = fields.xScale.value
-			scaleY = fields.yScale.value
-			scaleZ = fields.zScale.value
-		}%
+		%<
+			const rotVal = [1.57, 0, 4.71, 3.14];
+			let y_shift = -.075;
+			const scaleX = fields.xScale.value
+			const scaleY = fields.yScale.value
+			const scaleZ = fields.zScale.value
+		>%
 
-		%{if fields.isHalf.value == true then 
+		%<if (fields.isHalf.value === true) {
 		y_shift = y_shift * 2
-		}%
-		%{end}%
-		%{if fields.rot.value == 1 then }%
-		translation %{=-.15 * scaleX}% %{=y_shift * scaleY}% %{=.15 * scaleZ}%
-		%{end}%
-		%{if fields.rot.value == 2 then }%
-		translation %{=-.15 * scaleX}% %{=y_shift * scaleY}% %{=-.15 * scaleZ}%
-		%{end}%
-		%{if fields.rot.value == 3 then }%
-		translation %{=.15 * scaleX}% %{=y_shift * scaleY}% %{=-.15 * scaleZ}%
-		%{end}%
-		%{if fields.rot.value == 4 then }%
-		translation %{=.15 * scaleX}% %{=y_shift * scaleY}% %{=.15 * scaleZ}%
-		%{end}%
+		>%
+		%< } >%
+		%<if (fields.rot.value === 1) { >%
+		translation %<= modelNumber(-.15 * scaleX) >% %<= modelNumber(y_shift * scaleY) >% %<= modelNumber(.15 * scaleZ) >%
+		%< } >%
+		%<if (fields.rot.value === 2) { >%
+		translation %<= modelNumber(-.15 * scaleX) >% %<= modelNumber(y_shift * scaleY) >% %<= modelNumber(-.15 * scaleZ) >%
+		%< } >%
+		%<if (fields.rot.value === 3) { >%
+		translation %<= modelNumber(.15 * scaleX) >% %<= modelNumber(y_shift * scaleY) >% %<= modelNumber(-.15 * scaleZ) >%
+		%< } >%
+		%<if (fields.rot.value === 4) { >%
+		translation %<= modelNumber(.15 * scaleX) >% %<= modelNumber(y_shift * scaleY) >% %<= modelNumber(.15 * scaleZ) >%
+		%< } >%
 
-		
-		rotation 0 1 0 %{=rotVal[fields.rot.value]}%		
+
+		rotation 0 1 0 %<= modelNumber(rotVal[fields.rot.value - 1]) >%
 
 		children [
 			DEF CURVED Shape {
@@ -56,7 +64,7 @@ PROTO curvedWall [
 				}
 			}
 		]
-		
+
 		boundingObject USE CURVED
 	}
 }

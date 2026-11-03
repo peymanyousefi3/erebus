@@ -68,7 +68,9 @@ def read_animation(path):
         if len(fields) != holes:
             raise ValueError('Missing animation states do not match the streaming export')
         try:
-            scene = ET.parse(path.with_suffix('.x3d'))
+            scene_file = next((path.with_suffix(ext) for ext in ('.w3d', '.x3d')
+                               if path.with_suffix(ext).is_file()), path.with_suffix('.x3d'))
+            scene = ET.parse(scene_file)
         except ET.ParseError as scene_error:
             raise ValueError('Initial animation scene is invalid') from scene_error
         nodes = {node.get('id'): node for node in scene.iter()}

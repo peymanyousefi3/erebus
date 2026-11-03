@@ -1,26 +1,33 @@
-#VRML_SIM R2023b utf8
+#VRML_SIM R2025a utf8
+# template language: javascript
+
 # tags: static
 PROTO Fake [
-    field SFVec3f    translation       0 0 0
-    field SFRotation rotation          0 0 0 0
-    field SFString   name              "Fake"
-    field SFString   type              "omega"
-    field SFInt32    scoreWorth        10
+	field SFVec3f    translation       0 0 0
+	field SFRotation rotation          0 0 0 0
+	field SFString   name              "Fake"
+	field SFString   type              "omega"
+	field SFInt32    scoreWorth        10
 ]
 {
-    %{
-        if fields.type.value == "omega" then
-			filename = "\"./stl/omega.stl\""   
-        end
-        if fields.type.value == "phi" then
-			filename = "\"./stl/phi.stl\""   
-        end
-        if fields.type.value == "psi" then
-			filename = "\"./stl/psi.stl\""   
-        end
+%<
+// Preserve the original model geometry precision after template conversion.
+function modelNumber(value) {
+  return typeof value === "number" ? Number(value.toPrecision(14)) : value;
+}
+>%
 
-    }%
-	
+	%<
+		let filename = "";
+		if (fields.type.value === "omega") {
+			filename = "./stl/U.stl";
+		} else if (fields.type.value === "phi") {
+			filename = "./stl/S.stl";
+		} else if (fields.type.value === "psi") {
+			filename = "./stl/H.stl";
+		}
+	>%
+
 	Pose {
 		translation IS translation
 		rotation IS rotation
@@ -38,14 +45,14 @@ PROTO Fake [
 									emissiveColor 1 1 1
 								}
 								geometry Box {
-									size 0.016 0.016 0.0002
+									size 0.02 0.02 0.0002
 								}
 							}
 						]
 					}
 					Transform {
-						scale 0.0008 0.0008 0.0008
-						translation -0.0036 0.0058 0
+						scale 0.001 0.001 0.001
+						translation 0 0 0
 						children [
 							Shape {
 								appearance PBRAppearance {
@@ -53,17 +60,17 @@ PROTO Fake [
 									emissiveIntensity 0
 								}
 								geometry Mesh {
-									url [ %{= filename}% ]
+									url [ "%<= modelNumber(filename) >%" ]
 								}
 							}
 						]
 					}
 				]
 				name IS name
-				
+
 			}
 		]
 	}
-	
+
 }
 

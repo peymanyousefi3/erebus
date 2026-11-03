@@ -241,3 +241,16 @@
 .events-tools{display:flex;align-items:center;gap:8px;margin-left:auto;max-width:100%}
 .export-csv-button{min-height:44px;padding:8px 10px;font-size:.75rem;white-space:nowrap}
 .export-csv-button>.icon{width:16px;height:16px}
+
+/* The 2027 battery belongs above the timers at every console width. */
+@media(min-width:681px) and (max-width:960px){
+ .battery-display{grid-column:1/-1;grid-row:2;border-left:0;border-top:1px solid #416aaf;padding:10px 0;margin:0 0 10px;display:block}
+ .clock-heading{grid-row:3}.combined-clock{grid-row:4}.clock-totals{grid-row:5}
+}
+@media(min-width:961px){
+ .battery-display{grid-column:2;grid-row:1;margin:0 0 12px;padding:0 0 12px;border-top:0;border-bottom:1px solid #416aaf}
+ .clock-heading{grid-row:2}.combined-clock{grid-row:3}.clock-totals{grid-row:4}
+}
+
+.battery-display[data-state="low"] output{color:#ffca45}
+.battery-display[data-state="empty"] output{color:#ffb4be}

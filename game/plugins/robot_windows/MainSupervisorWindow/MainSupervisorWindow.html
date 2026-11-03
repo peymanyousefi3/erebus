@@ -2,7 +2,7 @@
 <!-- Erebus interface customizations by Peyman Yousefi. -->
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Erebus — Match supervisor</title><link rel="icon" href="erebus.png" type="image/png">
-<link rel="stylesheet" href="MainSupervisorWindow.css?v=26.2.eventcsv"><script type="module" src="MainSupervisorWindow.js?v=26.2.eventcsv"></script></head>
+<link rel="stylesheet" href="MainSupervisorWindow.css?v=27.0.battery"><script type="module" src="MainSupervisorWindow.js?v=27.0.battery"></script></head>
 <body><svg xmlns="http://www.w3.org/2000/svg" class="icon-library" aria-hidden="true" focusable="false"><symbol id="i-earth" viewBox="0 0 24 24">
   <path d="M21.54 15H17a2 2 0 0 0-2 2v4.54"></path>
   <path d="M7 3.34V5a3 3 0 0 0 3 3a2 2 0 0 1 2 2c0 1.1.9 2 2 2a2 2 0 0 0 2-2c0-1.1.9-2 2-2h3.17"></path>
@@ -114,8 +114,8 @@
 <a class="skip-link" href="#match-controls">Skip to match controls</a>
 <header class="app-header"><div class="header-inner">
 <img class="brand-logo" src="robocup.png" width="400" height="115" alt="RoboCupJunior Rescue Simulation">
-<div class="app-title"><h1>Erebus</h1><p>Rescue Simulation 2026</p></div>
-<button type="button" id="openCompact" class="compact-button" onclick="openCompactWindow()" title="Open in a separate compact browser window" aria-label="Open compact window"><svg class="icon" aria-hidden="true"><use href="#i-external-link"></use></svg><span>Open compact window</span></button><div class="version-block"><span id="versionInfo">Ver. 26.2 — Match Studio</span><span id="newVersion"></span></div>
+<div class="app-title"><h1>Erebus</h1><p>Rescue Simulation 2027 draft</p></div>
+<button type="button" id="openCompact" class="compact-button" onclick="openCompactWindow()" title="Open in a separate compact browser window" aria-label="Open compact window"><svg class="icon" aria-hidden="true"><use href="#i-external-link"></use></svg><span>Open compact window</span></button><div class="version-block"><span id="versionInfo">Ver. 27.0-draft.1 — Match Studio</span><span id="newVersion"></span></div>
 </div></header>
 <main class="app-shell">
 <div class="match-heading"><div class="world-title"><svg class="icon" aria-hidden="true" focusable="false"><use href="#i-flag"></use></svg><div><h2 id="currentWorldName">Waiting for a world</h2></div></div><span id="matchState" class="match-state" data-state="connecting" role="status">Connecting</span></div>
@@ -150,11 +150,12 @@
 <div class="live-workspace">
 <section id="match-console" class="match-console" aria-label="Score and time" tabindex="-1">
 <div class="score-readout"><div class="score-value"><span id="score0">0.00</span><div class="score-meta"><div class="readout-label"><span>Score</span></div><span class="score-unit">points</span></div></div></div>
+<div class="battery-display" title="Stop on a cyan contact tile to replace the battery."><div class="battery-label"><label for="robotBattery">Robot battery</label><span id="batteryStatus">Ready</span></div><div class="battery-reading"><meter id="robotBattery" min="0" max="100" low="20" high="40" optimum="100" value="100" aria-label="Robot battery remaining">100%</meter><output id="batteryPercentage">100%</output></div></div>
 <div class="clock-heading"><svg class="icon" aria-hidden="true"><use href="#i-timer"></use></svg><h2>Simulation remaining</h2></div>
 <div class="combined-clock"><span id="timer" class="digital">--:--</span><div class="clock-allowance"><span id="allowanceLabel">Real-world allowance</span><span id="realWorldAllowance" class="digital" aria-labelledby="allowanceLabel">+--:--</span></div></div>
 <p class="clock-totals">Simulation <span id="simulationLimit">08:00 total</span> · Real world <span id="realWorldLimit">10:00 total</span></p>
 <span id="realWorldTimer" class="visually-hidden" aria-label="Real-world time remaining">--:--</span>
-<div class="battery-display" title="Display placeholder. Battery telemetry is not connected yet."><div class="battery-label"><label for="robotBattery">Robot battery</label><span>Display only</span></div><div class="battery-reading"><meter id="robotBattery" min="0" max="100" value="100" aria-label="Robot battery, display placeholder">100%</meter><output id="batteryPercentage">100%</output></div></div>
+
 
 </section>
 <div id="match-controls" class="match-actions" role="group" aria-label="Match controls" tabindex="-1"><button type="button" id="runButton" class="run-button" onclick="runPressed()" disabled=""><svg class="icon" aria-hidden="true" focusable="false"><use href="#i-play"></use></svg><span>Run match</span></button><button type="button" id="pauseButton" class="console-button" onclick="pausePressed()" disabled=""><svg class="icon" aria-hidden="true" focusable="false"><use href="#i-pause"></use></svg><span>Pause</span></button><button type="button" id="lopButton" aria-label="Relocate robot" class="console-button relocate-button" onclick="relocate('0')" disabled=""><svg class="icon" aria-hidden="true" focusable="false"><use href="#i-locate-fixed"></use></svg><span>Relocate</span></button><button type="button" id="reset" class="reset-action" onclick="resetPressed()"><svg class="icon" aria-hidden="true" focusable="false"><use href="#i-rotate-ccw"></use></svg><span>Reset</span></button><button type="button" id="giveupB" class="btn-giveupD" onclick="giveupPressed()" disabled=""><svg class="icon" aria-hidden="true" focusable="false"><use href="#i-flag"></use></svg><span>Give up</span></button><button type="button" id="viewMapReview" aria-label="Save map result and open it" class="toolbar-button map-action" onclick="openMapReview()" title="Save and open map result" disabled=""><svg class="icon" aria-hidden="true" focusable="false"><use href="#i-map"></use></svg><span>Save map</span></button></div><section class="events-panel" aria-labelledby="events-heading"><div class="events-heading"><div class="events-title"><svg class="icon" aria-hidden="true" focusable="false"><use href="#i-activity"></use></svg><h2 id="events-heading">Match events</h2></div><div class="events-tools"><span id="eventCount">0 events</span><button type="button" id="exportEventCsv" class="secondary-button export-csv-button" onclick="exportEventCsv()" disabled title="Download all match events, oldest first"><svg class="icon" aria-hidden="true"><use href="#i-download"></use></svg><span>Export CSV</span></button></div><span id="eventScrollHint" class="history-hint" hidden=""><svg class="icon" aria-hidden="true"><use href="#i-chevron-down"></use></svg>Scroll for earlier events</span></div>
@@ -172,4 +173,4 @@
 
 
 
-<footer class="app-footer"><span>Erebus Rescue Simulator 2026</span><span>Match Studio · 26.2</span></footer></main></body></html>
+<footer class="app-footer"><span>Erebus Rescue Simulator 2027 draft</span><span>Match Studio · 27.0-draft.1</span></footer></main></body></html>

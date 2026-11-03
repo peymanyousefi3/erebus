@@ -1,5 +1,14 @@
 # Fork changelog
 
+## 27.0 draft 1
+
+- Target Webots R2025a, converting every local procedural model to JavaScript templates.
+- Implement supervisor-owned speed-based battery use, cyan contact-tile replacement, swamp energy penalties and depletion termination.
+- Add 2027 smiley victims, physical sign dimensions, contact mapping and the half-tile reporting radius.
+- Preserve Match Studio, portable replays, map review, controller management and match exports.
+- Add native simulator checks for every bundled field, generated sensors, scoring, full matches and remote controllers.
+
+
 ## 26.2 Preview 2
 
 - Recover the missing initial node states in Webots R2023b streaming-mode HTML recordings using the exported scene.

@@ -29,3 +29,13 @@ __pycache__/
 /game/controllers/robot0Controller/*
 !/game/controllers/robot0Controller/.gitkeep
 /game/worlds/.*.wbproj
+
+# Disposable simulator validation copies.
+/validation/runtime/
+/validation/*.log
+
+/validation/parity-baseline/
+/validation/parity-candidate/
+
+# Local research, simulator work copies and test captures.
+/validation/

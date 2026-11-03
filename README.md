@@ -4,7 +4,7 @@
 
 **Interactive HTML replay · Submitted-map review · Renovated match supervisor**
 
-[![Edition: 26.2 preview](docs/media/badges/edition.svg)](docs/releases/26.2-studio.1.md) [![Based on official Erebus 26.1](docs/media/badges/upstream.svg)](https://github.com/robocup-junior/erebus/tree/v26.1) [![Webots R2023b](docs/media/badges/webots.svg)](https://cyberbotics.com/) [![Tested Python version: 3.10](docs/media/badges/python.svg)](#verification-and-limits) [![Licence status: see NOTICE](docs/media/badges/license.svg)](NOTICE.md)
+[![Edition: 27.0 draft](docs/media/badges/edition.svg)](docs/releases/27.0-draft.1.md) [![Based on official Erebus 26.1](docs/media/badges/upstream.svg)](https://github.com/robocup-junior/erebus/tree/v26.1) [![Webots R2025a](docs/media/badges/webots.svg)](https://cyberbotics.com/) [![Tested Python version: 3.10](docs/media/badges/python.svg)](#verification-and-limits) [![Licence status: see NOTICE](docs/media/badges/license.svg)](NOTICE.md)
 
 [Get started](#quick-start) · [What's changed](#changes-from-official-261) · [Changelog](CHANGELOG.md) · [Report an issue](https://github.com/peymanyousefi3/erebus/issues)
 
@@ -14,7 +14,33 @@
 
 This independent fork is maintained by **Peyman Yousefi**. It extends [RoboCupJunior Erebus](https://github.com/robocup-junior/erebus), developed by the Erebus maintainers and contributors, on the [Webots](https://cyberbotics.com/) simulator from Cyberbotics. The original competition environment, scoring rules, world assets and robot examples remain upstream work.
 
-The interface identifies this edition as **26.2**. That is this fork's version, **not an official RoboCupJunior Erebus 26.2 release**. Its exact comparison baseline is [`v26.1`](https://github.com/robocup-junior/erebus/tree/v26.1), commit `a53a7965c8c0c594196aad111b486ca979e063a2`.
+This branch targets **Webots R2025a only** and implements the **8 September 2026 Rescue Simulation 2027 draft** on top of the customized 26.2 Match Studio supervisor. Its edition is **27.0-draft.1**, maintained by Peyman Yousefi. It is an independent fork, not an official RoboCupJunior release.
+
+| Branch | Purpose |
+| --- | --- |
+| `2026_webots2023b` | Preserved 26.2 edition for the 2026 rules and Webots R2023b |
+| `2027_webots2025a` | 2027 draft rules, battery/contact tiles and Match Studio on R2025a |
+| `2028_webots2025a` | Development foundation for future robot configuration and 2028 work |
+
+The 2027 integration uses the [official 2027 R2025a branch](https://github.com/robocup-junior/erebus/tree/147d7a6190b10ebe67385d5836d8f7739c695899) and the [supplied battery implementation](https://github.com/sebybritez/Bater-a-PRUEBA/tree/b0e4aafaf67850cfc1b37fc4ce84235767714f9a). Original source and asset credits are retained. The 2028 development branch does not claim compliance with unpublished 2028 rules.
+
+## 2027 rules
+
+- A live battery meter appears above the timers. Drain follows measured wheel speed; participant `customData` does not control the reading.
+- Remain stationary on the same cyan contact tile for **5 seconds** to replace the battery. Movement, leaving the tile or relocation resets the stop interval.
+- Swamps accelerate battery drain and do not accelerate the match clock.
+- An empty battery ends the run, applies the final map bonus once and saves the recording before removing the robot.
+- Victims use the H/sad, S/neutral and U/happy smileys. Three-dimensional decoys never score. Real victim signs are 20 mm square; cognitive targets are 50 mm across.
+- Token reports require one second stopped and a robot/reported position within 60 mm of the token. Contact tiles are encoded as `k` in maps and map review.
+- Existing customizer limits and the **3,000-point** competition budget are retained. The separate future Robot Designer budget is outside this branch.
+
+Battery settings are organizer-owned in `game/controllers/MainSupervisor/sensorEnergyConfig.txt`. The inherited calibration is 0.02 percentage points per 16 ms at full speed for a two-wheel pair (6.28 rad/s), with additional wheels counted separately. Sensor/passive rates default to zero. The default swamp multiplier is 5; this is an organizer calibration, since the draft does not prescribe a numeric multiplier.
+
+The implementation uses the draft's explicit mapping formula, `1 + 1.2 × correctness` (section 5.6.10.b.viii). The draft's earlier description of a 1-to-2 range conflicts with that formula; the explicit formula and upstream implementation yield a maximum multiplier of 2.2.
+
+### Controller game-info packet
+
+A `G` request receives `struct.pack('c f i i f', b'G', score, simulated_seconds_remaining, real_seconds_remaining, battery_percent)`, a 20-byte packet. The first four values retain their meanings; battery percentage is appended by the reference 2027 interface. Update readers that require exactly 16 bytes. `player_controllers/GetGameInfo.py` accepts both packet sizes.
 
 [Quick start](#quick-start) · [Changes from 26.1](#changes-from-official-261) · [Match files](#match-files) · [Verification](#verification-and-limits) · [Credits and licensing](#credits-and-licensing)
 
@@ -40,13 +66,13 @@ The interface identifies this edition as **26.2**. That is this fork's version, 
 | Remote and Docker | Original connection modes | **Remote mode stays unchanged** by unrelated settings; **Docker paths preserve commas**, with duplicate-start protection and visible errors |
 | Event export | On-screen history | **Export CSV** for the complete timestamped event history |
 
-**The map-scoring implementation and scoring formulas are unchanged.** The original worlds and example player controllers are retained. This fork does not require changes to a participant's robot controller to record a match, display the HUD or review an accepted map.
+**The existing map-scoring formula is retained.** The 2027 changes add contact-tile encoding, the 60 mm token boundary and battery-dependent termination. Historical maps are retained alongside the supplied 2027 examples. Recording, HUD and map review require no extra participant messages; game-info readers must accept the 2027 battery field described above.
 
 ## Quick start
 
 ### Requirements
 
-- **Webots R2023b**, the version identified by the upstream setup instructions.
+- **Webots R2025a**, the engine targeted by this branch. R2023b remains on `2026_webots2023b`.
 - **Python 3.10**, the version used for the tested local workflow.
 - A browser with WebGL support. Chrome on macOS was used for the recorded end-to-end checks.
 - Internet access when opening an HTML replay: scene and recording data are embedded locally, but the Webots viewer is loaded from Cyberbotics.
@@ -68,7 +94,7 @@ The requirements file records versions from the tested environment. It is not a 
 5. Review **Advanced Setup**. HTML recording is on by default; automatic map review and source refresh are off.
 6. Press **Run match**. When the robot finishes or the match ends, recording is finalized before the robot is removed.
 
-When replacing an older installation, restart Erebus once so the Python supervisor and HTML panel use the same version. **Starting a new match with source refresh does not automatically reload the world.** The normal Reset action retains upstream world-reset behavior.
+When replacing an older installation, restart Erebus once so the Python supervisor and HTML panel use the same version, then load the robot JSON again to regenerate its R2025a model and energy inventory. An older retained model is rejected with a recovery message. **Starting a new match with source refresh does not automatically reload the world.** The normal Reset action retains upstream world-reset behavior.
 
 Use the [official robot customiser](https://v25.robot.erebus.rcj.cloud/) and [World Editor](https://world.erebus.rcj.cloud/) for compatible input files. The supervisor's References strip also links to the [competition rules](https://junior.robocup.org/rcj-rescue-sim/), documentation, upstream source and changelog.
 
@@ -80,7 +106,7 @@ Use the [official robot customiser](https://v25.robot.erebus.rcj.cloud/) and [Wo
 - Simulation remaining time is shown with the additional real-world allowance. The real-world total is also identified.
 - Narrow windows use a three-column, two-row match-control group; events follow the controls.
 - Setup switches use a fixed column and center against the complete label/description block.
-- The battery graphic is a **100% placeholder**. It is not connected to robot telemetry or scoring.
+- The battery meter shows the live supervisor-owned level, including Low battery and Depleted states. Browser refresh restores its latest state.
 - Open Compact Window requests a separate, resizable browser window. Browser popup rules and the operating system determine whether that request is honored; Webots Show Window is not guaranteed to open a new compact window automatically.
 
 <p align="center">
@@ -131,7 +157,7 @@ The original debugging facilities remain available; they are not temporary devel
 
 ## Automatic HTML recording
 
-**Record an interactive 3D match, then rotate the scene, zoom in or out and replay it in a browser.** The two short test exports produced **2.81–2.99 MB ZIP archives**; size varies with scene assets, movement and match duration. Their self-contained HTML pages were 3.54–3.65 MB. These are measured examples, not a size guarantee.
+**Record an interactive 3D match, then rotate the scene, zoom in or out and replay it in a browser.** R2025a recordings use W3D scenes. The saved HTML embeds the scene, animation and exported assets; a ZIP is also produced. Size varies with assets, movement and match duration.
 
 Replay can be viewed in a **WebGL-capable phone browser** as well as on a computer. Internet access is required for the viewer. Physical-phone playback and touch gestures have not yet been tested for this fork; see the [Webots animation viewer documentation](https://cyberbotics.com/doc/guide/web-animation).
 
@@ -213,7 +239,7 @@ match-results/
     ├── recording/                   # When HTML recording is enabled
     │   ├── replay.html
     │   ├── replay.json
-    │   ├── replay.x3d
+    │   ├── replay.w3d
     │   ├── replay.css
     │   ├── replay.jpg
     │   ├── match-result.json
@@ -243,25 +269,21 @@ Other scene dependencies may also be exported. The recording ZIP packages the re
 | `scripts/prepare_world.py` — new | First-checkout preparation of the ignored default robot model; preserves existing custom models |
 | `tests/`, `scripts/check_customizations.py`, workflow | Reproducible regression checks for the added behavior |
 
-Upstream `MapScorer`, `MapAnswer`, `Tile`, `Victim`, `ProtoGenerator`, world files and example player controllers are retained. Runtime controller copies, custom robot models, generated target textures, logs, local maps, recordings, cached native binaries and machine-specific settings are not included in this publication.
+The upstream `MapScorer` calculation is retained. `MapAnswer`, `Tile`, `Victim`, `ProtoGenerator`, 2027 sample maps and the game-info example include the reviewed 2027 changes. Runtime controller copies, custom robot models, generated target textures, logs, local maps, recordings, cached native binaries and machine-specific settings are not included in this publication.
 
 ## Verification and limits
 
-The development checks included **two short real Webots matches** on macOS with Chrome: actual controller upload, original-source refresh on/off, Keep Files across Reset, pause/resume, browser refresh, automatic completion, robot removal, recording/ZIP creation, map saving and missing/invalid JSON recovery. Direct-file replay loading, play/pause and actual timeline seeking were also checked.
+Run the portable checks with `python scripts/check_customizations.py` and `node tests/test_interface_contract.cjs`.
 
-Additional isolated tests reproduced and verified the Remote-mode and Docker-message fixes. A failed real Docker-start request returned an error and restored the controls.
+The R2025a integration suite prepares an isolated copy with `python tests/webots/prepare.py`. Open its printed world in an existing Webots window and run `python tests/webots/monitor.py --output validation/release --webots-home /path/to/Webots --port 1234`. It loads fields sequentially in that window and pauses when finished. It never opens, minimizes or resizes Webots. `--docker` adds a real container-controller check when Docker is available.
 
-Run the portable regression suite:
+The suite covers every supplied world, real motor/sensor access, zero-camera and custom-resolution robots, continuous contact replacement, pause, swamp drain, natural depletion, an eight-minute simulation, external IPC/TCP connections, token reporting, map submission and final exit/map awards. Portable checks retain the Keep Files/source reload, upload handling, HUD, CSV, map review, replay and failure-path contracts. Test status and remaining platform limitations are recorded in `docs/releases/27.0-draft.1.md` and the release guide.
 
-```sh
-python -m pip install -r requirements-dev.txt
-python scripts/check_customizations.py
-node tests/test_interface_contract.cjs
-```
+### Docker controllers
 
-Node is needed only for that interface contract check, not for running Erebus. A workflow is configured for Python 3.10/3.12 on Linux, Windows and macOS; configuration is not evidence of completed workflow runs.
+Use Docker Engine or Docker Desktop with a running daemon. `docker/controller/` contains an R2025a Linux/amd64 example: copy it, replace `controller.py`, and select that folder in Advanced Setup. Its Dockerfile downloads the official R2025a package. Older containers using R2023b libraries need updating.
 
-**Not yet verified:** physical-phone playback and touch gestures, successful Docker container startup, Safari, or Windows/Linux Webots runtime behavior. The local test computer had no Docker runtime. Static cross-platform checks and unit tests do not establish full simulator compatibility, accessibility compliance or readiness for every competition environment. Validate the complete setup on the intended referee computer before an event.
+The helper builds the selected project and supplies `EREBUS_SERVER`, `EREBUS_CONTROLLER_PORT` and `EREBUS_ROBOT_NAME`. The default host is `host.docker.internal` with the Docker host-gateway mapping. If Webots uses a non-default port, set `EREBUS_CONTROLLER_PORT` before starting Webots. `EREBUS_DOCKER_HOST` can override the host address. The default port is 1234. Docker build/daemon errors are shown by the supervisor.
 
 ## Credits and licensing
 
@@ -286,4 +308,4 @@ This is an independent extension, with no claim of official RoboCupJunior or Cyb
 
 ## Support and contributing
 
-See the [fork changelog](CHANGELOG.md), [preview release notes](docs/releases/26.2-studio.1.md) and [contributing guide](CONTRIBUTING.md). Report issues with these additions in [this fork](https://github.com/peymanyousefi3/erebus/issues); use the upstream project's channels for issues reproduced without the fork modifications.
+See the [fork changelog](CHANGELOG.md), [preview release notes](docs/releases/27.0-draft.1.md) and [contributing guide](CONTRIBUTING.md). Report issues with these additions in [this fork](https://github.com/peymanyousefi3/erebus/issues); use the upstream project's channels for issues reproduced without the fork modifications.

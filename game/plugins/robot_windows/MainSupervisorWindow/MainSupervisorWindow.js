@@ -79,6 +79,16 @@ function showSourceStatus(message, error = false) {
     status.setAttribute("role", error ? "alert" : "status");
 }
 
+function updateBattery(value) {
+    const percent = Number(value);
+    if (!Number.isFinite(percent)) return;
+    const level = Math.max(0, Math.min(100, percent));
+    document.getElementById('robotBattery').value = level;
+    document.querySelector('.battery-display').setAttribute('data-state', level === 0 ? 'empty' : level <= 20 ? 'low' : 'normal');
+    document.getElementById('batteryPercentage').textContent = level.toFixed(1) + '%';
+    document.getElementById('batteryStatus').textContent = level === 0 ? 'Depleted' : level <= 20 ? 'Low battery' : 'Remaining';
+}
+
 function receive (message){
 	//Receive message from the python supervisor
 	//Split on comma
@@ -88,6 +98,9 @@ function receive (message){
 	//If there is a message
 	if (parts.length > 0){			
 		switch (parts[0]){
+            case "batteryUpdate":
+                if (parts[1] === "0") updateBattery(parts[2]);
+                break;
 			case "startup":
 				//Call for set up the robot window
 				startup();
@@ -363,6 +376,7 @@ function setDisableRemoteBtn() {
 }
 
 function startup (){
+    updateBattery(100);
     dockerStarting = false;
     setMatchState('ready');
     setEnableButton("recording", true);

@@ -33,7 +33,7 @@ with TemporaryDirectory() as temp:
   assert ProtoGenerator.generate_robot_proto(base)
   model=root/'protos/custom_robot.proto';before=model.read_bytes()
   assert b'supervisor FALSE' in before and b'supervisor TRUE' not in before
-  for key,value in [('customName','x"\n supervisor TRUE\n name "x'),('customName','x\\"'),('customName','x\n'),('rx','0\n supervisor TRUE'),('a',float('nan')),('x',float('inf')),('rz',True),('a',10**400)]:
+  for key,value in [('customName','x"\n supervisor TRUE\n name "x'),('customName','x\\"'),('customName','x\n'),('customName','%< injected_template >%'),('rx','0\n supervisor TRUE'),('a',float('nan')),('x',float('inf')),('rz',True),('a',10**400)]:
    attack=copy.deepcopy(base);attack['wheel'][key]=value
    assert not ProtoGenerator.generate_robot_proto(attack),(key,value)
    assert model.read_bytes()==before

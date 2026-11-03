@@ -24,7 +24,7 @@ def generate_robot_proto(robot_json: dict) -> bool:
             return False
         name = component.get('customName', '')
         coordinates = [component.get(key) for key in ('x', 'y', 'z', 'rx', 'ry', 'rz', 'a')]
-        if (not isinstance(name, str) or re.search(r'["\\\x00-\x1f\x7f]', name) or
+        if (not isinstance(name, str) or '%<' in name or '>%' in name or re.search(r'["\\\x00-\x1f\x7f]', name) or
                 any(type(value) not in (int, float) or abs(value) > 1e308 or not math.isfinite(value) for value in coordinates)):
             Console.log_err("Component names must be plain text and poses must be finite numbers.")
             return False

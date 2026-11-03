@@ -91,7 +91,7 @@ The requirements file records versions from the tested environment. It is not a 
 
 ### Start a match
 
-1. Clone this fork, or download its source ZIP from GitHub, and extract it fully.
+1. Clone the correct branch with `git clone --single-branch --branch 2027_webots2025a https://github.com/peymanyousefi3/erebus.git erebus-2027`, then enter `erebus-2027`. Alternatively, download the [2027 branch ZIP](https://github.com/peymanyousefi3/erebus/archive/refs/heads/2027_webots2025a.zip) and extract it fully.
 2. Run `python scripts/prepare_world.py` once, then open a supplied world such as `game/worlds/mapping_example_1.wbt` in Webots. This creates the ignored initial robot model only if none exists. It never overwrites an existing robot.
 3. Open the Main Supervisor robot window and expand **Robot Setup**.
 4. Load a supported controller program and the matching robot JSON from the browser file pickers. A compiled controller must match the operating system where Webots runs.

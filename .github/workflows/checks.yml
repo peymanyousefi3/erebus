@@ -3,6 +3,12 @@ on:
   push:
   pull_request:
   workflow_dispatch:
+    inputs:
+      test_mode:
+        description: Native test group
+        type: choice
+        options: [all, legacy-model, scoring, remote-docker]
+        default: all
 env:
   PYTHONUTF8: '1'
 permissions:
@@ -45,8 +51,14 @@ jobs:
           python -m pip install -r requirements.txt
       - name: Exercise all fields, rules, sensors, replays and Docker
         run: |
-          python tests/webots/prepare.py --docker
-          xvfb-run -a -s '-screen 0 1280x720x24' "$WEBOTS_HOME/webots" --batch --mode=fast --stdout --stderr --port=1255 validation/release/runtime/game/worlds/.Tests.wbt > validation/webots-r2025a.log 2>&1 &
+          test_mode="${{ inputs.test_mode || 'all' }}"
+          if [ "$test_mode" = all ]; then
+            python tests/webots/prepare.py --docker
+          else
+            python tests/webots/prepare.py --docker --only-mode "$test_mode"
+          fi
+          first_world=$(python -c 'import json; print(json.load(open("validation/release/queue.json"))["jobs"][0]["world"])')
+          xvfb-run -a -s '-screen 0 1280x720x24' "$WEBOTS_HOME/webots" --batch --mode=fast --stdout --stderr --port=1255 "validation/release/runtime/game/worlds/$first_world.wbt" > validation/webots-r2025a.log 2>&1 &
           webots_pid=$!
           python tests/webots/monitor.py --output validation/release --webots-home "$WEBOTS_HOME" --port 1255 --webots-pid "$webots_pid" --engine-log validation/webots-r2025a.log
           wait "$webots_pid"

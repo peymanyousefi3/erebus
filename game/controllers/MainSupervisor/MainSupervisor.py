@@ -1066,7 +1066,6 @@ class Erebus(Supervisor):
                 self._game_state = GameState.MATCH_NOT_STARTED
                 self.rws.send("unloaded1")
                 self.rws.send("sourceReloadError", f"Robot could not start: {error}. Load the robot JSON again.")
-                self.simulationSetMode(self.SIMULATION_MODE_PAUSE)
                 return
 
         if self._run_tests:

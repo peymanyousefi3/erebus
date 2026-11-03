@@ -2,7 +2,7 @@
 from pathlib import Path
 import shutil,json,argparse
 root=Path(__file__).resolve().parents[2]
-p=argparse.ArgumentParser();p.add_argument('--output',type=Path,default=root/'validation/release');p.add_argument('--docker',action='store_true');args=p.parse_args()
+p=argparse.ArgumentParser();p.add_argument('--output',type=Path,default=root/'validation/release');p.add_argument('--docker',action='store_true');p.add_argument('--only-mode');args=p.parse_args()
 out=args.output.resolve();runtime=out/'runtime';game=runtime/'game'
 shutil.copytree(root/'game',game,dirs_exist_ok=True)
 shutil.copyfile(game/'proto_defaults/E-puck-custom-default-FLU.proto',game/'protos/custom_robot.proto')
@@ -26,6 +26,9 @@ if args.docker:
  driver=Path(__file__).with_name('robot0Controller.py').read_text()
  driver=driver.replace("root=Path(__file__).resolve().parents[3]", "root=Path('/tmp/erebus-test');root.mkdir(exist_ok=True)")
  (project/'controller.py').write_text(driver)
+if args.only_mode:
+ jobs=[job for job in jobs if job['mode']==args.only_mode]
+ if not jobs:raise SystemExit('No checks matched --only-mode')
 (out/'queue.json').write_text(json.dumps(dict(index=0,jobs=jobs),indent=2))
 print('Open this world in the existing Webots R2025a window:')
 print(game/'worlds'/(jobs[0]['world']+'.wbt'))

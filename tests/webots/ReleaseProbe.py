@@ -55,6 +55,8 @@ try:
         s._game_state=GameState.MATCH_RUNNING;s.update()
         assert s._game_state==GameState.MATCH_NOT_STARTED and not s.robot_obj.in_simulation
         assert s.getFromDef('ROBOT0') is None
+        assert s.simulationGetMode() == s.SIMULATION_MODE_FAST
+        s.update()  # The supervisor stays responsive for replacement JSON.
         assert any(command=='sourceReloadError' for command,args in s.rws.history)
         proto.write_text(original)
         result['legacy_model_rejected_without_crash']=True

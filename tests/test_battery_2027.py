@@ -102,3 +102,6 @@ with TemporaryDirectory() as tmp:
 init_source=source[source.index("    def _game_init("):source.index("    def relocate_robot(")]
 assert init_source.index("sensor_types_from_proto(") < init_source.index("self._add_robot()")
 assert init_source.index("self.robot_obj.set_node(robot_node)") < init_source.index("field.setSFFloat(value)")
+
+recovery=source[source.index("            except (ValueError, OSError) as error:"):source.index("        if self._run_tests:",source.index("            except (ValueError, OSError) as error:"))]
+assert "simulationSetMode" not in recovery

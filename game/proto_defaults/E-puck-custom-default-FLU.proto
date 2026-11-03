@@ -7,7 +7,7 @@
 # The e-puck is powered by a dsPIC processor and features a very large number of sensors in its basic configuration.
 # More info here: http://www.e-puck.org.
 
-EXTERNPROTO "webots://projects/objects/solids/protos/SolidPipe.proto"
+EXTERNPROTO "../protos/SolidPipe.proto"
 
 # energy_sensors: ["Camera", "Camera", "Camera", "Gyro", "GPS", "Accelerometer", "Receiver", "Emitter", "ColourSensor", "DistanceSensor", "DistanceSensor", "DistanceSensor", "DistanceSensor", "DistanceSensor", "DistanceSensor", "DistanceSensor", "DistanceSensor"]
 PROTO custom_robot [

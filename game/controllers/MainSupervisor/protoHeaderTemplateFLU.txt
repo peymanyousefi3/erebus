@@ -7,7 +7,7 @@
 # The e-puck is powered by a dsPIC processor and features a very large number of sensors in its basic configuration.
 # More info here: http://www.e-puck.org.
 
-EXTERNPROTO "webots://projects/objects/solids/protos/SolidPipe.proto"
+EXTERNPROTO "SolidPipe.proto"
 
 PROTO custom_robot [
     field SFVec3f            translation                  0 0 0                    # Is `Transform.translation`.

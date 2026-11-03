@@ -162,7 +162,7 @@ def write_match_result(target, final_score, elapsed_seconds, max_seconds, histor
     # Webots retains label IDs from previously loaded worlds in one process.
     # Export only labels actually present in this recording.
     animation['labelsIds'] = ';'.join(dict.fromkeys(
-        str(label['id']) for frame in frames for label in frame.get('labels', [])))
+        str(label['id']) for frame in frames for label in frame.get('labels', []) if 'id' in label))
     target.with_suffix('.json').write_text(json.dumps(animation, separators=(',', ':')) + '\n', encoding='utf-8')
     result = {
         'last_event': f"{events[-1]['timestamp']} {events[-1]['text']}" if events else None,

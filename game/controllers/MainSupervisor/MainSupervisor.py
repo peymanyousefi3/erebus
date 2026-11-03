@@ -45,6 +45,7 @@ from Test import TestRunner
 from RobotWindowSender import RWSender
 from ThumbnailWriter import export_map_to_img
 from DockerHelper import run_docker_container
+from battery import sensor_types_from_proto
 
 from typing import Sequence, cast
 
@@ -287,6 +288,11 @@ class Erebus(Supervisor):
         # One start-time folder shared by this match's recording and map exports.
         self._match_folder = self._match_animation.root / MatchDateTime.now().astimezone().strftime('%Y-%m-%d_%H-%M-%S-%f')
 
+        if self._run_tests:
+            self._add_physicsless_robot_proto()
+        # Reject old retained sources before importing nodes or queuing field updates.
+        sensor_types_from_proto(get_file_path('protos/custom_robot.proto', '../../protos/custom_robot.proto'))
+
         # Get the robot node by DEF name
         robot_node: Optional[Node] = self.getFromDef("ROBOT0")
         # Add robot into world
@@ -294,6 +300,13 @@ class Erebus(Supervisor):
             robot_node = self._add_robot()
         # Init robot as object to hold their info
         self.robot_obj.set_node(robot_node)
+        for name, value in (("camera_fieldOfView", 1.0), ("camera_width", 64), ("camera_height", 40)):
+            field = robot_node.getField(name)
+            if field is not None:
+                if name == "camera_fieldOfView":
+                    field.setSFFloat(value)
+                else:
+                    field.setSFInt32(value)
 
         # Set robots starting position in world
         self.robot_obj.set_start_pos(self.tile_manager.start_tile)
@@ -413,9 +426,6 @@ class Erebus(Supervisor):
             Node: Node reference to newly added robot
         """
         
-        if self._run_tests:
-            self._add_physicsless_robot_proto()
-
         controller: str = "robot0Controller"
         if self._remote_enabled:
             controller = "<extern>"
@@ -435,13 +445,6 @@ class Erebus(Supervisor):
         # Get robot to insert into world
         root_children_field.importMFNodeFromString(-1, node_string)
         robot = self.getFromDef("ROBOT0")
-        for name, value in (("camera_fieldOfView", 1.0), ("camera_width", 64), ("camera_height", 40)):
-            field = robot.getField(name)
-            if field is not None:
-                if name == "camera_fieldOfView":
-                    field.setSFFloat(value)
-                else:
-                    field.setSFInt32(value)
         # Update robot window to say robot is in simulation
         self.rws.send("robotInSimulation0")
         # Return the robot node

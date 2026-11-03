@@ -97,3 +97,8 @@ with TemporaryDirectory() as tmp:
         pass
     else:
         raise AssertionError("Missing organizer inventory accepted")
+
+# Retained models must fail before importing a robot with pending field updates.
+init_source=source[source.index("    def _game_init("):source.index("    def relocate_robot(")]
+assert init_source.index("sensor_types_from_proto(") < init_source.index("self._add_robot()")
+assert init_source.index("self.robot_obj.set_node(robot_node)") < init_source.index("field.setSFFloat(value)")

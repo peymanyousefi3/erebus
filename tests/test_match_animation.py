@@ -125,7 +125,7 @@ def check():
     methods = [n for n in cls.body if isinstance(n, ast.FunctionDef) and n.name in ('_game_init', '_robot_quit')]
     quit_method = next(n for n in methods if n.name == '_robot_quit')
     assert not any(isinstance(n, ast.Call) and isinstance(n.func, ast.Attribute) and n.func.attr == 'step' for n in ast.walk(quit_method))
-    namespace = {'MatchDateTime': datetime, 'math': math, 'Recorder': Recorder, 'Erebus': NS(TIME_STEP=16), 'Console': NS(DEBUG_MODE=False), 'Logger': NS(write_log=lambda *args: events.append('log')), 'time': NS(time=lambda: 0)}
+    namespace = {'sensor_types_from_proto': lambda path: [], 'get_file_path': lambda *args: 'custom_robot.proto', 'MatchDateTime': datetime, 'math': math, 'Recorder': Recorder, 'Erebus': NS(TIME_STEP=16), 'Console': NS(DEBUG_MODE=False), 'Logger': NS(write_log=lambda *args: events.append('log')), 'time': NS(time=lambda: 0)}
     exec(compile(ast.Module(body=methods, type_ignores=[]), '<lifecycle>', 'exec'), namespace)
     events.clear()
     def removed():
@@ -137,8 +137,8 @@ def check():
                remove_node=removed, history=NS(master_history=[], enqueue=lambda message: events.append(('history', message))), in_simulation=False)
     world_info = NS(getTypeName=lambda: 'WorldInfo', getField=lambda name: NS(getSFFloat=lambda: 60.0))
     children = NS(getCount=lambda: 1, getMFNode=lambda index: world_info)
-    active = NS(getRoot=lambda: NS(getField=lambda name: children), config=NS(recording=True, automatic_camera=False, show_hud=True), getFromDef=lambda name: None,
-                _add_robot=lambda: events.append('spawn'), robot_obj=robot,
+    active = NS(_run_tests=False, getRoot=lambda: NS(getField=lambda name: children), config=NS(recording=True, automatic_camera=False, show_hud=True), getFromDef=lambda name: None,
+                _add_robot=lambda: (events.append('spawn') or NS(getField=lambda name: None)), robot_obj=robot,
                 tile_manager=NS(start_tile=None), DEFAULT_MAX_MULT=1,
                 _match_animation=NS(root=Path('match-results'), target=Path('replay.html'), start=lambda folder: events.append('record-start'), stop=lambda **kwargs: events.append('record-stop')),
                 time_elapsed=65.9, setLabel=lambda *args: events.append(('label', args[0], args[1])), step=lambda value: events.append(('step', value)),

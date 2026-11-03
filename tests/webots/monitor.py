@@ -1,7 +1,7 @@
 """Monitor an existing Webots test queue; never launch or resize Webots."""
 from pathlib import Path
 import argparse,json,subprocess,os,time
-p=argparse.ArgumentParser();p.add_argument('--output',type=Path,required=True);p.add_argument('--webots-home',type=Path,required=True);p.add_argument('--port',default='1255');args=p.parse_args()
+p=argparse.ArgumentParser();p.add_argument('--output',type=Path,required=True);p.add_argument('--webots-home',type=Path,required=True);p.add_argument('--port',default='1255');p.add_argument('--webots-pid',type=int);args=p.parse_args()
 out=args.output.resolve();started=set();reported=set();children=[];deadline=time.monotonic()+1200
 while time.monotonic()<deadline:
  q=json.loads((out/'queue.json').read_text())
@@ -9,6 +9,9 @@ while time.monotonic()<deadline:
   if f.name not in reported:
    r=json.loads(f.read_text());print(f.name,'PASS' if r['passed'] else 'FAIL',r.get('error',''),flush=True);reported.add(f.name)
  if q['index']>=len(q['jobs']):break
+ if args.webots_pid:
+  try:os.kill(args.webots_pid,0)
+  except ProcessLookupError:raise SystemExit('Webots exited before its validation queue completed; inspect the engine log.')
  i=q['index'];job=q['jobs'][i];ready=out/'runtime/remote-ready'
  if job['mode'].startswith('remote-') and i not in started and ready.exists() and ready.read_text()==str(i):
   log=(out/f'remote-{i}.txt').open('w')

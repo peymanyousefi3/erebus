@@ -22,7 +22,8 @@ Battery = 1,
 Motor_Drain_Per_Step = 0.02,
 Motor_Max_Velocity = 6.28,
 Battery_Per_Step = 0.00,
-# Battery change time in seconds
+# Organizer-configurable stationary stop before battery replacement, in seconds.
+# Set ChangeBatteryTime to 5, 10, or another positive duration; restart the supervisor after editing.
 ChangeBatteryTime = 5
 
 # Organizer policy: fixed swamp battery-drain multiplier (draft does not prescribe a number).

@@ -105,3 +105,16 @@ assert init_source.index("self.robot_obj.set_node(robot_node)") < init_source.in
 
 recovery=source[source.index("            except (ValueError, OSError) as error:"):source.index("        if self._run_tests:",source.index("            except (ValueError, OSError) as error:"))]
 assert "simulationSetMode" not in recovery
+
+# Organizer-selected contact duration must affect real replacement logic.
+with TemporaryDirectory() as tmp:
+    cfg=Path(tmp)/'energy.txt'
+    for seconds in (5,10):
+        cfg.write_text(original.replace('ChangeBatteryTime = 5', f'ChangeBatteryTime = {seconds}'))
+        b=Battery(0,rws,cfg);b.reset();b.level=40;tile=object()
+        assert b.change_battery_time==seconds
+        assert not b.contact(tile,True,100)
+        assert not b.contact(tile,True,100+seconds-.001) and b.level==40
+        assert b.contact(tile,True,100+seconds) and b.level==100
+        assert not b.contact(tile,True,101+seconds)
+print('PASS: organizer-configured 5- and 10-second replacement, exact boundary, no early/repeated refill.')

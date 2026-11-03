@@ -24,7 +24,7 @@ def _docker_available() -> bool:
         return False
 
 def run_docker_container(
-    erebus: Erebus, 
+    erebus: Erebus,
     project_dir: str,
 ) -> Optional[subprocess.Popen] | None:
     """Run a controller via a docker container
@@ -33,7 +33,7 @@ def run_docker_container(
         project_dir (str): System path to directory containing a Dockerfile
 
     Returns:
-        Optional[subprocess.Popen]: Subprocess if docker container runs 
+        Optional[subprocess.Popen]: Subprocess if docker container runs
         successfully, None otherwise.
     """
     if not _docker_available():
@@ -47,12 +47,12 @@ def run_docker_container(
 
     # Build container
     try:
-        command: list[str] = ["docker", "build", 
+        command: list[str] = ["docker", "build",
                               "--tag" ,EREBUS_CONTROLLER_TAG, project_dir]
         Console.log_info(f"Building project image ($ {' '.join(command)})")
         with subprocess.Popen(
             command,
-            stdout=subprocess.PIPE, stderr=subprocess.STDOUT, 
+            stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
             bufsize=1, universal_newlines=True, shell=False, encoding="utf-8"
         ) as build_process:
             # Print output from build process
@@ -60,22 +60,22 @@ def run_docker_container(
                 for line in build_process.stdout:
                     Console.log_info(line, sep=None, end='')
                     erebus.step(erebus.TIME_STEP)
-                    
+
     except Exception as e:
         Console.log_err(f"Error building project image - {e}")
         return None
-    
+
     if build_process.returncode != 0:
         Console.log_err(f"Unable to build project image")
         return None
-    
+
     # Run container
     try:
-        command: list[str] = ["docker", "run", 
+        command: list[str] = ["docker", "run",
                               "--add-host", "host.docker.internal:host-gateway",
                               "--env", f"EREBUS_SERVER={host}",
                               "--env", f"EREBUS_CONTROLLER_PORT={port}",
-                              "--env", "EREBUS_ROBOT_NAME=Erebus_Bot", 
+                              "--env", "EREBUS_ROBOT_NAME=Erebus_Bot",
                               "--rm",
                               EREBUS_CONTROLLER_TAG]
         Console.log_info(f"Running container ($ {' '.join(command)})")
@@ -92,12 +92,12 @@ def run_docker_container(
     except Exception as e:
         Console.log_err(f"Error running project image - {e}")
         return None
-    
+
     return run_process
 
 def print_stdout(out) -> None:
     """Print a sub process's stdout to the erebus console
-    
+
     Used for printing docker container outputs to the console
 
     Args:

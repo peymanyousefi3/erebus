@@ -58,6 +58,7 @@ try:
         assert any(command=='sourceReloadError' for command,args in s.rws.history)
         proto.write_text(original)
         result['legacy_model_rejected_without_crash']=True
+        s.simulationSetMode(s.SIMULATION_MODE_FAST)
     if mode=='scoring':s.max_time=10000
     s._game_state = GameState.MATCH_RUNNING
     s._game_init()

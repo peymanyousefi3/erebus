@@ -1,0 +1,276 @@
+{
+  "source_commit": "19a996a8104b6563f95f84abeb9e36d5a268ada4",
+  "platform": "macOS-27.0.1-arm64-arm-64bit",
+  "python": "3.10.11",
+  "engine": "Webots R2025a",
+  "launch": "--minimize --mode=fast --stdout --stderr --port=1255",
+  "passed": 31,
+  "simulator_errors": 0,
+  "simulator_warnings": 0,
+  "docker": "Not run on Mac; separately qualified on Linux",
+  "limitations": [
+    "Programmed fixtures, not an autonomous entrant demonstration",
+    "600-second wall-clock cutoff tested by setting the timer to its boundary",
+    "UI browser layout checks are separate from these native backend tests"
+  ],
+  "results_sha256": {
+    "00-.Tests-load.json": "6d7c8075e612bf485a6f706c429d06e8c004c7a2f6c510c1670a28f273c9ac8f",
+    "01-mapping_example_1_cyan_tiles-contact.json": "d6083bc5674136b18d100631a29bf8d31398f4b0c681e1c0f6143322cfac70a2",
+    "02-mapping_example_1_cyan_tiles-four-wheels.json": "f1e8f74e1c362107f122f957553812e107c562f8ce9741e97077693f294ad1f9",
+    "03-mapping_example_1_cyan_tiles-no-camera.json": "9e3036d866790c4706f6c83919b3bac84719d27d13a777a01a8329a86b37d559",
+    "04-mapping_example_1_cyan_tiles-custom-camera.json": "ee85e0e71adacbece159eb548f7189759992c3211226b2fd8692b5274950a2d1",
+    "05-mapping_example_1_cyan_tiles-all-sensors.json": "c14c0453bbeaa90b718b81a00c003adbd35804c0a3cd0969b79956e893cf62f3",
+    "06-mapping_example_1_cyan_tiles-legacy-model.json": "842610cbace9d555e496e8f4ba15a99b0985a9f6490b7f14b0727d4250a58a28",
+    "07-mapping_example_1_cyan_tiles-swamp.json": "f9434790c07d920e076dde727ea05bc4c88296d0045d66b11dd10add3367c8f0",
+    "08-mapping_example_1_cyan_tiles-natural-depletion.json": "c59bcc39cd5ebe93bad4e20c9ece0b27e1b782b4b2e6576f55b4a97ebe674bf2",
+    "09-mapping_example_1_cyan_tiles-remote-ipc.json": "0ca99ec16e8548ed9e376036d9c2f0764e3f6e323ff0da11762e19245613e781",
+    "10-mapping_example_1_cyan_tiles-remote-tcp.json": "1069f94ae1d71411a7af7f6f2d2d571fad68941351e8610a806dfd0c77c20e98",
+    "11-mapping_example_1_cyan_tiles-full-match.json": "5611d9e4c4717ce682eed7ae0600bfe943092e46b58f8f981ed9f060a098fb48",
+    "12-mapping_example_1_cyan_tiles-real-time-limit.json": "3dd7329bc988c0179f327b149808d715eb4c9d5e65262b35ffefc564363f8bd3",
+    "13-2027_d1r1-scoring.json": "f3a7f09d45cdf2910886c2c485117df168a781597d1aeb3582cfa575ab9b7d23",
+    "14-2027_d1r2-scoring.json": "03f209e76bea33959b98b3e02cba62ab7baee0579b121030e70dffa855555f19",
+    "15-2027_d2r1-scoring.json": "c47b813147b72e6fe79cb8e73313abab4f7ecdc07107437e2bfd2fd010bf001e",
+    "16-2027_d2r2-scoring.json": "a6b43f42a6b404b268772ba4235db479ee994bd9781481068dac3feb21b75529",
+    "17-world1-scoring.json": "4d181fa08d1a46b57c2001e77ab3e05bfea22226bd1ce5af32083d94e54cb46b",
+    "18-2027_d1r1-load.json": "986194e4e6c649670aee4cf5fc18c922814d8b88c151b69fe72dfd2ea55b44a3",
+    "19-2027_d1r2-load.json": "039dba4503ee290e1e5ff302778f7a7f526ca9f7944c339282008b176822a04c",
+    "20-2027_d2r1-load.json": "10f810dfd5f0c64fa5a637b366c02ad9b6d82380e6691af645ace7e356fbb8f2",
+    "21-2027_d2r2-load.json": "8f5116d927695c6563b150ef82d6231d68c669a3d2cdfabda97400595ed360a5",
+    "22-NewPassages-load.json": "456dc3c9dbf625d9a46dd6b9df131ce84b0c4ac0e4ea13f3d92be20ceed26309",
+    "23-mapping_example_1-load.json": "4ad2ceeebaafd7dfa2b186717e5e65f4ba93da67986b95ce8cb6028b2369ab73",
+    "24-mapping_example_1_cyan_tiles-load.json": "1ee834bb52ff9510b2ebbf37e46918e8d82ad25d3a56077223a3b95153444ca1",
+    "25-mapping_example_2-load.json": "56567eeab3351cbc5c05dd3944da57ea1d7689d1dfb81e5fc351bfe8db0c0fd4",
+    "26-mapping_example_3-load.json": "ba6a8f77626534e1a97ed2bfde009bb5da117b38d4fa849e2954e582cbdfecf5",
+    "27-world1-load.json": "7e0e6a90e2650d5c75a6785d1f799a3c034c49d7d9cb4ed643af2c07b8ec8b70",
+    "28-world2-load.json": "36c227543bdfe8771554ac4585acde36c5f7c1b806729a50d960adb975faef46",
+    "29-world3-load.json": "b2f7f28c7eda4ff8cf113778973f95a76b65171e68ebc4439416c356af8068a0",
+    "30-world4-load.json": "48fb1eb2693ac504df6eeaa49364704ff18d387ee911d168fcec0d793790ea45"
+  },
+  "cases": [
+    {
+      "job_index": 0,
+      "world": ".Tests",
+      "mode": "load",
+      "passed": true,
+      "elapsed_seconds": 1.008
+    },
+    {
+      "job_index": 1,
+      "world": "mapping_example_1_cyan_tiles",
+      "mode": "contact",
+      "passed": true,
+      "elapsed_seconds": 6.368
+    },
+    {
+      "job_index": 2,
+      "world": "mapping_example_1_cyan_tiles",
+      "mode": "four-wheels",
+      "passed": true,
+      "elapsed_seconds": 1.008
+    },
+    {
+      "job_index": 3,
+      "world": "mapping_example_1_cyan_tiles",
+      "mode": "no-camera",
+      "passed": true,
+      "elapsed_seconds": 1.008
+    },
+    {
+      "job_index": 4,
+      "world": "mapping_example_1_cyan_tiles",
+      "mode": "custom-camera",
+      "passed": true,
+      "elapsed_seconds": 1.008
+    },
+    {
+      "job_index": 5,
+      "world": "mapping_example_1_cyan_tiles",
+      "mode": "all-sensors",
+      "passed": true,
+      "elapsed_seconds": 1.008
+    },
+    {
+      "job_index": 6,
+      "world": "mapping_example_1_cyan_tiles",
+      "mode": "legacy-model",
+      "passed": true,
+      "elapsed_seconds": 1.008,
+      "legacy_model_rejected_without_crash": true
+    },
+    {
+      "job_index": 7,
+      "world": "mapping_example_1_cyan_tiles",
+      "mode": "swamp",
+      "passed": true,
+      "elapsed_seconds": 2.016
+    },
+    {
+      "job_index": 8,
+      "world": "mapping_example_1_cyan_tiles",
+      "mode": "natural-depletion",
+      "passed": true,
+      "elapsed_seconds": 80.544
+    },
+    {
+      "job_index": 9,
+      "world": "mapping_example_1_cyan_tiles",
+      "mode": "remote-ipc",
+      "passed": true,
+      "elapsed_seconds": 1.008
+    },
+    {
+      "job_index": 10,
+      "world": "mapping_example_1_cyan_tiles",
+      "mode": "remote-tcp",
+      "passed": true,
+      "elapsed_seconds": 1.008
+    },
+    {
+      "job_index": 11,
+      "world": "mapping_example_1_cyan_tiles",
+      "mode": "full-match",
+      "passed": true,
+      "elapsed_seconds": 480.0,
+      "full_match_seconds": 480.0
+    },
+    {
+      "job_index": 12,
+      "world": "mapping_example_1_cyan_tiles",
+      "mode": "real-time-limit",
+      "passed": true,
+      "elapsed_seconds": 1.008,
+      "real_time_boundary_seconds": 600
+    },
+    {
+      "job_index": 13,
+      "world": "2027_d1r1",
+      "mode": "scoring",
+      "passed": true,
+      "elapsed_seconds": 20.832,
+      "scored_tokens": 13
+    },
+    {
+      "job_index": 14,
+      "world": "2027_d1r2",
+      "mode": "scoring",
+      "passed": true,
+      "elapsed_seconds": 19.36,
+      "scored_tokens": 12
+    },
+    {
+      "job_index": 15,
+      "world": "2027_d2r1",
+      "mode": "scoring",
+      "passed": true,
+      "elapsed_seconds": 34.656,
+      "scored_tokens": 21
+    },
+    {
+      "job_index": 16,
+      "world": "2027_d2r2",
+      "mode": "scoring",
+      "passed": true,
+      "elapsed_seconds": 75.264,
+      "scored_tokens": 29
+    },
+    {
+      "job_index": 17,
+      "world": "world1",
+      "mode": "scoring",
+      "passed": true,
+      "elapsed_seconds": 8.784,
+      "scored_tokens": 5
+    },
+    {
+      "job_index": 18,
+      "world": "2027_d1r1",
+      "mode": "load",
+      "passed": true,
+      "elapsed_seconds": 1.008
+    },
+    {
+      "job_index": 19,
+      "world": "2027_d1r2",
+      "mode": "load",
+      "passed": true,
+      "elapsed_seconds": 1.008
+    },
+    {
+      "job_index": 20,
+      "world": "2027_d2r1",
+      "mode": "load",
+      "passed": true,
+      "elapsed_seconds": 1.008
+    },
+    {
+      "job_index": 21,
+      "world": "2027_d2r2",
+      "mode": "load",
+      "passed": true,
+      "elapsed_seconds": 1.008
+    },
+    {
+      "job_index": 22,
+      "world": "NewPassages",
+      "mode": "load",
+      "passed": true,
+      "elapsed_seconds": 1.008
+    },
+    {
+      "job_index": 23,
+      "world": "mapping_example_1",
+      "mode": "load",
+      "passed": true,
+      "elapsed_seconds": 1.008
+    },
+    {
+      "job_index": 24,
+      "world": "mapping_example_1_cyan_tiles",
+      "mode": "load",
+      "passed": true,
+      "elapsed_seconds": 1.008
+    },
+    {
+      "job_index": 25,
+      "world": "mapping_example_2",
+      "mode": "load",
+      "passed": true,
+      "elapsed_seconds": 1.008
+    },
+    {
+      "job_index": 26,
+      "world": "mapping_example_3",
+      "mode": "load",
+      "passed": true,
+      "elapsed_seconds": 1.008
+    },
+    {
+      "job_index": 27,
+      "world": "world1",
+      "mode": "load",
+      "passed": true,
+      "elapsed_seconds": 1.008
+    },
+    {
+      "job_index": 28,
+      "world": "world2",
+      "mode": "load",
+      "passed": true,
+      "elapsed_seconds": 1.008
+    },
+    {
+      "job_index": 29,
+      "world": "world3",
+      "mode": "load",
+      "passed": true,
+      "elapsed_seconds": 1.008
+    },
+    {
+      "job_index": 30,
+      "world": "world4",
+      "mode": "load",
+      "passed": true,
+      "elapsed_seconds": 1.008
+    }
+  ]
+}

@@ -197,6 +197,8 @@ try:
     result['passed']=True
 except Exception:
     result['error']=traceback.format_exc()
+    if s is not None:
+        result.update(elapsed_seconds=s.time_elapsed, real_seconds=s._real_time_elapsed, battery_level=s.robot_obj.battery.level, game_state=s._game_state.name)
 finally:
     target=root/'probe-result.json'
     target.write_text(json.dumps(result,indent=2,allow_nan=False))

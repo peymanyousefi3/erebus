@@ -7,7 +7,7 @@ on:
       test_mode:
         description: Native test group
         type: choice
-        options: [all, portable-only, legacy-model, scoring, remote-docker]
+        options: [all, portable-only, legacy-model, scoring, full-match, natural-depletion, remote-docker]
         default: all
 env:
   PYTHONUTF8: '1'
@@ -58,7 +58,7 @@ jobs:
             python tests/webots/prepare.py --docker --only-mode "$test_mode"
           fi
           first_world=$(python -c 'import json; print(json.load(open("validation/release/queue.json"))["jobs"][0]["world"])')
-          xvfb-run -a -s '-screen 0 1280x720x24' "$WEBOTS_HOME/webots" --batch --mode=fast --stdout --stderr --port=1255 "validation/release/runtime/game/worlds/$first_world.wbt" > validation/webots-r2025a.log 2>&1 &
+          xvfb-run -a -s '-screen 0 1280x720x24' "$WEBOTS_HOME/webots" --batch --mode=fast --no-rendering --stdout --stderr --port=1255 "validation/release/runtime/game/worlds/$first_world.wbt" > validation/webots-r2025a.log 2>&1 &
           webots_pid=$!
           python tests/webots/monitor.py --output validation/release --webots-home "$WEBOTS_HOME" --port 1255 --webots-pid "$webots_pid" --engine-log validation/webots-r2025a.log
           wait "$webots_pid"

@@ -1,9 +1,12 @@
 """Monitor an existing Webots test queue; never launch or resize Webots."""
 from pathlib import Path
 import argparse,json,subprocess,os,time
-p=argparse.ArgumentParser();p.add_argument('--output',type=Path,required=True);p.add_argument('--webots-home',type=Path,required=True);p.add_argument('--port',default='1255');p.add_argument('--webots-pid',type=int);args=p.parse_args()
-out=args.output.resolve();started=set();reported=set();children=[];deadline=time.monotonic()+1200
+p=argparse.ArgumentParser();p.add_argument('--output',type=Path,required=True);p.add_argument('--webots-home',type=Path,required=True);p.add_argument('--port',default='1255');p.add_argument('--webots-pid',type=int);p.add_argument('--engine-log',type=Path);args=p.parse_args()
+out=args.output.resolve();started=set();reported=set();children=[];deadline=time.monotonic()+1800
 while time.monotonic()<deadline:
+ if args.engine_log and args.engine_log.exists():
+  errors=[line for line in args.engine_log.read_text(errors='replace').splitlines() if line.startswith('ERROR:')]
+  if errors:raise SystemExit('Simulator error: '+errors[0])
  q=json.loads((out/'queue.json').read_text())
  for f in sorted((out/'results').glob('*.json')) if (out/'results').exists() else []:
   if f.name not in reported:

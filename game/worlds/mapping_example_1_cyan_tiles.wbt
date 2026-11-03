@@ -5,7 +5,8 @@ EXTERNPROTO "../protos/TexturedBackground.proto"
 EXTERNPROTO "../protos/CognitiveTarget.proto"
 EXTERNPROTO "../protos/Victim.proto"
 EXTERNPROTO "../protos/worldTile.proto"
-IMPORTABLE EXTERNPROTO "../protos/custom_robot.proto"
+IMPORTABLE EXTERNPROTO "webots://projects/objects/solids/protos/SolidPipe.proto"
+        IMPORTABLE EXTERNPROTO "../protos/custom_robot.proto"
 
 WorldInfo {
   basicTimeStep 16

@@ -48,7 +48,7 @@ jobs:
           python tests/webots/prepare.py --docker
           xvfb-run -a -s '-screen 0 1280x720x24' "$WEBOTS_HOME/webots" --batch --mode=fast --stdout --stderr --port=1255 validation/release/runtime/game/worlds/.Tests.wbt > validation/webots-r2025a.log 2>&1 &
           webots_pid=$!
-          python tests/webots/monitor.py --output validation/release --webots-home "$WEBOTS_HOME" --port 1255 --webots-pid "$webots_pid"
+          python tests/webots/monitor.py --output validation/release --webots-home "$WEBOTS_HOME" --port 1255 --webots-pid "$webots_pid" --engine-log validation/webots-r2025a.log
           wait "$webots_pid"
           if rg '^ERROR:' validation/webots-r2025a.log; then exit 1; fi
       - name: Save test evidence

@@ -281,7 +281,7 @@ Run the portable checks with `python scripts/check_customizations.py` and `node 
 
 The R2025a integration suite prepares an isolated copy with `python tests/webots/prepare.py`. Open its printed world in an existing Webots window and run `python tests/webots/monitor.py --output validation/release --webots-home /path/to/Webots --port 1234`. It loads fields sequentially in that window and pauses when finished. It never opens, minimizes or resizes Webots. `--docker` adds a real container-controller check when Docker is available.
 
-The suite covers every supplied world, real motor/sensor access, zero-camera and custom-resolution robots, continuous contact replacement, pause, swamp drain, natural depletion, an eight-minute simulation, external IPC/TCP connections, token reporting, map submission and final exit/map awards. Portable checks retain the Keep Files/source reload, upload handling, HUD, CSV, map review, replay and failure-path contracts. Test status and remaining platform limitations are recorded in `docs/releases/27.0-draft.1.md` and the release guide.
+The suite covers every supplied world, real motor/sensor access, zero-camera and custom-resolution robots, continuous contact replacement, pause, swamp drain, natural depletion, an eight-minute simulation, external IPC/TCP connections, token reporting, map submission and final exit/map awards. Portable checks retain the Keep Files/source reload, upload handling, HUD, CSV, map review, replay and failure-path contracts. The 32 native cases passed across the core and focused Docker runs; the six portable OS/Python combinations also passed. See the [verified results and platform limits](docs/releases/27.0-draft.1.md) and [PDF report](docs/releases/27.0-draft.1.pdf).
 
 ### Docker controllers
 

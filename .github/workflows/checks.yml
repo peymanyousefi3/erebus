@@ -7,7 +7,7 @@ on:
       test_mode:
         description: Native test group
         type: choice
-        options: [all, legacy-model, scoring, remote-docker]
+        options: [all, portable-only, legacy-model, scoring, remote-docker]
         default: all
 env:
   PYTHONUTF8: '1'
@@ -18,7 +18,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]
+        os: [ubuntu-latest, windows-latest, macos-15-intel]
         python: ['3.10', '3.12']
     runs-on: ${{ matrix.os }}
     steps:
@@ -30,7 +30,7 @@ jobs:
       - run: python scripts/check_customizations.py
       - run: node tests/test_interface_contract.cjs
   webots-r2025a:
-    if: github.ref == 'refs/heads/2027_webots2025a' || github.event_name == 'pull_request'
+    if: (github.ref == 'refs/heads/2027_webots2025a' || github.event_name == 'pull_request') && inputs.test_mode != 'portable-only'
     runs-on: ubuntu-22.04
     timeout-minutes: 35
     env:

@@ -31,6 +31,7 @@ PROTO custom_robot [
 ]
 {
 Robot {
+    supervisor FALSE
     translation IS translation
     rotation IS rotation
     children [

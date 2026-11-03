@@ -10,6 +10,7 @@ with TemporaryDirectory() as temp:
  root=Path(temp);browser=root/'browser/robot0Controller';direct=root/'direct/robot0Controller'
  browser.mkdir(parents=True);direct.mkdir(parents=True)
  class Handler(SimpleHTTPRequestHandler):
+  upload_directory=browser
   def translate_path(self,path):return str(browser)
   def log_message(self,*args):pass
  server=ThreadingHTTPServer(('127.0.0.1',0),Handler);thread=threading.Thread(target=server.serve_forever,daemon=True);thread.start()

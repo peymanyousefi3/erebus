@@ -341,12 +341,15 @@ class Robot(ErebusObject):
         """
 
         # Get length of bytes
+        self.message = []
         data_len: int = len(received_data)
         Console.log_debug(f"Data: {received_data} with length {data_len}")
         try:
             if data_len == 1:
                 tup = struct.unpack('c', received_data)
-                self.message = [tup[0].decode("utf-8")]
+                command = tup[0].decode("utf-8")
+                if command in ("E", "M", "L", "G"):
+                    self.message = [command]
             # Victim identification bytes data should be of length = 9
             elif data_len == 9:
                 # Unpack data

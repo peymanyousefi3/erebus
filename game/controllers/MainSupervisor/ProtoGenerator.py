@@ -1,5 +1,6 @@
 import json
 import re
+import math
 from Tools import *
 from ConsoleLog import Console
 
@@ -12,6 +13,21 @@ def generate_robot_proto(robot_json: dict) -> bool:
     Returns:
         bool: Generation success, True if the proto is generated successfully
     """
+
+    # Reject scene syntax before interpolating participant JSON into a PROTO.
+    if not isinstance(robot_json, dict):
+        Console.log_err("Robot JSON must contain a component dictionary.")
+        return False
+    for component in robot_json.values():
+        if not isinstance(component, dict):
+            Console.log_err("Invalid robot component.")
+            return False
+        name = component.get('customName', '')
+        coordinates = [component.get(key) for key in ('x', 'y', 'z', 'rx', 'ry', 'rz', 'a')]
+        if (not isinstance(name, str) or re.search(r'["\\\x00-\x1f\x7f]', name) or
+                any(type(value) not in (int, float) or abs(value) > 1e308 or not math.isfinite(value) for value in coordinates)):
+            Console.log_err("Component names must be plain text and poses must be finite numbers.")
+            return False
 
     # Hard coded, values from website
     component_max_counts: dict[str, int] = {

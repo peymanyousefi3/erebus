@@ -67,36 +67,31 @@ def install_controller(file_name, content, directory):
 
 class SimpleHTTPRequestHandler(http.server.BaseHTTPRequestHandler):
 
-    """Simple HTTP request handler with GET/HEAD/POST commands.
-
-    This serves files from the current directory and any of its
-    subdirectories.  The MIME type for files is determined by
-    calling the .guess_type() method. And can reveive file uploaded
-    by client.
-
-    The GET/HEAD/POST requests are identical except that the HEAD
-    request omits the actual contents of the file.
-
-    """
+    """Accept organizer uploads only into the participant controller folder."""
 
     server_version = "SimpleHTTPWithUpload/" + __version__
+    upload_directory = Path(__file__).resolve().parents[2] / "controllers/robot0Controller"
 
 
     def do_GET(self):
-        """Serve a GET request."""
-        f = self.send_head()
-        if f:
-            self.copyfile(f, self.wfile)
-            f.close()
+        self.send_error(403, "This service only accepts controller uploads.")
 
     def do_HEAD(self):
-        """Serve a HEAD request."""
-        f = self.send_head()
-        if f:
-            f.close()
+        self.send_error(403, "This service only accepts controller uploads.")
 
     def do_POST(self):
         """Serve a POST request."""
+        # A filename check alone cannot protect an arbitrary destination folder.
+        destination = Path(self.translate_path(self.path)).resolve()
+        if destination != self.upload_directory.resolve():
+            self.send_error(403, "Only the participant controller folder accepts uploads.")
+            return
+        origin = self.headers.get('Origin')
+        if origin:
+            parsed = urllib.parse.urlsplit(origin)
+            if parsed.scheme != 'http' or parsed.hostname not in ('localhost', '127.0.0.1', '::1'):
+                self.send_error(403, "Uploads must come from the local supervisor interface.")
+                return
         r, info = self.deal_post_data()
         f = BytesIO()
         f.write(info.encode())
@@ -332,7 +327,7 @@ class SimpleHTTPRequestHandler(http.server.BaseHTTPRequestHandler):
 
 def start(HandlerClass = SimpleHTTPRequestHandler, ServerClass = http.server.ThreadingHTTPServer):
     os.chdir('../../')
-    server_address = ('', 60520)
+    server_address = ('127.0.0.1', 60520)
     httpd = ServerClass(server_address, HandlerClass)
     httpd.serve_forever()
 

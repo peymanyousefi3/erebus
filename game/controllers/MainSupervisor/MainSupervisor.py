@@ -28,6 +28,8 @@ from controller import Receiver
 import MapScorer
 import MapReview
 import ControllerUploader
+from AccessAudit import AccessAudit
+from AccessMonitor import AccessMonitor
 
 from Tools import *
 from ConsoleLog import Console
@@ -76,12 +78,19 @@ class Erebus(Supervisor):
         self._stream = 27
         self.version = "27.0-draft.1"
 
+        self.access_audit = AccessAudit(Path(__file__).resolve().parents[3])
+        self.access_audit.start()
+        self.access_monitor = AccessMonitor(Path(__file__).resolve().parents[3], self.access_audit)
+        self.access_monitor.start()
+        self._audit_revision = -1
+        self._audit_last_sent = 0.0
+
         # Start controller uploader
-        uploader: Thread = Thread(target=ControllerUploader.start, daemon=True)
+        uploader: Thread = Thread(target=ControllerUploader.start, kwargs={"access_audit": self.access_audit}, daemon=True)
         uploader.start()
 
         # Robot window send text wrapper
-        self.rws: RWSender = RWSender(self)
+        self.rws: RWSender = RWSender(self, self.access_audit)
         
         # Get the config data from config.txt
         config_file_path = get_file_path(
@@ -848,6 +857,10 @@ class Erebus(Supervisor):
             message (str): Message to process
         """
         
+        if message.startswith('securityWebotsWarning,'):
+            self.access_audit.report_webots_warning(message.split(',', 1)[1])
+            return
+
         # Split the message to get extra command arguments if needed 
         parts: list[str] = message.split(",")
 
@@ -1053,10 +1066,25 @@ class Erebus(Supervisor):
         else:
             self.rws.update_history("remoteDisabled")
 
+    def _send_access_audit(self):
+        now = time.monotonic()
+        if now - self._audit_last_sent < 1:
+            return
+        self._audit_last_sent = now
+        revision, status = self.access_audit.snapshot()
+        monitor_revision, network = self.access_monitor.snapshot()
+        status["network"] = {key: value for key, value in network.items() if key != "events"}
+        revision = (revision, monitor_revision)
+        if revision != self._audit_revision:
+            self.wwiSendText('accessAudit,' + json.dumps(status, separators=(',', ':')))
+            self._audit_revision = revision
+
     def update(self) -> None:
         """Main Erebus update loop, used to process anything needed during the
         runtime of the simulation
         """
+
+        self._send_access_audit()
 
         # If last frame
         if self._last_frame == True:

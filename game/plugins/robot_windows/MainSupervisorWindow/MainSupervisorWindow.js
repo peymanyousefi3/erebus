@@ -98,6 +98,10 @@ function receive (message){
 	//If there is a message
 	if (parts.length > 0){			
 		switch (parts[0]){
+            case "accessAudit":
+                try { renderAccessAudit(JSON.parse(parts.slice(1).join(','))); }
+                catch (error) { console.warn('Invalid access audit status'); }
+                break;
             case "batteryUpdate":
                 if (parts[1] === "0") updateBattery(parts[2]);
                 break;
@@ -645,6 +649,11 @@ window.onload = function(){
     const historyObserver = new ResizeObserver(updateEventScrollHint);
     historyObserver.observe(document.getElementById('historyRegion'));
 	window.robotWindow = new RobotWindow();
+    window.robotWindow.socket.addEventListener('message', relayWebotsReadWarnings);
+    document.getElementById('accessAuditAlert').addEventListener('cancel', event => {
+        event.preventDefault();
+        window.acknowledgeAccessAuditAlert();
+    });
 	//Set the title
 	window.robotWindow.setTitle('Erebus Simulation Controls');
 	//Set which function handles the recieved messages
@@ -846,3 +855,110 @@ function setSetupExpanded(expanded) {
     if (expanded) setPreparationPanel('setup');
     else if (activePanel === 'setup') setPreparationPanel(null);
 }
+
+
+// Reuse the existing Webots connection; never treat a browser report as trusted evidence.
+function relayWebotsReadWarnings(event) {
+    if (typeof event.data !== 'string') return;
+    for (const line of event.data.split(/\r?\n/)) {
+        const match = line.match(/^stderr:((?:WARNING: )?Cannot read '[^\r\n]{1,2048}', sending "404 Not Found"\.)$/);
+        if (match) window.robotWindow.send('securityWebotsWarning,' + JSON.stringify({message:match[1]}));
+    }
+}
+let accessAuditSnapshot = null;
+function renderAccessAudit(snapshot) {
+    if (!snapshot || !Array.isArray(snapshot.events)) return;
+    accessAuditSnapshot = snapshot;
+    const network = snapshot.network;
+    const networkProblem = network && ['unavailable', 'incomplete', 'stopped'].includes(network.state);
+    const incomplete = Boolean(snapshot.error || snapshot.dropped || networkProblem);
+    const warnings = Number(snapshot.warnings) || 0;
+    const status = incomplete ? 'Monitoring incomplete. ' + (snapshot.error || (snapshot.dropped ? snapshot.dropped + ' observations could not be queued.' : network.message)) : network ? network.message + ' ' + warnings + (warnings === 1 ? ' warning for review.' : ' warnings for review.') : 'Access audit active. ' + warnings + (warnings === 1 ? ' warning for review.' : ' warnings for review.');
+    document.getElementById('accessAuditStatus').textContent = status;
+    const panel = document.getElementById('accessAuditPanel');
+    panel.dataset.warning = incomplete || warnings > 0 ? 'true' : 'false';
+    const indicator = document.getElementById('accessAuditIndicator');
+    indicator.dataset.warning = panel.dataset.warning;
+    indicator.textContent = incomplete ? 'Network monitoring · unavailable or incomplete' : warnings ? 'Access warnings · review ' + warnings : network && network.state === 'starting' ? 'Network monitoring · starting' : 'Access audit · active';
+    document.getElementById('accessAuditCount').textContent = snapshot.total + (snapshot.total === 1 ? ' observation' : ' observations');
+    document.getElementById('accessAuditEmpty').hidden = snapshot.events.length > 0;
+    document.getElementById('exportAccessAudit').disabled = false;
+    document.getElementById('accessAuditEvidence').textContent = 'Local log: security-evidence/' + snapshot.session + '/events.jsonl';
+    const list = document.getElementById('accessAuditEvents');
+    list.replaceChildren();
+    for (const event of [...snapshot.events].reverse()) {
+        const item = document.createElement('li');
+        item.dataset.warning = event.warning ? 'true' : 'false';
+        const title = document.createElement('strong');
+        title.textContent = event.source + ' — ' + event.summary;
+        const detail = document.createElement('p');
+        const confidence = event.trust === 'browser-relayed-unverified' ? 'Browser-relayed report · unverified' : event.trust === 'packet-capture' ? 'Network capture · team identity not established' : 'Recorded by Erebus';
+        detail.textContent = event.time + ' · ' + confidence + (event.peer ? ' · Connection ' + event.peer : ' · Sender identity unavailable');
+        item.append(title, detail);
+        list.append(item);
+    }
+    showAccessAuditAlert(snapshot);
+}
+window.openAccessAudit = function() {
+    const panel = document.getElementById('accessAuditPanel');
+    document.getElementById('accessAuditDetails').open = true;
+    panel.scrollIntoView({block:'start',behavior:'auto'});
+    panel.querySelector('summary').focus({preventScroll:true});
+};
+window.exportAccessAudit = function() {
+    if (!accessAuditSnapshot) return;
+    const data = {...accessAuditSnapshot, scope:'Network observations depend on active capture coverage. Referee activity is included; team identity is not established. Browser-relayed warnings are unverified. Local file reads are not monitored.'};
+    const blob = new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'erebus-access-audit-' + accessAuditSnapshot.session + '.json';
+    document.body.appendChild(link);
+    link.click();link.remove();
+    setTimeout(()=>URL.revokeObjectURL(url),1000);
+};
+
+
+const accessAuditAcknowledgements = new Map();
+let pendingAccessAuditAlert = null;
+function showAccessAuditAlert(snapshot) {
+    const key = 'erebus.auditAcknowledged.' + snapshot.session;
+    let acknowledged = accessAuditAcknowledgements.get(key);
+    if (!acknowledged) {
+        try { acknowledged = JSON.parse(sessionStorage.getItem(key)); } catch (error) { /* Storage may be disabled. */ }
+        if (!acknowledged || !Number.isFinite(acknowledged.warnings)) acknowledged = {warnings:0, issue:''};
+        accessAuditAcknowledgements.set(key, acknowledged);
+    }
+    const warnings = Number(snapshot.warnings) || 0;
+    const networkIssue = snapshot.network && ['unavailable', 'incomplete', 'stopped'].includes(snapshot.network.state) ? snapshot.network.message : '';
+    const issue = snapshot.error || snapshot.dropped || networkIssue ? (snapshot.error || networkIssue || '') + '/' + (snapshot.dropped || 0) : '';
+    if (warnings <= acknowledged.warnings && (!issue || issue === acknowledged.issue)) return;
+    pendingAccessAuditAlert = {key, warnings, issue};
+    const count = Math.max(0, warnings - acknowledged.warnings);
+    document.getElementById('accessAuditAlertTitle').textContent = issue ? 'Access log incomplete' : 'Access warning reported';
+    document.getElementById('accessAuditAlertSummary').textContent = issue
+        ? (snapshot.error || networkIssue || snapshot.dropped + ' observations could not be queued.') + ' Review the access log.'
+        : count + (count === 1 ? ' new warning needs referee review.' : ' new warnings need referee review.');
+    const list = document.getElementById('accessAuditAlertEvents');
+    list.replaceChildren();
+    for (const event of snapshot.events.filter(item => item.warning).slice(-Math.min(count || 5, 5)).reverse()) {
+        const item = document.createElement('li');
+        const title = document.createElement('strong');
+        title.textContent = event.summary;
+        const details = document.createElement('span');
+        details.textContent = event.source + ' · ' + (event.trust === 'browser-relayed-unverified' ? 'Unverified browser report' : event.trust === 'packet-capture' ? 'Network capture; team identity not established' : 'Recorded by Erebus') + ' · ' + event.time;
+        item.append(title, details);
+        list.append(item);
+    }
+    const dialog = document.getElementById('accessAuditAlert');
+    if (!dialog.open) dialog.showModal();
+}
+window.acknowledgeAccessAuditAlert = function() {
+    if (!pendingAccessAuditAlert) return;
+    const {key, warnings, issue} = pendingAccessAuditAlert;
+    const acknowledged = {warnings, issue};
+    accessAuditAcknowledgements.set(key, acknowledged);
+    try { sessionStorage.setItem(key, JSON.stringify(acknowledged)); } catch (error) { /* In-memory acknowledgement still applies. */ }
+    pendingAccessAuditAlert = null;
+    document.getElementById('accessAuditAlert').close();
+};

@@ -73,6 +73,16 @@ class SimpleHTTPRequestHandler(http.server.BaseHTTPRequestHandler):
     upload_directory = Path(__file__).resolve().parents[2] / "controllers/robot0Controller"
 
 
+    def log_request(self, code='-', size='-'):
+        super().log_request(code, size)
+        audit = getattr(self.server, 'access_audit', None)
+        if audit is not None:
+            route = self.path.split('?', 1)[0]
+            status = str(int(code)) if isinstance(code, int) else str(code)
+            audit.record('Upload service', f'{self.command} {route} - HTTP {status}',
+                         warning=status.startswith(('4', '5')), peer=self.client_address[0],
+                         method=self.command, route=route[:2048], status=status)
+
     def do_GET(self):
         self.send_error(403, "This service only accepts controller uploads.")
 
@@ -325,10 +335,11 @@ class SimpleHTTPRequestHandler(http.server.BaseHTTPRequestHandler):
         })
 
 
-def start(HandlerClass = SimpleHTTPRequestHandler, ServerClass = http.server.ThreadingHTTPServer):
+def start(HandlerClass = SimpleHTTPRequestHandler, ServerClass = http.server.ThreadingHTTPServer, access_audit=None):
     os.chdir('../../')
     server_address = (os.environ.get('EREBUS_UPLOAD_HOST', '127.0.0.1'), 60520)
     httpd = ServerClass(server_address, HandlerClass)
+    httpd.access_audit = access_audit
     httpd.serve_forever()
 
 if __name__ == '__main__':

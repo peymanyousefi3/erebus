@@ -896,19 +896,23 @@ function relayWebotsReadWarnings(event) {
 let accessAuditSnapshot = null;
 function renderAccessAudit(snapshot) {
     if (!snapshot || !Array.isArray(snapshot.events)) return;
+    snapshot = {...snapshot, events:snapshot.events.filter(event => event.warning)};
     accessAuditSnapshot = snapshot;
     const network = snapshot.network;
     const networkProblem = network && ['unavailable', 'incomplete', 'stopped'].includes(network.state);
     const incomplete = Boolean(snapshot.error || snapshot.dropped || networkProblem);
     const warnings = Number(snapshot.warnings) || 0;
-    const status = incomplete ? 'Monitoring incomplete. ' + (snapshot.error || (snapshot.dropped ? snapshot.dropped + ' observations could not be queued.' : network.message)) : network ? network.message + ' ' + warnings + (warnings === 1 ? ' warning for review.' : ' warnings for review.') : 'Access audit active. ' + warnings + (warnings === 1 ? ' warning for review.' : ' warnings for review.');
+    const status = incomplete ? 'Monitoring incomplete. ' + (snapshot.error || (snapshot.dropped ? snapshot.dropped + ' observations could not be queued.' : network.message)) : warnings + (warnings === 1 ? ' access warning for review.' : ' access warnings for review.');
     document.getElementById('accessAuditStatus').textContent = status;
     const panel = document.getElementById('accessAuditPanel');
-    panel.dataset.warning = incomplete || warnings > 0 ? 'true' : 'false';
+    const visible = incomplete || warnings > 0;
+    panel.hidden = !visible;
+    panel.dataset.warning = visible ? 'true' : 'false';
     const indicator = document.getElementById('accessAuditIndicator');
+    indicator.hidden = !visible;
     indicator.dataset.warning = panel.dataset.warning;
     indicator.textContent = incomplete ? 'Network monitoring · unavailable or incomplete' : warnings ? 'Access warnings · review ' + warnings : network && network.state === 'starting' ? 'Network monitoring · starting' : 'Access audit · active';
-    document.getElementById('accessAuditCount').textContent = snapshot.total + (snapshot.total === 1 ? ' observation' : ' observations');
+    document.getElementById('accessAuditCount').textContent = warnings + (warnings === 1 ? ' flagged observation' : ' flagged observations');
     document.getElementById('accessAuditEmpty').hidden = snapshot.events.length > 0;
     document.getElementById('exportAccessAudit').disabled = false;
     document.getElementById('accessAuditEvidence').textContent = 'Local log: security-evidence/' + snapshot.session + '/events.jsonl';

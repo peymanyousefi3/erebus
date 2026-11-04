@@ -156,6 +156,8 @@ class AccessMonitor:
         self._log_bytes += len(data)
 
     def _publish(self, key, entry, private):
+        if not entry.get('warning', True):
+            return
         self._write_log(dict(entry, **private))
         if self.audit is not None:
             summary = entry['resource'] + ': ' + entry.get('filename', '') + ' - ' + entry['outcome']
@@ -200,6 +202,8 @@ class AccessMonitor:
             authorised = bool(self.referee_connections and self.referee_connections.authorised(
                 show('ip.src') or show('ipv6.src'), show('tcp.srcport'),
                 show('ip.dst') or show('ipv6.dst'), show('tcp.dstport'), stamp))
+            if authorised:
+                return
             key = f'{stream}:{number}:{index}'
             entry = dict(id=key, time=stamp, source=show('ip.src') or show('ipv6.src'),
                          source_port=show('tcp.srcport'), resource='WebSocket connection' if websocket else kind or 'Webots HTTP resource', method=method,

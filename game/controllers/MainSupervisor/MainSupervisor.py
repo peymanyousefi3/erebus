@@ -1013,6 +1013,7 @@ class Erebus(Supervisor):
             # The robot window was reloaded, commands must be re-sent to
             # achieve the same state it was previously in
             if command == 'rw_reload':
+                self._audit_revision = None  # New referee windows need the latest status even without incidents.
                 self.rws.send_all()
                 if self._submitted_map is not None:
                     self.wwiSendText('mapReviewAvailable,')

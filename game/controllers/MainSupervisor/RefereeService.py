@@ -204,8 +204,6 @@ class RefereeService:
                             self.headers_for(200, kind, target.stat().st_size)
                             if self.command != 'HEAD':
                                 shutil.copyfileobj(file, self.wfile)
-                    service.audit.record('Referee interface', 'Opened ' + target.name,
-                                         trust='referee-authorised')
                 except (OSError, ValueError):
                     self.headers_for(404)
 

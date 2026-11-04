@@ -34,6 +34,8 @@ class AccessAudit:
         atexit.register(self.close)
 
     def record(self, source, summary, *, warning=False, peer='', trust='server-received', **private):
+        if not warning:
+            return
         event = dict(time=datetime.now(timezone.utc).isoformat(), source=source,
                      summary=''.join(c if c.isprintable() else ' ' for c in str(summary))[:300],
                      warning=bool(warning), peer=str(peer)[:100], trust=trust)

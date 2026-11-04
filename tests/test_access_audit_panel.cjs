@@ -15,6 +15,11 @@ assert.equal(JSON.parse(sent[0].split(',').slice(1).join(',')).message,'WARNING:
 context.relayWebotsReadWarnings({data:'robot: {"message":"Cannot read"}'});
 assert.equal(sent.length,1);
 const snapshot={session:'test',total:1,warnings:1,dropped:0,error:'',events:[{time:'2026-11-04T00:00:00Z',source:'Robot-window report',summary:'<script>unsafe</script>',trust:'browser-relayed-unverified',peer:'',warning:true}]};
+const normal={...snapshot,total:1,warnings:0,events:[{...snapshot.events[0],warning:false,source:'Referee interface'}],network:{state:'monitoring',message:'Monitoring active.'}};
+context.renderAccessAudit(normal);
+assert(get('accessAuditPanel').hidden && get('accessAuditIndicator').hidden);
+assert.equal(get('accessAuditEvents').children.length,0);
+assert(!get('accessAuditAlert').open,'Normal activity opened an alert');
 context.renderAccessAudit(snapshot);
 assert(get('accessAuditIndicator').textContent.includes('review 1'));
 const item=get('accessAuditEvents').children[0];
@@ -40,6 +45,10 @@ vm.runInNewContext(source.slice(source.indexOf('// Reuse the existing Webots con
 refreshed.renderAccessAudit({...snapshot,warnings:3,total:3});
 assert(!dialog.open && dialog.shows===2,'Page refresh forgot the acknowledgement');
 
+context.renderAccessAudit({...snapshot,warnings:0,total:0,events:[],network:{state:'unavailable',message:'Capture permission missing.'}});
+assert(!get('accessAuditPanel').hidden && !get('accessAuditIndicator').hidden,'Monitoring failure was hidden without access warnings');
+assert(dialog.open,'Monitoring failure did not alert the referee');
+context.acknowledgeAccessAuditAlert();
 context.renderAccessAudit({...snapshot,dropped:2});
 assert(get('accessAuditStatus').textContent.includes('incomplete'));
 context.renderAccessAudit({...snapshot,network:{state:'unavailable',message:'Capture permission missing.'}});

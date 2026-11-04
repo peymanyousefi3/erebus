@@ -21,6 +21,11 @@ with TemporaryDirectory() as temporary:
     audit.start()
     sender = RWSender(SimpleNamespace(wwiSendText=lambda value: None), audit)
     sender.update_received_history('showMapReview', 'private arguments')
+    assert audit.snapshot()[1]['total'] == 0, 'Normal supervisor actions were retained'
+    for _ in range(1000):
+        audit.record_command('run')
+        audit.record('Referee interface', 'Opened normal preview')
+    assert audit.snapshot()[0] == 0 and audit._queue.empty()
     warning = '''WARNING: Cannot read 'C:\\Erebus\\thumbnails\\missing.png', sending "404 Not Found".'''
     assert audit.report_webots_warning(json.dumps({'message': warning, 'peer':'forged-team'}))
     for bad in ('bad json', '[]', '{"message":"a download succeeded"}', 'x' * 4097):
@@ -44,36 +49,36 @@ with TemporaryDirectory() as temporary:
         server.server_close()
         thread.join()
     revision, view = audit.snapshot()
-    assert view['total'] == 4 and view['warnings'] == 3 and view['dropped'] == 0
-    relay = view['events'][1]
+    assert view['total'] == 3 and view['warnings'] == 3 and view['dropped'] == 0
+    relay = view['events'][0]
     assert relay['trust'] == 'browser-relayed-unverified' and relay['peer'] == ''
     assert 'missing.png' in relay['summary'] and 'C:' not in relay['summary']
-    upload = view['events'][2]
+    upload = view['events'][1]
     assert upload['trust'] == 'server-received' and upload['peer'] == '127.0.0.1'
     assert '403' in upload['summary']
     public = json.dumps(view)
     assert 'private arguments' not in public and 'hidden' not in public
     audit.close()
     saved = [json.loads(line) for line in (audit.directory/'events.jsonl').read_text().splitlines()]
-    assert len(saved) == 4 and saved[1]['details']['reported_warning'] == warning
-    assert saved[2]['details']['status'] == '403'
-    assert saved[3]['details']['status'] == '501' and saved[3]['warning']
+    assert len(saved) == 3 and saved[0]['details']['reported_warning'] == warning
+    assert saved[1]['details']['status'] == '403'
+    assert saved[2]['details']['status'] == '501' and saved[2]['warning']
 
 with TemporaryDirectory() as temporary:
     audit = AccessAudit(temporary)
     audit._queue = Queue(maxsize=1)
-    audit.record_command('first')
-    audit.record_command('second')
+    audit.record('Probe', 'first', warning=True)
+    audit.record('Probe', 'second', warning=True)
     assert audit.snapshot()[1]['dropped'] == 1
 
 with TemporaryDirectory() as temporary:
     audit = AccessAudit(temporary)
     audit.MAX_LOG_BYTES = 1
-    audit.record_command('over-capacity')
+    audit.record('Probe', 'over-capacity', warning=True)
     audit.start()
     audit.close()
     assert 'capacity' in audit.snapshot()[1]['error']
 
 source = (main/'AccessAudit.py').read_text()
 assert not any(token in source for token in ('subprocess', 'sys.platform', 'ctypes', 'tcpdump', 'tshark'))
-print('PASS: actual command journal, real HTTP denial, unverified warning reports, UI redaction, bounded queue/log and platform-independent runtime.')
+print('PASS: normal activity excluded without queue/revision work, real HTTP denial, unverified warning reports, UI redaction, bounded queue/log and platform-independent runtime.')

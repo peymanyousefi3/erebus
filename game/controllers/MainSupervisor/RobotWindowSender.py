@@ -56,8 +56,6 @@ class RWSender(ErebusObject):
             command. Defaults to ''.
         """
         self._update_log_history(command, args)
-        if self.access_audit is not None:
-            self.access_audit.record_command(command)
         
 
     def send(self, command: str, args: str = '') -> None:

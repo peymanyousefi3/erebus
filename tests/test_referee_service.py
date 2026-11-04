@@ -55,7 +55,7 @@ with tempfile.TemporaryDirectory() as temporary:
         assert get(base+'reports/%2e%2e/%2e%2e/outside.html')[0]==404
         assert get(service.origin+'/favicon.ico')[0]==204
         assert get(service.origin+'/apple-touch-icon.png')[0]==204
-        assert audit.snapshot()[1]['warnings']==0,'Normal referee activity caused an alert'
+        assert audit.snapshot()[1]['total']==0,'Normal referee activity was logged'
         status,_,_=get(base+'commands',b'run',{'Content-Type':'text/plain'})
         assert status==202 and list(service.receive_commands())==['run']
         assert get(service.origin+'/wrong/commands',b'reset',{'User-Agent':'referee browser'})[0]==403
@@ -78,7 +78,7 @@ with tempfile.TemporaryDirectory() as temporary:
                 'tcp.srcport':str(peer[1]),'ip.dst':'127.0.0.1','tcp.dstport':str(port),
                 'http.request.method':'GET','http.request.uri':'/','http.upgrade':'websocket'}
             monitor._http(fields)
-            assert not monitor.snapshot()[1]['events'][0]['warning']
+            assert monitor.snapshot()[1]['events']==[] and not monitor._pending, 'Normal referee connection was retained'
             monitor._http(dict(fields,**{'frame.number':'2','tcp.stream':'2','tcp.srcport':str(peer[1]+1)}))
             assert monitor.snapshot()[1]['events'][-1]['warning'],'Same-IP direct connection escaped detection'
             client.sendall(b'raw frame bytes');assert client.recv(4096)==b'raw frame bytes'

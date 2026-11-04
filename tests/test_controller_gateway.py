@@ -23,7 +23,8 @@ async def check():
     private=await asyncio.start_server(backend,'127.0.0.1',0);port=private.sockets[0].getsockname()[1]
     public=await asyncio.start_server(lambda r,w:g.controller(r,w,'127.0.0.1',port,'Erebus_Bot'),'127.0.0.1',0);gateway=public.sockets[0].getsockname()[1]
     try:
-        for request in (b'GET /robot_windows/MainSupervisorWindow/thumbnails/world4.png HTTP/1.1\r\n\r\n',b'GET / HTTP/1.1\r\nUpgrade: websocket\r\n\r\n',b'CTR\nRobot-Name: MAINSUPERVISOR',b'CTR\nRobot-Name: Other_Robot'):
+        downloads=[f'{verb} {path} HTTP/1.1\r\nHost: server\r\n\r\n'.encode() for verb in ('GET','HEAD') for path in ('/worlds/','/worlds/world1.wbt','/protos/Victim.proto','/controllers/MainSupervisor/Victim.py','/worlds/textures/victim_harmed_not_found.png','/%2e%2e/worlds/world1.wbt')]
+        for request in (*downloads,b'GET /robot_windows/MainSupervisorWindow/thumbnails/world4.png HTTP/1.1\r\n\r\n',b'GET / HTTP/1.1\r\nUpgrade: websocket\r\n\r\n',b'CTR\nRobot-Name: MAINSUPERVISOR',b'CTR\nRobot-Name: Other_Robot'):
             reader,writer=await asyncio.open_connection('127.0.0.1',gateway);writer.write(request);await writer.drain()
             try:answer=await asyncio.wait_for(reader.read(),1)
             except ConnectionResetError:answer=b''

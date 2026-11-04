@@ -11,6 +11,9 @@ import ControllerUploader,ProtoGenerator
 with TemporaryDirectory() as temp:
  root=Path(temp);allowed=root/'controllers/robot0Controller';allowed.mkdir(parents=True)
  protected=root/'controllers/MainSupervisor';protected.mkdir();config=protected/'sensorEnergyConfig.txt';config.write_text('protected')
+ secret=b'private-victim-position-92.314-type-H'
+ for route in ('worlds/world1.wbt','protos/Victim.proto','worlds/textures/victim_harmed_not_found.png'):
+  target=root/route;target.parent.mkdir(parents=True,exist_ok=True);target.write_bytes(secret)
  class Handler(ControllerUploader.SimpleHTTPRequestHandler):
   upload_directory=allowed
   def translate_path(self,path):return str(root/Path(path.lstrip('/')))
@@ -20,12 +23,13 @@ with TemporaryDirectory() as temp:
   for route in ('/controllers/MainSupervisor/','/controllers/robot0Controller/../MainSupervisor/','/protos/','/controllers/robot0Controller/../../controllers/MainSupervisor/'):
    c=http.client.HTTPConnection('127.0.0.1',server.server_port,timeout=3);c.request('POST',route,b'');r=c.getresponse();r.read();assert r.status==403;c.close()
   for verb in ('GET','HEAD'):
-   c=http.client.HTTPConnection('127.0.0.1',server.server_port,timeout=3);c.request(verb,'/controllers/MainSupervisor/sensorEnergyConfig.txt');r=c.getresponse();r.read();assert r.status==403;c.close()
+   for route in ('/worlds/','/worlds/world1.wbt','/worlds/world1.wbt?download=1','/protos/Victim.proto','/worlds/textures/victim_harmed_not_found.png','/controllers/MainSupervisor/Victim.py','/controllers/MainSupervisor/sensorEnergyConfig.txt','/%2e%2e/worlds/world1.wbt'):
+    c=http.client.HTTPConnection('127.0.0.1',server.server_port,timeout=3);c.request(verb,route);r=c.getresponse();body=r.read();assert r.status==403 and secret not in body,(verb,route,r.status);c.close()
   c=http.client.HTTPConnection('127.0.0.1',server.server_port,timeout=3);c.request('POST','/controllers/robot0Controller/',b'',{'Origin':'https://untrusted.example'});r=c.getresponse();r.read();assert r.status==403;c.close()
   assert config.read_text()=='protected' and list(allowed.iterdir())==[]
  finally:server.shutdown();server.server_close();thread.join()
  # Generate only in a temporary destination, never overwrite the live robot.
- (root/'protos').mkdir()
+ (root/'protos').mkdir(exist_ok=True)
  def path(game_relative,supervisor_relative):
   return str(main/'protoHeaderTemplateFLU.txt') if 'protoHeaderTemplate' in game_relative else str(root/'protos')
  base={'wheel':dict(name='Wheel',customName='left wheel',dictName='wheel',x=0,y=0,z=0,rx=0,ry=0,rz=1,a=0)}

@@ -791,7 +791,8 @@ class Erebus(Supervisor):
             folder = MapReview.save_review(self._map_review, self._match_folder / 'map')
             self.wwiSendText('mapReviewSaved,' + str(folder))
             Console.log_info(f"Map review saved: {folder}")
-            MapReview.open_review(folder / 'map-review.html')
+            if os.environ.get('EREBUS_ISOLATED_SERVER') != '1':
+                MapReview.open_review(folder / 'map-review.html')
         except Exception as error:
             self.wwiSendText('mapReviewError,Could not save or open the map result: ' + str(error))
             Console.log_err(f"Map review failed: {error}")

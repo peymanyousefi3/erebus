@@ -11,6 +11,7 @@ queue_path = root.parent / 'queue.json'
 queue = json.loads(queue_path.read_text())
 job = queue['jobs'][queue['index']]
 mode = job['mode']
+scoring = mode in ('scoring','remote-secure-scoring')
 os.environ.update(EREBUS_TEST_MODE=mode, EREBUS_TEST_WORLD=job['world'], EREBUS_TEST_ENGINE='R2025a')
 for name in ('game-info.json','remote-ready','device-info.json'):
     (root/name).unlink(missing_ok=True)
@@ -61,7 +62,7 @@ try:
         proto.write_text(original)
         result['legacy_model_rejected_without_crash']=True
         s.simulationSetMode(s.SIMULATION_MODE_FAST)
-    if mode=='scoring':s.max_time=10000
+    if scoring:s.max_time=10000
     s._game_state = GameState.MATCH_RUNNING
     s._game_init()
     s.simulationSetMode(s.SIMULATION_MODE_FAST)
@@ -83,7 +84,7 @@ try:
     assert before == (s.time_elapsed,s.robot_obj.battery.level)
     s._game_state=GameState.MATCH_RUNNING
     result['pause_preserved_energy']=True
-    if mode in ('scoring','full-match'):
+    if scoring or mode=='full-match':
         s.robot_obj._wb_node.getField('customData').setSFString('stop')
         advance(.5)
     if mode=='full-match':
@@ -98,7 +99,7 @@ try:
         assert not s.robot_obj.in_simulation and s._game_state==GameState.MATCH_FINISHED
         assert s._real_time_elapsed==600 and s.time_elapsed<480
         result['real_time_boundary_seconds']=s._real_time_elapsed
-    elif mode=='scoring':
+    elif scoring:
         from Test import TestRunner
         result['scored_tokens']=0
         command_id=0

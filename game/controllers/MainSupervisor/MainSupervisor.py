@@ -427,7 +427,7 @@ class Erebus(Supervisor):
         """
         
         controller: str = "robot0Controller"
-        if self._remote_enabled:
+        if self._remote_enabled or os.environ.get("EREBUS_ISOLATED_SERVER") == "1":
             controller = "<extern>"
 
         # Get webots root
@@ -874,6 +874,9 @@ class Erebus(Supervisor):
 
             # Start running the match using a docker controller
             if command == "runDocker":
+                if os.environ.get("EREBUS_ISOLATED_SERVER") == "1":
+                    self.rws.send('dockerError', 'Run the participant container outside the organizer server, connected to the controller gateway.')
+                    return
                 if self._game_state != GameState.MATCH_NOT_STARTED:
                     return
                 project_path = message.split(',', 1)[1].strip() if ',' in message else ''
@@ -1006,6 +1009,10 @@ class Erebus(Supervisor):
 
             # Disable remote controller
             if command == 'remoteDisable':
+                if os.environ.get("EREBUS_ISOLATED_SERVER") == "1":
+                    self._remote_enabled = True
+                    self.rws.send('remoteEnabled')
+                    return
                 if self._game_state == GameState.MATCH_NOT_STARTED:
                     self._remote_enabled = False
                     self.rws.update_history("remoteDisabled")
@@ -1039,7 +1046,7 @@ class Erebus(Supervisor):
         Updates the web UI's remote enabled button enable state to reflect the
         current state of the config setting 
         """
-        self._remote_enabled = self.config.keep_remote
+        self._remote_enabled = self.config.keep_remote or os.environ.get("EREBUS_ISOLATED_SERVER") == "1"
         if self._remote_enabled:
             self.rws.update_history("remoteEnabled")
         else:

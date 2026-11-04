@@ -327,7 +327,7 @@ class SimpleHTTPRequestHandler(http.server.BaseHTTPRequestHandler):
 
 def start(HandlerClass = SimpleHTTPRequestHandler, ServerClass = http.server.ThreadingHTTPServer):
     os.chdir('../../')
-    server_address = ('127.0.0.1', 60520)
+    server_address = (os.environ.get('EREBUS_UPLOAD_HOST', '127.0.0.1'), 60520)
     httpd = ServerClass(server_address, HandlerClass)
     httpd.serve_forever()
 

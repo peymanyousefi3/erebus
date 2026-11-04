@@ -1,0 +1,13 @@
+.git
+validation
+match-results
+recordings
+map-results
+docs
+tests
+**/__pycache__
+**/*.pyc
+**/.DS_Store
+game/logs
+game/controllers/robot0Controller/*
+!game/controllers/robot0Controller/.gitkeep

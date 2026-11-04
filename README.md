@@ -72,6 +72,10 @@ A `G` request receives `struct.pack('c f i i f', b'G', score, simulated_seconds_
 
 **The existing map-scoring formula is retained.** The 2027 changes add contact-tile encoding, the 60 mm token boundary and battery-dependent termination. Historical maps are retained alongside the supplied 2027 examples. Recording, HUD and map review require no extra participant messages; game-info readers must accept the 2027 battery field described above.
 
+## Protected competition connections
+
+For client-server competitions, start `python3 scripts/start_competition.py`. The organizer retains full map/replay access on private loopback ports; participant controllers use only the controller gateway. A restricted Mac launcher and a separate local participant-container profile are included. **The ordinary native Run/Remote paths are development modes and do not isolate code running under the organizer account.** See the [protected execution guide](docs/security/controller-isolation.md).
+
 ## Quick start
 
 ### Requirements

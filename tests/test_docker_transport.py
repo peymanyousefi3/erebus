@@ -4,7 +4,7 @@ from enum import Enum
 from pathlib import Path
 from types import SimpleNamespace as NS
 from urllib.parse import quote, unquote
-import sys
+import sys,os
 
 main = Path(sys.argv[1]).resolve()
 class State(Enum):
@@ -25,7 +25,7 @@ for raw in ['/tmp/team folder',r'C:\Team\project','/tmp/name%20literal']:
 klass=next(n for n in ast.parse((main/'MainSupervisor.py').read_text()).body if isinstance(n,ast.ClassDef) and n.name=='Erebus')
 method=next(n for n in klass.body if isinstance(n,ast.FunctionDef) and n.name=='_process_rw_message')
 calls=[]
-scope.update(GameState=State,Erebus=NS(TIME_STEP=16),run_docker_container=lambda self,p:calls.append(p) or object())
+scope.update(os=os,GameState=State,Erebus=NS(TIME_STEP=16),run_docker_container=lambda self,p:calls.append(p) or object())
 exec(compile(ast.Module(body=[method],type_ignores=[]),'MainSupervisor.py','exec'),scope)
 self=NS(_game_state=State.MATCH_NOT_STARTED,rws=Sender(),step=lambda duration:None)
 scope['_process_rw_message'](self,'runDocker,/tmp/team, demo')
@@ -38,3 +38,13 @@ assert self.rws.messages[-1][0]=='dockerError'
 scope['_process_rw_message'](self,'runDocker,')
 assert self.rws.messages[-1][0]=='dockerError'
 print('PASS: legacy/encoded paths, comma-preserving launch, duplicate-start guard and failure messages.')
+
+from unittest.mock import patch
+with patch.dict(os.environ,{'EREBUS_ISOLATED_SERVER':'1'}):
+ self._game_state=State.MATCH_NOT_STARTED;calls.clear()
+ scope['_process_rw_message'](self,'runDocker,/tmp/project')
+ assert not calls and self.rws.messages[-1][0]=='dockerError'
+ self._remote_enabled=False
+ scope['_process_rw_message'](self,'remoteDisable')
+ assert self._remote_enabled and self.rws.messages[-1][0]=='remoteEnabled'
+print('PASS: isolated organizer server cannot switch to native participant code or build participant containers.')

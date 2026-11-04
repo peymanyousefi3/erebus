@@ -1,6 +1,6 @@
 """Monitor an existing Webots test queue; never launch or resize Webots."""
 from pathlib import Path
-import argparse,json,subprocess,os,time
+import argparse,json,subprocess,os,time,sys,socket,atexit
 p=argparse.ArgumentParser();p.add_argument('--output',type=Path,required=True);p.add_argument('--webots-home',type=Path,required=True);p.add_argument('--port',default='1255');p.add_argument('--webots-pid',type=int);p.add_argument('--engine-log',type=Path);args=p.parse_args()
 out=args.output.resolve();started=set();reported=set();children=[];active={};exited_at={};deadline=time.monotonic()+1800
 while time.monotonic()<deadline:
@@ -24,6 +24,24 @@ while time.monotonic()<deadline:
  if job['mode'].startswith('remote-') and i not in started and ready.exists() and ready.read_text()==str(i):
   log=(out/f'remote-{i}.txt').open('w')
   protocol=job['mode'].split('-')[1]
+  controller_port=args.port
+  if protocol=='secure':
+   protocol='tcp';controller_port=str(int(args.port)+1)
+   gateway_log=(out/'gateway.log').open('w')
+   gateway=subprocess.Popen([sys.executable,str(Path(__file__).resolve().parents[2]/'scripts/controller_gateway.py'),'--port',controller_port,'--backend-port',args.port],stdout=gateway_log,stderr=subprocess.STDOUT)
+   atexit.register(gateway.terminate)
+   until=time.monotonic()+5
+   while True:
+    try:
+     with socket.create_connection(('127.0.0.1',int(controller_port)),timeout=.1):break
+    except OSError:
+     assert gateway.poll() is None and time.monotonic()<until,'Gateway startup failed'
+     time.sleep(.05)
+   # The known organizer preview must remain inaccessible through this port.
+   with socket.create_connection(('127.0.0.1',int(controller_port)),timeout=2) as attempt:
+    attempt.sendall(b'GET /robot_windows/MainSupervisorWindow/thumbnails/world4.png HTTP/1.1\r\nHost: localhost\r\n\r\n')
+    try:assert attempt.recv(100)==b''
+    except ConnectionResetError:pass
   if protocol=='docker':
    import sys
    from types import SimpleNamespace
@@ -42,7 +60,7 @@ while time.monotonic()<deadline:
    child=run_docker_container(SimpleNamespace(TIME_STEP=16,step=lambda ms:None),str(out/'docker-project'))
    assert child is not None, 'Docker controller did not start'
    children.append(child);active[i]=child;started.add(i);continue
-  command=[str((args.webots_home/'webots-controller') if (args.webots_home/'webots-controller').is_file() else (args.webots_home/'Contents/MacOS/webots-controller')),'--protocol='+protocol,'--port='+args.port,'--robot-name=Erebus_Bot']
+  command=[str((args.webots_home/'webots-controller') if (args.webots_home/'webots-controller').is_file() else (args.webots_home/'Contents/MacOS/webots-controller')),'--protocol='+protocol,'--port='+controller_port,'--robot-name=Erebus_Bot']
   if protocol=='tcp':command+=['--ip-address=127.0.0.1']
   command+=[str(out/'runtime/game/controllers/robot0Controller/robot0Controller.py')]
   child=subprocess.Popen(command,stdout=log,stderr=subprocess.STDOUT,env=dict(os.environ,WEBOTS_HOME=str(args.webots_home)))

@@ -1,0 +1,58 @@
+# Only the controller gateway is public. Never publish Webots on a LAN address.
+services:
+  webots:
+    platform: linux/amd64
+    build:
+      context: ../..
+      dockerfile: docker/competition/Dockerfile
+    environment:
+      EREBUS_WORLD: ${EREBUS_WORLD:-mapping_example_1_cyan_tiles}
+      EREBUS_UPLOAD_HOST: 0.0.0.0
+      EREBUS_ISOLATED_SERVER: '1'
+      LIBGL_ALWAYS_SOFTWARE: '1'
+    ports:
+      - '127.0.0.1:${EREBUS_ORGANIZER_PORT:-1240}:1255'
+      - '127.0.0.1:${EREBUS_UPLOAD_PORT:-60520}:60520'
+    networks: [organizer]
+    volumes:
+      - results:/erebus/match-results
+    security_opt: [no-new-privileges:true]
+    cap_drop: [ALL]
+    shm_size: 512m
+  gateway:
+    build:
+      context: ../..
+      dockerfile: docker/competition/Gateway.Dockerfile
+    command: ['--listen', '0.0.0.0', '--backend', 'webots', '--backend-port', '1255']
+    ports:
+      - '${EREBUS_CONTROLLER_BIND:-0.0.0.0}:${EREBUS_CONTROLLER_PORT:-1234}:1234'
+    networks: [participants, organizer]
+    depends_on: [webots]
+    read_only: true
+    security_opt: [no-new-privileges:true]
+    cap_drop: [ALL]
+    pids_limit: 64
+    sysctls:
+      net.ipv4.ip_forward: '0'
+  # Optional local participant runs: no organizer-network membership or host files.
+  participant:
+    platform: linux/amd64
+    profiles: [participant]
+    build: ../controller
+    environment:
+      EREBUS_SERVER: gateway
+      EREBUS_CONTROLLER_PORT: '1234'
+    networks: [participants]
+    depends_on: [gateway]
+    security_opt: [no-new-privileges:true]
+    cap_drop: [ALL]
+    pids_limit: 128
+    mem_limit: 2g
+networks:
+  organizer:
+    driver: bridge
+    driver_opts:
+      com.docker.network.bridge.gateway_mode_ipv4: nat
+  participants: {}
+volumes:
+  results: {}

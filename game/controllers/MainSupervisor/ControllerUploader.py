@@ -15,6 +15,7 @@ __author__ = "bones7456"
 __home_page__ = "http://li2z.cn/"
 
 import os
+import hmac
 import posixpath
 import http.server
 import urllib.request, urllib.parse, urllib.error
@@ -91,6 +92,10 @@ class SimpleHTTPRequestHandler(http.server.BaseHTTPRequestHandler):
 
     def do_POST(self):
         """Serve a POST request."""
+        token = getattr(self.server, "referee_token", None)
+        if token and not hmac.compare_digest(self.headers.get("X-Erebus-Referee", "").encode(), token.encode()):
+            self.send_error(403, "Use the authenticated referee interface for controller uploads.")
+            return
         # A filename check alone cannot protect an arbitrary destination folder.
         destination = Path(self.translate_path(self.path)).resolve()
         if destination != self.upload_directory.resolve():
@@ -335,11 +340,12 @@ class SimpleHTTPRequestHandler(http.server.BaseHTTPRequestHandler):
         })
 
 
-def start(HandlerClass = SimpleHTTPRequestHandler, ServerClass = http.server.ThreadingHTTPServer, access_audit=None):
+def start(HandlerClass = SimpleHTTPRequestHandler, ServerClass = http.server.ThreadingHTTPServer, access_audit=None, referee_token=None):
     os.chdir('../../')
     server_address = (os.environ.get('EREBUS_UPLOAD_HOST', '127.0.0.1'), 60520)
     httpd = ServerClass(server_address, HandlerClass)
     httpd.access_audit = access_audit
+    httpd.referee_token = referee_token
     httpd.serve_forever()
 
 if __name__ == '__main__':

@@ -15,7 +15,8 @@ messages=[];opens=[]
 console=NS(DEBUG_MODE=False,log_err=lambda *a:None,log_info=lambda *a:None)
 scope=dict(np=np,json=json,MapScorer=MapScorer,MapReview=MapReview,Console=console,os=NS(environ={}))
 exec(compile(module,'<actual accepted-map/manual methods>','exec'),scope)
-class Supervisor:pass
+class Supervisor:
+ def __init__(self):self.referee_service=NS(open_report=lambda path:opens.append(Path(path)))
 Supervisor.evaluate=scope['evaluate'];Supervisor._save_and_open_map_review=scope['_save_and_open_map_review']
 MapReview.open_review=lambda path:opens.append(Path(path))
 answer=np.array([['1','1','1'],['0','5','0'],['0','1','0']])

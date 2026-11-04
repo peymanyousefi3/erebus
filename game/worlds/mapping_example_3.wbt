@@ -926,6 +926,6 @@
             supervisor TRUE
             controller "MainSupervisor"
             customData "480"
-            window "MainSupervisorWindow"
+            window "<none>"
           }
         

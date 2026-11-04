@@ -9,10 +9,12 @@ services:
       EREBUS_WORLD: ${EREBUS_WORLD:-mapping_example_1_cyan_tiles}
       EREBUS_UPLOAD_HOST: 0.0.0.0
       EREBUS_ISOLATED_SERVER: '1'
+      EREBUS_REFEREE_PORT: ${EREBUS_REFEREE_PORT:-1241}
       LIBGL_ALWAYS_SOFTWARE: '1'
     ports:
       - '127.0.0.1:${EREBUS_ORGANIZER_PORT:-1240}:1255'
       - '127.0.0.1:${EREBUS_UPLOAD_PORT:-60520}:60520'
+      - '127.0.0.1:${EREBUS_REFEREE_PORT:-1241}:${EREBUS_REFEREE_PORT:-1241}'
     networks: [organizer]
     volumes:
       - results:/erebus/match-results

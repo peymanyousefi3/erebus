@@ -83,13 +83,21 @@ print('PRIVATE_ENDPOINTS='+json.dumps(blocked),flush=True)
     private_checks=json.loads(attacker.stdout.split('PRIVATE_ENDPOINTS=')[1].splitlines()[0])
     docker_checks=json.loads(attacker.stdout.split('DOWNLOAD_CHECKS=')[1].splitlines()[0])
     # Organizer-only WWI still controls the real supervisor.
-    js="""const socket=new WebSocket('ws://127.0.0.1:1240/');let started=false;let retry;
-const timeout=setTimeout(()=>{console.error('Organizer interface did not start match');process.exit(1)},30000);
-socket.onopen=()=>{socket.send('robot:robot:init robot window');socket.send('robot:robot:rw_reload');retry=setInterval(()=>socket.send('robot:robot:rw_reload'),500)};
-socket.onmessage=e=>{if(!started && (e.data.includes('startup')||e.data.includes('config,'))){started=true;clearInterval(retry);socket.send('robot:robot:remoteDisable');socket.send('robot:robot:run')};if(e.data.includes('runPressed')){clearTimeout(timeout);clearInterval(retry);socket.close()}};
-socket.onerror=e=>{console.error(e);process.exit(1)};
+    session=''
+    for _ in range(60):
+        credential=subprocess.run(compose+['exec','-T','webots','cat','/tmp/erebus-referee.cfg'],capture_output=True,text=True)
+        if credential.returncode==0:
+            session=credential.stdout.strip();break
+        time.sleep(1)
+    assert session,'Authenticated organizer service did not start'
+    js="""const page=require('node:fs').readFileSync(0,'utf8').trim();const url=new URL(page);const prefix=url.pathname.slice(0,url.pathname.indexOf('/robot_windows/')+1);
+const socket=new WebSocket('ws://'+url.host+prefix);let sent=false;
+const timeout=setTimeout(()=>{console.error('Authenticated organizer operation timed out');process.exit(1)},30000);
+socket.onopen=async()=>{socket.send('robot:robot:init robot window');const response=await fetch(url.origin+prefix+'commands',{method:'POST',body:process.argv[1]});if(response.status!==202)process.exit(1)};
+socket.onmessage=e=>{const marker=process.argv[1]==='run'?'runPressed':'mapReviewSaved,';if(e.data.includes(marker)){clearTimeout(timeout);socket.close()}};
+socket.onerror=()=>process.exit(1);
 """
-    run(['node','--input-type=module','-e',js])
+    run(['node','-e',js,'run'],input=session)
     controller=out/'robot_controller.py'
     controller.write_text(download_probe('gateway')+'''from controller import Supervisor\nimport struct,json\nr=Supervisor();assert not r.getSupervisor();assert not r.getRoot()._ref;assert r.getFromDef('MAINSUPERVISOR') is None;e=r.getDevice('emitter');rx=r.getDevice('receiver');rx.enable(16)\nfor name in ('wheel1 motor','wheel2 motor'):\n m=r.getDevice(name);m.setPosition(float('inf'));m.setVelocity(3.14)\nfor _ in range(70):assert r.step(16)!=-1\ne.send(struct.pack('2i',3,3)+b'0,0,0,0,5,0,0,0,0')\nfor _ in range(4):r.step(16)\ne.send(b'M');e.send(b'G')\ninfo=None\nfor _ in range(50):\n r.step(16)\n while rx.getQueueLength():\n  data=rx.getBytes()\n  if len(data)==20:info=struct.unpack('c f i i f',data)\n  rx.nextPacket()\nassert info and info[0]==b'G' and 0<info[4]<100\nprint('PASS: real external robot motion, map submission/evaluation, game-info and battery reply through public gateway.',flush=True)\ne.send(b'E')\nfor _ in range(10):\n if r.step(16)==-1:break\n''')
     sdk=run(['docker','run','--rm','--network',network,'--mount',f'type=bind,src={controller},dst=/controller/robot_controller.py,readonly','--entrypoint','/usr/local/webots/webots-controller','cyberbotics/webots:R2025a-ubuntu22.04','--protocol=tcp','--ip-address=gateway','--port=1234','--robot-name=Erebus_Bot','/controller/robot_controller.py'],capture_output=True)
@@ -98,13 +106,7 @@ socket.onerror=e=>{console.error(e);process.exit(1)};
     assert 'PASS: real external robot motion' in sdk.stdout
     # The organizer's map-review command and automatic replay must both export
     # into the private results volume without requiring container root access.
-    review_js="""const socket=new WebSocket('ws://127.0.0.1:1240/');let sent=false;let retry;
-const timeout=setTimeout(()=>{console.error('Organizer map review failed');process.exit(1)},30000);
-socket.onopen=()=>{socket.send('robot:robot:init robot window');socket.send('robot:robot:rw_reload');retry=setInterval(()=>socket.send('robot:robot:rw_reload'),500)};
-socket.onmessage=e=>{if(!sent && (e.data.includes('startup')||e.data.includes('config,'))){sent=true;clearInterval(retry);socket.send('robot:robot:showMapReview')};if(e.data.includes('mapReviewSaved,')){clearTimeout(timeout);clearInterval(retry);socket.close()}};
-socket.onerror=e=>{console.error(e);process.exit(1)};
-"""
-    run(['node','--input-type=module','-e',review_js])
+    run(['node','-e',js,'showMapReview'],input=session)
     exports=json.loads(run(compose+['exec','-T','webots','python3','-c',
         "from pathlib import Path;import json; root=Path('/erebus/match-results'); matches=list(root.rglob('match-result.json')); maps=list(root.rglob('map-result.json')); archives=list(root.rglob('*.zip')); assert len(matches)==len(maps)==len(archives)==1; assert list(root.rglob('replay.html')) and list(root.rglob('map-review.html')); result=json.loads(matches[0].read_text()); print(json.dumps(dict(replay=True,map_review=True,archive=True,final_score=result['final_score'])))"],capture_output=True).stdout)
     logs=run(compose+['logs','--no-color'],capture_output=True).stdout

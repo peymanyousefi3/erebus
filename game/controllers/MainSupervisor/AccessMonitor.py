@@ -89,7 +89,8 @@ class AccessMonitor:
     MAX_EVIDENCE = 128 * 1024 * 1024
     MAX_LOG = 16 * 1024 * 1024
 
-    def __init__(self, project_root, audit=None):
+    def __init__(self, project_root, audit=None, referee_connections=None):
+        self.referee_connections = referee_connections
         self.port = 0
         self.audit = audit
         self._health_uri = "/robot_windows/MainSupervisorWindow/erebus.png?capture-check=" + secrets.token_hex(16)
@@ -161,7 +162,7 @@ class AccessMonitor:
             if entry['status']:
                 summary += ' (HTTP ' + entry['status'] + '; ' + str(entry['bytes'] or 0) + ' body bytes captured)'
             self.audit.record('Network capture', summary,
-                warning=entry.get('warning', True), trust='packet-capture',
+                warning=entry.get('warning', True), trust='referee-capture' if entry.get('authorised') else 'packet-capture',
                 peer=entry['source'] + ':' + entry['source_port'],
                 observation=entry, evidence_session=self.session)
         with self._lock:
@@ -176,7 +177,7 @@ class AccessMonitor:
     FIELDS = ('frame.number', 'frame.time_epoch', 'ip.src', 'ipv6.src',
               'tcp.stream', 'tcp.srcport', 'http.request.method', 'http.request.uri',
               'http.response.code', 'http.request_in', 'http.content_length', 'http.file_data',
-              'http.upgrade', 'tcp.dstport')
+              'http.upgrade', 'tcp.dstport', 'ip.dst', 'ipv6.dst')
 
     def _http(self, fields, index=0):
         def show(name):
@@ -192,15 +193,18 @@ class AccessMonitor:
             uri = show('http.request.uri')
             if uri == self._health_uri:
                 if not self._gap:
-                    self._status('monitoring', 'Network capture active; loopback self-check passed. Referee activity is included.')
+                    self._status('monitoring', 'Network capture active; loopback self-check passed. Authenticated referee traffic is excluded from alerts.')
                 return
             kind = resource_kind(uri)
             websocket = show('http.upgrade').lower() == 'websocket'
+            authorised = bool(self.referee_connections and self.referee_connections.authorised(
+                show('ip.src') or show('ipv6.src'), show('tcp.srcport'),
+                show('ip.dst') or show('ipv6.dst'), show('tcp.dstport'), stamp))
             key = f'{stream}:{number}:{index}'
             entry = dict(id=key, time=stamp, source=show('ip.src') or show('ipv6.src'),
                          source_port=show('tcp.srcport'), resource='WebSocket connection' if websocket else kind or 'Webots HTTP resource', method=method,
                          filename=unquote(urlsplit(uri).path).replace('\\', '/').rsplit('/', 1)[-1][:160] if kind != 'Malformed resource request' else '[invalid URI]',
-                         warning=bool(kind or websocket),
+                         authorised=authorised, warning=not authorised,
                          outcome='Connection request observed' if websocket else 'HTTP request observed', status='', bytes=None,
                          complete=False, sha256='', evidence='')
             self._pending[(stream, number, index)] = (key, entry, uri, time.monotonic())
@@ -219,7 +223,7 @@ class AccessMonitor:
             return
         key, previous, uri, requested_at = pending
         entry = dict(previous, status=status, time=stamp)
-        if int(status) >= 400:
+        if int(status) >= 400 and not previous.get('authorised'):
             entry['warning'] = True
         if status == '101':
             entry['outcome'] = 'WebSocket connection accepted by Webots'
@@ -299,7 +303,7 @@ class AccessMonitor:
                     items = layers.get(name.replace('.', '_'), [])
                     items = items if isinstance(items, list) else [items]
                 values[name] = items
-            if record.get('timestamp'):
+            if record.get('timestamp') and not values['frame.time_epoch']:
                 values['frame.time_epoch'] = [str(int(record['timestamp']) / 1000)]
             common = {name: str(items[0]) for name, items in values.items() if items and not name.startswith('http.')}
             for operation, paired in (('http.request.method', 'http.request.uri'),

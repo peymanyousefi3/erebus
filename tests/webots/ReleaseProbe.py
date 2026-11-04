@@ -3,8 +3,10 @@ from pathlib import Path
 import sys, json, traceback, os, math, time
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]/'MainSupervisor'))
 import ControllerUploader
-ControllerUploader.start = lambda: None  # No upload server needed for this automated fixture.
+ControllerUploader.start = lambda **kwargs: None  # No upload server needed for this automated fixture.
 from MainSupervisor import Erebus, GameState
+from RefereeService import RefereeService
+RefereeService.open_url = lambda *args: None  # Automated tests retain the private service without opening a browser.
 Erebus._get_erebus_version = lambda self: self.rws.send('version', self.version)
 root = Path(__file__).resolve().parents[3]
 queue_path = root.parent / 'queue.json'

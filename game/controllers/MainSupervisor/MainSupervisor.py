@@ -29,7 +29,8 @@ import MapScorer
 import MapReview
 import ControllerUploader
 from AccessAudit import AccessAudit
-from AccessMonitor import AccessMonitor
+from AccessMonitor import AccessMonitor, server_port
+from RefereeService import RefereeService, RefereeConnections
 
 from Tools import *
 from ConsoleLog import Console
@@ -80,13 +81,20 @@ class Erebus(Supervisor):
 
         self.access_audit = AccessAudit(Path(__file__).resolve().parents[3])
         self.access_audit.start()
-        self.access_monitor = AccessMonitor(Path(__file__).resolve().parents[3], self.access_audit)
+        referee_connections = RefereeConnections()
+        self.referee_service = RefereeService(Path(__file__).resolve().parents[3],
+            server_port(os.environ.get("WEBOTS_INSTANCE_PATH", "")), referee_connections, self.access_audit, self.getName())
+        window_field = self.getSelf().getField("window")
+        if window_field.getSFString() != "<none>":
+            window_field.setSFString("<none>")
+        self.referee_service.start()
+        self.access_monitor = AccessMonitor(Path(__file__).resolve().parents[3], self.access_audit, referee_connections)
         self.access_monitor.start()
         self._audit_revision = -1
         self._audit_last_sent = 0.0
 
         # Start controller uploader
-        uploader: Thread = Thread(target=ControllerUploader.start, kwargs={"access_audit": self.access_audit}, daemon=True)
+        uploader: Thread = Thread(target=ControllerUploader.start, kwargs={"access_audit": self.access_audit, "referee_token": self.referee_service.uploader_token}, daemon=True)
         uploader.start()
 
         # Robot window send text wrapper
@@ -543,6 +551,8 @@ class Erebus(Supervisor):
             Logger.write_log(self.robot_obj, self.rws, self.max_time)
         path: str = get_file_path("worlds", "../../worlds")
         path = os.path.join(path, world)
+        self.access_monitor.close()
+        self.referee_service.close()
         self.worldLoad(path)
 
     def _load_test_script(self) -> None:
@@ -801,7 +811,7 @@ class Erebus(Supervisor):
             self.wwiSendText('mapReviewSaved,' + str(folder))
             Console.log_info(f"Map review saved: {folder}")
             if os.environ.get('EREBUS_ISOLATED_SERVER') != '1':
-                MapReview.open_review(folder / 'map-review.html')
+                self.referee_service.open_report(folder / 'map-review.html')
         except Exception as error:
             self.wwiSendText('mapReviewError,Could not save or open the map result: ' + str(error))
             Console.log_err(f"Map review failed: {error}")
@@ -934,6 +944,8 @@ class Erebus(Supervisor):
                 # which only seems to be read and interpreted once per game, so
                 # if we load a new robot file, the new changes won't come into
                 # place until the world is reset!
+                self.access_monitor.close()
+                self.referee_service.close()
                 self.worldReload()
 
             # Unload the robot controller
@@ -1202,11 +1214,16 @@ class Erebus(Supervisor):
 
                 self.rws.send("ended")
 
-        # Get the message in from the robot window(if there is one)
+        # Referee commands arrive only through the authenticated local service.
+        for command in self.referee_service.receive_commands():
+            self._process_rw_message(command)
+
+        # Direct Webots window messages have no authenticated referee identity.
         message: Optional[str] = self.wwiReceiveText()
         while message not in ['', None]:
-            Console.log_debug(f"Received wwi message: {message}")
-            self._process_rw_message(message)  # type: ignore
+            self.access_audit.record("Unauthorised supervisor connection",
+                "Direct supervisor command rejected: " + message.split(",", 1)[0][:64],
+                warning=True, trust="server-received")
             message = self.wwiReceiveText()
 
         if self._game_state == GameState.MATCH_PAUSED:

@@ -2,7 +2,7 @@
 <!-- Erebus interface customizations by Peyman Yousefi. -->
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Erebus — Match supervisor</title><link rel="icon" href="erebus.png" type="image/png">
-<link rel="stylesheet" href="MainSupervisorWindow.css?v=27.0.network-audit"><script type="module" src="MainSupervisorWindow.js?v=27.0.network-audit"></script></head>
+<link rel="stylesheet" href="MainSupervisorWindow.css?v=27.0.referee-auth"><script type="module" src="MainSupervisorWindow.js?v=27.0.referee-auth"></script></head>
 <body><svg xmlns="http://www.w3.org/2000/svg" class="icon-library" aria-hidden="true" focusable="false"><symbol id="i-earth" viewBox="0 0 24 24">
   <path d="M21.54 15H17a2 2 0 0 0-2 2v4.54"></path>
   <path d="M7 3.34V5a3 3 0 0 0 3 3a2 2 0 0 1 2 2c0 1.1.9 2 2 2a2 2 0 0 0 2-2c0-1.1.9-2 2-2h3.17"></path>
@@ -166,7 +166,7 @@
 
 <section id="accessAuditPanel" class="access-audit-panel" aria-labelledby="accessAuditHeading">
 <div class="audit-heading"><div><h2 id="accessAuditHeading"><svg class="icon" aria-hidden="true"><use href="#i-circle-alert"></use></svg>Access audit</h2><p id="accessAuditStatus" role="status" aria-atomic="true">Waiting for the supervisor audit…</p></div><button type="button" class="secondary-button" id="exportAccessAudit" onclick="exportAccessAudit()" disabled><svg class="icon" aria-hidden="true"><use href="#i-download"></use></svg>Export access log</button></div>
-<p class="audit-scope">Automatic network detection uses the installed Wireshark tools. Capture must be active and include the relevant interfaces. HTTP requests and WebSocket connections are recorded; referee activity is included. Browser-relayed warnings remain unverified. Local file reads and team identity are not covered.</p>
+<p class="audit-scope">Automatic network detection uses the installed Wireshark tools. Capture must be active and include the relevant interfaces. Direct HTTP requests and WebSocket connections are reviewed. Authenticated referee previews, reports and controls are normal activity and do not trigger access alerts. Browser-relayed warnings remain unverified. Local file reads and team identity are not covered.</p>
 <details id="accessAuditDetails"><summary>Review observations <span id="accessAuditCount">0 observations</span></summary><p id="accessAuditEmpty">No observations recorded yet.</p><ol id="accessAuditEvents" class="audit-events" reversed></ol><p id="accessAuditEvidence" class="audit-evidence"></p><p>Organizer activity is included. Commands and browser reports do not identify a team. These observations are for review, not automatic disqualification. The latest 100 observations appear here.</p></details>
 </section>
 
@@ -182,7 +182,7 @@
 <dialog id="accessAuditAlert" class="audit-alert" role="alertdialog" aria-modal="true" aria-labelledby="accessAuditAlertTitle" aria-describedby="accessAuditAlertSummary accessAuditAlertCaution">
 <div class="audit-alert-heading"><svg class="icon" aria-hidden="true"><use href="#i-circle-alert"></use></svg><div><p class="audit-alert-label">Referee attention required</p><h2 id="accessAuditAlertTitle">Access warning reported</h2></div></div>
 <p id="accessAuditAlertSummary"></p><ul id="accessAuditAlertEvents" class="audit-alert-events"></ul>
-<p id="accessAuditAlertCaution" class="audit-alert-caution">Review these observations before making a decision. Referee activity is included. Network capture records observed traffic, not the identity of a team. A browser-relayed warning is unverified. Acknowledging this alert keeps the saved log intact.</p>
+<p id="accessAuditAlertCaution" class="audit-alert-caution">Review these observations before making a decision. Authenticated referee activity is excluded from access alerts. Direct network capture records observed traffic, not the identity of a team. A browser-relayed warning is unverified. Acknowledging this alert keeps the saved log intact.</p>
 <div class="audit-alert-actions"><button type="button" class="secondary-button" onclick="acknowledgeAccessAuditAlert(); openAccessAudit();">View access log</button><button type="button" id="acknowledgeAccessAudit" class="audit-alert-acknowledge" onclick="acknowledgeAccessAuditAlert()" autofocus>Acknowledge</button></div>
 </dialog>
 <footer class="app-footer"><span>Erebus Rescue Simulator 2027 draft</span><span>Match Studio · 27.0-draft.1</span></footer></main></body></html>

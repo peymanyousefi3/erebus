@@ -1,6 +1,29 @@
 // Erebus interface customizations by Peyman Yousefi.
 import RobotWindow from 'https://cyberbotics.com/wwi/R2023a/RobotWindow.js';
 
+// Only the private referee page can submit organizer commands.
+class RefereeRobotWindow extends RobotWindow {
+    connect() {
+        super.connect();
+        if (window.erebusReferee.reconnect) this.socket.onclose = () => {
+            setMatchState('connecting');
+            const reconnect = () => fetch(window.erebusReferee.base + 'status').then(response => {
+                if (!response.ok) throw new Error('Waiting for referee service');
+                return response.json();
+            }).then(state => window.location.replace(state.url)).catch(() => setTimeout(reconnect, 1000));
+            setTimeout(reconnect, 500);
+        };
+    }
+    send(message) {
+        if (message === 'init robot window') return super.send(message);
+        this.commandQueue = (this.commandQueue || Promise.resolve()).then(() => fetch(window.erebusReferee.base + 'commands', {
+            method:'POST', body:message, headers:{'Content-Type':'text/plain; charset=utf-8'}
+        })).then(response => {
+            if (!response.ok) throw new Error('Referee command was not accepted.');
+        }).catch(() => showSourceStatus('The referee connection is unavailable. Reload the world to reopen the authenticated controls.', true));
+    }
+}
+
 let matchStarted = false;
 let dockerStarting = false;
 
@@ -627,6 +650,12 @@ function setEnableButton(name, state){
 
 //Set the onload command for the window
 window.onload = function(){
+    if (!window.erebusReferee) {
+        for (const control of document.querySelectorAll('button,input,select')) control.disabled = true;
+        document.getElementById('matchState').textContent = 'Read-only';
+        document.getElementById('accessAuditStatus').textContent = 'These controls require the authenticated referee window, which Erebus opens automatically.';
+        return;
+    }
 	//Connect the window
     // Match actions return the interface to its live view before running their existing handler.
     document.getElementById('match-controls').addEventListener('click', event => {
@@ -648,8 +677,7 @@ window.onload = function(){
     });
     const historyObserver = new ResizeObserver(updateEventScrollHint);
     historyObserver.observe(document.getElementById('historyRegion'));
-	window.robotWindow = new RobotWindow();
-    window.robotWindow.socket.addEventListener('message', relayWebotsReadWarnings);
+	window.robotWindow = new RefereeRobotWindow();
     document.getElementById('accessAuditAlert').addEventListener('cancel', event => {
         event.preventDefault();
         window.acknowledgeAccessAuditAlert();
@@ -727,7 +755,7 @@ window.fileOpened = function(filesId, acceptTypes, location, id){
 				};
                 setFileState(id, 'Uploading controller…', false);
 				disableWhileSending(true);
-				xmlhttp.open("POST", "http://127.0.0.1:60520/"+location+"/", true);
+				xmlhttp.open("POST", window.erebusReferee.base+"uploader/"+location+"/", true);
 				xmlhttp.send(fd);
 			}else{
 				//Tell the user to select a program
@@ -892,7 +920,7 @@ function renderAccessAudit(snapshot) {
         const title = document.createElement('strong');
         title.textContent = event.source + ' — ' + event.summary;
         const detail = document.createElement('p');
-        const confidence = event.trust === 'browser-relayed-unverified' ? 'Browser-relayed report · unverified' : event.trust === 'packet-capture' ? 'Network capture · team identity not established' : 'Recorded by Erebus';
+        const confidence = event.trust === 'browser-relayed-unverified' ? 'Browser-relayed report · unverified' : event.trust === 'referee-capture' || event.trust === 'referee-authorised' ? 'Authenticated referee activity' : event.trust === 'packet-capture' ? 'Direct network access · team identity not established' : 'Recorded by Erebus';
         detail.textContent = event.time + ' · ' + confidence + (event.peer ? ' · Connection ' + event.peer : ' · Sender identity unavailable');
         item.append(title, detail);
         list.append(item);
@@ -907,7 +935,7 @@ window.openAccessAudit = function() {
 };
 window.exportAccessAudit = function() {
     if (!accessAuditSnapshot) return;
-    const data = {...accessAuditSnapshot, scope:'Network observations depend on active capture coverage. Referee activity is included; team identity is not established. Browser-relayed warnings are unverified. Local file reads are not monitored.'};
+    const data = {...accessAuditSnapshot, scope:'Network observations depend on active capture coverage. Authenticated referee activity is distinguished; direct access does not establish team identity. Browser-relayed warnings are unverified. Local file reads are not monitored.'};
     const blob = new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
@@ -946,7 +974,7 @@ function showAccessAuditAlert(snapshot) {
         const title = document.createElement('strong');
         title.textContent = event.summary;
         const details = document.createElement('span');
-        details.textContent = event.source + ' · ' + (event.trust === 'browser-relayed-unverified' ? 'Unverified browser report' : event.trust === 'packet-capture' ? 'Network capture; team identity not established' : 'Recorded by Erebus') + ' · ' + event.time;
+        details.textContent = event.source + ' · ' + (event.trust === 'browser-relayed-unverified' ? 'Unverified browser report' : event.trust === 'referee-capture' || event.trust === 'referee-authorised' ? 'Authenticated referee activity' : event.trust === 'packet-capture' ? 'Direct network access; team identity not established' : 'Recorded by Erebus') + ' · ' + event.time;
         item.append(title, details);
         list.append(item);
     }

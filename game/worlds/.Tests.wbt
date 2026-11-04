@@ -6720,6 +6720,6 @@ name "curved0"
             supervisor TRUE
             controller "MainSupervisor"
             customData "10000"
-            window "MainSupervisorWindow"
+            window "<none>"
           }
         

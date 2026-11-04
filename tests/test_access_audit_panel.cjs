@@ -46,6 +46,6 @@ context.renderAccessAudit({...snapshot,network:{state:'unavailable',message:'Cap
 assert(get('accessAuditStatus').textContent.includes('Capture permission missing'));
 assert.equal(get('accessAuditPanel').dataset.warning,'true');
 context.renderAccessAudit({...snapshot,events:[{...snapshot.events[0],trust:'packet-capture'}],network:{state:'monitoring',message:'Network capture active; loopback self-check passed.'}});
-assert(get('accessAuditEvents').children[0].children[1].textContent.includes('Network capture'));
+assert(get('accessAuditEvents').children[0].children[1].textContent.includes('Direct network access'));
 context.exportAccessAudit();
 (async()=>{const result=JSON.parse(await blob.text());assert(result.scope.includes('team identity'));assert.equal(download.download,'erebus-access-audit-test.json');console.log('PASS: warning relay, red event flags, referee popup, acknowledgement persistence, coalesced warning bursts, safe rendering and export.');})().catch(error=>{console.error(error);process.exitCode=1;});

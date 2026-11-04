@@ -16,6 +16,6 @@ values=config.read_text().strip().split(',')
 values[4]='1'  # Remote controller, controlled by the organizer interface.
 values[5]='0'  # Do not publish answer diagnostics through debug logs.
 config.write_text(','.join(values)+'\n')
-print('Organizer UI: http://127.0.0.1:1240/robot_windows/MainSupervisorWindow/MainSupervisorWindow.html?name=robot',flush=True)
+print('Authenticated organizer controls are opened by the competition launcher.',flush=True)
 command=['xvfb-run','-a','-s','-screen 0 1280x720x24',os.environ['WEBOTS_HOME']+'/webots','--batch','--mode=fast','--stream','--stdout','--stderr','--port=1255',str(world)]
 raise SystemExit(subprocess.call(command,cwd=root))

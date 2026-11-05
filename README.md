@@ -4,7 +4,7 @@
 
 **Interactive HTML replay · Submitted-map review · Renovated match supervisor**
 
-[![Edition: 26.2 preview](docs/media/badges/edition.svg)](docs/releases/26.2-studio.1.md) [![Based on official Erebus 26.1](docs/media/badges/upstream.svg)](https://github.com/robocup-junior/erebus/tree/v26.1) [![Webots R2023b](docs/media/badges/webots.svg)](https://cyberbotics.com/) [![Tested Python version: 3.10](docs/media/badges/python.svg)](#verification-and-limits) [![Licence status: see NOTICE](docs/media/badges/license.svg)](NOTICE.md)
+[![Edition: 26.2 preview](docs/media/badges/edition.svg)](docs/releases/26.2-studio.1.md) [![Based on official Erebus 26.1](docs/media/badges/upstream.svg)](https://github.com/robocup-junior/erebus/tree/v26.1) [![Webots R2023b](docs/media/badges/webots.svg)](https://cyberbotics.com/) [![Python 3.10](docs/media/badges/python.svg)](#quick-start) [![Licence status: see NOTICE](docs/media/badges/license.svg)](NOTICE.md)
 
 [Get started](#quick-start) · [What's changed](#changes-from-official-261) · [Changelog](CHANGELOG.md) · [Report an issue](https://github.com/peymanyousefi3/erebus/issues)
 
@@ -16,7 +16,7 @@ This independent fork is maintained by **Peyman Yousefi**. It extends [RoboCupJu
 
 The interface identifies this edition as **26.2**. That is this fork's version, **not an official RoboCupJunior Erebus 26.2 release**. Its exact comparison baseline is [`v26.1`](https://github.com/robocup-junior/erebus/tree/v26.1), commit `a53a7965c8c0c594196aad111b486ca979e063a2`.
 
-[Quick start](#quick-start) · [Changes from 26.1](#changes-from-official-261) · [Match files](#match-files) · [Verification](#verification-and-limits) · [Credits and licensing](#credits-and-licensing)
+[Quick start](#quick-start) · [Changes from 26.1](#changes-from-official-261) · [Match files](#match-files) · [Credits and licensing](#credits-and-licensing) · [PDF guide](docs/README-2026.pdf)
 
 <p align="center">
   <img src="docs/media/supervisor-overview.png" width="900" alt="Erebus Match Studio overview: narrow supervisor, interactive replay and submitted-map review">
@@ -47,8 +47,8 @@ The interface identifies this edition as **26.2**. That is this fork's version, 
 ### Requirements
 
 - **Webots R2023b**, the version identified by the upstream setup instructions.
-- **Python 3.10**, the version used for the tested local workflow.
-- A browser with WebGL support. Chrome on macOS was used for the recorded end-to-end checks.
+- **Python 3.10**.
+- A browser with WebGL support.
 - Internet access when opening an HTML replay: scene and recording data are embedded locally, but the Webots viewer is loaded from Cyberbotics.
 
 Install the Python dependencies with the interpreter configured for Webots:
@@ -56,8 +56,6 @@ Install the Python dependencies with the interpreter configured for Webots:
 ```sh
 python -m pip install -r requirements.txt
 ```
-
-The requirements file records versions from the tested environment. It is not a claim that every Webots/Python/operating-system combination has been validated.
 
 ### Start a match
 
@@ -131,9 +129,9 @@ The original debugging facilities remain available; they are not temporary devel
 
 ## Automatic HTML recording
 
-**Record an interactive 3D match, then rotate the scene, zoom in or out and replay it in a browser.** The two short test exports produced **2.81–2.99 MB ZIP archives**; size varies with scene assets, movement and match duration. Their self-contained HTML pages were 3.54–3.65 MB. These are measured examples, not a size guarantee.
+**Record an interactive 3D match, then rotate the scene, zoom in or out and replay it in a browser.** Recording size depends on the scene assets, movement and match duration.
 
-Replay can be viewed in a **WebGL-capable phone browser** as well as on a computer. Internet access is required for the viewer. Physical-phone playback and touch gestures have not yet been tested for this fork; see the [Webots animation viewer documentation](https://cyberbotics.com/doc/guide/web-animation).
+Replay uses a WebGL-capable browser and loads the viewer from Cyberbotics. See the [Webots animation viewer documentation](https://cyberbotics.com/doc/guide/web-animation).
 
 Enable **HTML replay recording** before starting the match. Recording starts after the robot and initial HUD are ready. On completion, give-up, timeout or reset, the supervisor finalizes the recording before removing the robot.
 
@@ -245,23 +243,6 @@ Other scene dependencies may also be exported. The recording ZIP packages the re
 
 Upstream `MapScorer`, `MapAnswer`, `Tile`, `Victim`, `ProtoGenerator`, world files and example player controllers are retained. Runtime controller copies, custom robot models, generated target textures, logs, local maps, recordings, cached native binaries and machine-specific settings are not included in this publication.
 
-## Verification and limits
-
-The development checks included **two short real Webots matches** on macOS with Chrome: actual controller upload, original-source refresh on/off, Keep Files across Reset, pause/resume, browser refresh, automatic completion, robot removal, recording/ZIP creation, map saving and missing/invalid JSON recovery. Direct-file replay loading, play/pause and actual timeline seeking were also checked.
-
-Additional isolated tests reproduced and verified the Remote-mode and Docker-message fixes. A failed real Docker-start request returned an error and restored the controls.
-
-Run the portable regression suite:
-
-```sh
-python -m pip install -r requirements-dev.txt
-python scripts/check_customizations.py
-node tests/test_interface_contract.cjs
-```
-
-Node is needed only for that interface contract check, not for running Erebus. A workflow is configured for Python 3.10/3.12 on Linux, Windows and macOS; configuration is not evidence of completed workflow runs.
-
-**Not yet verified:** physical-phone playback and touch gestures, successful Docker container startup, Safari, or Windows/Linux Webots runtime behavior. The local test computer had no Docker runtime. Static cross-platform checks and unit tests do not establish full simulator compatibility, accessibility compliance or readiness for every competition environment. Validate the complete setup on the intended referee computer before an event.
 
 ## Credits and licensing
 

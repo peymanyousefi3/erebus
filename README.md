@@ -63,7 +63,6 @@ Choose the branch that matches your competition and Webots installation.
 | --- | --- | --- | --- |
 | **[`2026_webots2023b`](https://github.com/peymanyousefi3/erebus/tree/2026_webots2023b)** (this branch) | 2026 | R2023b | Match Studio 26.2: match supervision, replay and map review. |
 | [`2027_webots2025a`](https://github.com/peymanyousefi3/erebus/tree/2027_webots2025a) | 2027 draft | R2025a | Match Studio with battery consumption, cyan contact tiles and smiley victims. |
-| [`2028_webots2025a`](https://github.com/peymanyousefi3/erebus/tree/2028_webots2025a) | Future development | R2025a | Robot Designer and component library; under development. |
 
 **[Quick start](#quick-start)** · [Features](#match-studio-features) · [Match files](#match-files) · [PDF guide](docs/README-2026.pdf)
 

@@ -1,0 +1,1113 @@
+{
+  "schema_version": 1,
+  "qualified_game_commit": "64027a0407c269eb23feb0490b58a885d24dda8b",
+  "qualified_test_commit": "3d9952b92b47a53943444d561ce52b984bbea78c",
+  "rules_pdf_sha256": "c4dc6cfe5a3d69d21c626e5a44258f947e4923fc06f49effe11b6f767827d3be",
+  "total_platform_cases": 103,
+  "platforms": {
+    "mac": {
+      "passed": true,
+      "case_count": 34,
+      "cases": [
+        {
+          "world": ".Tests",
+          "mode": "load",
+          "passed": true,
+          "elapsed_seconds": 1.008,
+          "battery_level": 99.38000000490146
+        },
+        {
+          "world": "mapping_example_1_cyan_tiles",
+          "mode": "contact",
+          "passed": true,
+          "elapsed_seconds": 6.368,
+          "replacement_stationary_seconds": 5.008,
+          "battery_level": 0.0
+        },
+        {
+          "world": "mapping_example_1_cyan_tiles",
+          "mode": "four-wheels",
+          "passed": true,
+          "elapsed_seconds": 1.008,
+          "battery_level": 98.75999987021488
+        },
+        {
+          "world": "mapping_example_1_cyan_tiles",
+          "mode": "no-camera",
+          "passed": true,
+          "elapsed_seconds": 1.008,
+          "battery_level": 99.37999981098368
+        },
+        {
+          "world": "mapping_example_1_cyan_tiles",
+          "mode": "custom-camera",
+          "passed": true,
+          "elapsed_seconds": 1.008,
+          "battery_level": 99.37999981004673
+        },
+        {
+          "world": "mapping_example_1_cyan_tiles",
+          "mode": "all-sensors",
+          "passed": true,
+          "elapsed_seconds": 1.008,
+          "battery_level": 99.37999980966687
+        },
+        {
+          "world": "mapping_example_1_cyan_tiles",
+          "mode": "legacy-model",
+          "passed": true,
+          "elapsed_seconds": 1.008,
+          "battery_level": 99.38000026878733
+        },
+        {
+          "world": "mapping_example_1_cyan_tiles",
+          "mode": "swamp",
+          "passed": true,
+          "elapsed_seconds": 2.016,
+          "battery_level": 96.37000010574646
+        },
+        {
+          "world": "mapping_example_1_cyan_tiles",
+          "mode": "natural-depletion",
+          "passed": true,
+          "elapsed_seconds": 80.544,
+          "natural_depletion_seconds": 80.544,
+          "battery_level": 0.0
+        },
+        {
+          "world": "mapping_example_1_cyan_tiles",
+          "mode": "remote-ipc",
+          "passed": true,
+          "elapsed_seconds": 1.008,
+          "battery_level": 99.38000026878733
+        },
+        {
+          "world": "mapping_example_1_cyan_tiles",
+          "mode": "remote-tcp",
+          "passed": true,
+          "elapsed_seconds": 1.008,
+          "battery_level": 99.38000026878733
+        },
+        {
+          "world": "mapping_example_1_cyan_tiles",
+          "mode": "full-match",
+          "passed": true,
+          "elapsed_seconds": 480.0,
+          "full_match_seconds": 480.0,
+          "battery_level": 99.35998363974458
+        },
+        {
+          "world": "mapping_example_1_cyan_tiles",
+          "mode": "real-time-limit",
+          "passed": true,
+          "elapsed_seconds": 1.008,
+          "real_time_boundary_seconds": 600,
+          "battery_level": 99.37000027441704
+        },
+        {
+          "world": "2027_d1r1",
+          "mode": "scoring",
+          "passed": true,
+          "elapsed_seconds": 20.832,
+          "scored_tokens": 13,
+          "final_score": 677.6,
+          "battery_level": 99.15999693338011
+        },
+        {
+          "world": "2027_d1r2",
+          "mode": "scoring",
+          "passed": true,
+          "elapsed_seconds": 19.36,
+          "scored_tokens": 12,
+          "final_score": 1089.0,
+          "battery_level": 99.35999959017477
+        },
+        {
+          "world": "2027_d2r1",
+          "mode": "scoring",
+          "passed": true,
+          "elapsed_seconds": 34.656,
+          "scored_tokens": 21,
+          "final_score": 1385.45,
+          "battery_level": 99.35999769173597
+        },
+        {
+          "world": "2027_d2r2",
+          "mode": "scoring",
+          "passed": true,
+          "elapsed_seconds": 75.264,
+          "scored_tokens": 29,
+          "final_score": 2193.11,
+          "battery_level": 99.35998853666436
+        },
+        {
+          "world": "world1",
+          "mode": "scoring",
+          "passed": true,
+          "elapsed_seconds": 8.784,
+          "scored_tokens": 5,
+          "final_score": 305.51,
+          "battery_level": 99.35999991954067
+        },
+        {
+          "world": "2027_d1r1",
+          "mode": "load",
+          "passed": true,
+          "elapsed_seconds": 1.008,
+          "battery_level": 99.2600000055526
+        },
+        {
+          "world": "2027_d1r2",
+          "mode": "load",
+          "passed": true,
+          "elapsed_seconds": 1.008,
+          "battery_level": 99.38000000489987
+        },
+        {
+          "world": "2027_d2r1",
+          "mode": "load",
+          "passed": true,
+          "elapsed_seconds": 1.008,
+          "battery_level": 99.38000000490146
+        },
+        {
+          "world": "2027_d2r2",
+          "mode": "load",
+          "passed": true,
+          "elapsed_seconds": 1.008,
+          "battery_level": 99.3800000048955
+        },
+        {
+          "world": "NewPassages",
+          "mode": "load",
+          "passed": true,
+          "elapsed_seconds": 1.008,
+          "battery_level": 99.38000000490146
+        },
+        {
+          "world": "mapping_example_1",
+          "mode": "load",
+          "passed": true,
+          "elapsed_seconds": 1.008,
+          "battery_level": 99.38000026878733
+        },
+        {
+          "world": "mapping_example_1_cyan_tiles",
+          "mode": "load",
+          "passed": true,
+          "elapsed_seconds": 1.008,
+          "battery_level": 99.38000026878733
+        },
+        {
+          "world": "mapping_example_2",
+          "mode": "load",
+          "passed": true,
+          "elapsed_seconds": 1.008,
+          "battery_level": 99.3800000048955
+        },
+        {
+          "world": "mapping_example_3",
+          "mode": "load",
+          "passed": true,
+          "elapsed_seconds": 1.008,
+          "battery_level": 99.38000000490146
+        },
+        {
+          "world": "world1",
+          "mode": "load",
+          "passed": true,
+          "elapsed_seconds": 1.008,
+          "battery_level": 99.38000000490146
+        },
+        {
+          "world": "world2",
+          "mode": "load",
+          "passed": true,
+          "elapsed_seconds": 1.008,
+          "battery_level": 99.38000000489987
+        },
+        {
+          "world": "world3",
+          "mode": "load",
+          "passed": true,
+          "elapsed_seconds": 1.008,
+          "battery_level": 99.38000000528535
+        },
+        {
+          "world": "world4",
+          "mode": "load",
+          "passed": true,
+          "elapsed_seconds": 1.008,
+          "battery_level": 99.38000000490146
+        },
+        {
+          "world": "mapping_example_1_cyan_tiles",
+          "mode": "contact-ten",
+          "passed": true,
+          "elapsed_seconds": 11.36,
+          "replacement_stationary_seconds": 10.0,
+          "battery_level": 0.0
+        },
+        {
+          "world": "mapping_example_1_cyan_tiles",
+          "mode": "autonomous",
+          "passed": true,
+          "elapsed_seconds": 480.0,
+          "full_match_seconds": 480.0,
+          "battery_level": 33.12104458770899,
+          "measured_path_m": 0.6230750773493842
+        },
+        {
+          "world": "mapping_example_1_cyan_tiles",
+          "mode": "remote-autonomous",
+          "passed": true,
+          "elapsed_seconds": 480.0,
+          "full_match_seconds": 480.0,
+          "battery_level": 33.121044587709044,
+          "measured_path_m": 0.6230750773493929
+        }
+      ]
+    },
+    "windows": {
+      "passed": true,
+      "case_count": 34,
+      "cases": [
+        {
+          "world": ".Tests",
+          "mode": "load",
+          "passed": true,
+          "elapsed_seconds": 1.008,
+          "battery_level": 99.38000000490146
+        },
+        {
+          "world": "mapping_example_3",
+          "mode": "load",
+          "passed": true,
+          "elapsed_seconds": 1.008,
+          "battery_level": 99.38000000490146
+        },
+        {
+          "world": "world1",
+          "mode": "load",
+          "passed": true,
+          "elapsed_seconds": 1.008,
+          "battery_level": 99.38000000490146
+        },
+        {
+          "world": "world4",
+          "mode": "load",
+          "passed": true,
+          "elapsed_seconds": 1.008,
+          "battery_level": 99.38000000490146
+        },
+        {
+          "world": "mapping_example_1_cyan_tiles",
+          "mode": "custom-camera",
+          "passed": true,
+          "elapsed_seconds": 1.008,
+          "battery_level": 99.37999981004673
+        },
+        {
+          "world": "mapping_example_1_cyan_tiles",
+          "mode": "four-wheels",
+          "passed": true,
+          "elapsed_seconds": 1.008,
+          "battery_level": 98.75999987021488
+        },
+        {
+          "world": "mapping_example_1_cyan_tiles",
+          "mode": "full-match",
+          "passed": true,
+          "elapsed_seconds": 480.0,
+          "full_match_seconds": 480.0,
+          "battery_level": 99.35998363974457
+        },
+        {
+          "world": "mapping_example_1_cyan_tiles",
+          "mode": "all-sensors",
+          "passed": true,
+          "elapsed_seconds": 1.008,
+          "battery_level": 99.37999980966686
+        },
+        {
+          "world": "2027_d2r2",
+          "mode": "scoring",
+          "passed": true,
+          "elapsed_seconds": 75.264,
+          "scored_tokens": 29,
+          "final_score": 2193.11,
+          "battery_level": 99.35998853666425
+        },
+        {
+          "world": "2027_d1r2",
+          "mode": "scoring",
+          "passed": true,
+          "elapsed_seconds": 19.36,
+          "scored_tokens": 12,
+          "final_score": 1089.0,
+          "battery_level": 99.35999959017477
+        },
+        {
+          "world": "mapping_example_1_cyan_tiles",
+          "mode": "autonomous",
+          "passed": true,
+          "elapsed_seconds": 480.0,
+          "full_match_seconds": 480.0,
+          "battery_level": 33.12104458770908,
+          "measured_path_m": 0.6230750773493593
+        },
+        {
+          "world": "mapping_example_1_cyan_tiles",
+          "mode": "remote-autonomous",
+          "passed": true,
+          "elapsed_seconds": 480.0,
+          "full_match_seconds": 480.0,
+          "battery_level": 33.12104458770909,
+          "measured_path_m": 0.6230750773493673
+        },
+        {
+          "world": "2027_d2r2",
+          "mode": "load",
+          "passed": true,
+          "elapsed_seconds": 1.008,
+          "battery_level": 99.3800000048955
+        },
+        {
+          "world": "mapping_example_1_cyan_tiles",
+          "mode": "contact-ten",
+          "passed": true,
+          "elapsed_seconds": 11.36,
+          "replacement_stationary_seconds": 10.0,
+          "battery_level": 0.0
+        },
+        {
+          "world": "2027_d1r1",
+          "mode": "load",
+          "passed": true,
+          "elapsed_seconds": 1.008,
+          "battery_level": 99.2600000055526
+        },
+        {
+          "world": "mapping_example_1_cyan_tiles",
+          "mode": "remote-ipc",
+          "passed": true,
+          "elapsed_seconds": 1.008,
+          "battery_level": 99.38000026878733
+        },
+        {
+          "world": "mapping_example_1_cyan_tiles",
+          "mode": "real-time-limit",
+          "passed": true,
+          "elapsed_seconds": 1.008,
+          "real_time_boundary_seconds": 600,
+          "battery_level": 99.37000027441704
+        },
+        {
+          "world": "NewPassages",
+          "mode": "load",
+          "passed": true,
+          "elapsed_seconds": 1.008,
+          "battery_level": 99.38000000490146
+        },
+        {
+          "world": "mapping_example_1_cyan_tiles",
+          "mode": "swamp",
+          "passed": true,
+          "elapsed_seconds": 2.016,
+          "battery_level": 96.37000010574646
+        },
+        {
+          "world": "2027_d1r1",
+          "mode": "scoring",
+          "passed": true,
+          "elapsed_seconds": 20.832,
+          "scored_tokens": 13,
+          "final_score": 677.6,
+          "battery_level": 99.15999693338014
+        },
+        {
+          "world": "mapping_example_1",
+          "mode": "load",
+          "passed": true,
+          "elapsed_seconds": 1.008,
+          "battery_level": 99.38000026878733
+        },
+        {
+          "world": "mapping_example_1_cyan_tiles",
+          "mode": "legacy-model",
+          "passed": true,
+          "elapsed_seconds": 1.008,
+          "battery_level": 99.38000026878733
+        },
+        {
+          "world": "2027_d2r1",
+          "mode": "load",
+          "passed": true,
+          "elapsed_seconds": 1.008,
+          "battery_level": 99.38000000490146
+        },
+        {
+          "world": "mapping_example_2",
+          "mode": "load",
+          "passed": true,
+          "elapsed_seconds": 1.008,
+          "battery_level": 99.3800000048955
+        },
+        {
+          "world": "2027_d2r1",
+          "mode": "scoring",
+          "passed": true,
+          "elapsed_seconds": 34.656,
+          "scored_tokens": 21,
+          "final_score": 1385.45,
+          "battery_level": 99.35999769173594
+        },
+        {
+          "world": "2027_d1r2",
+          "mode": "load",
+          "passed": true,
+          "elapsed_seconds": 1.008,
+          "battery_level": 99.38000000489987
+        },
+        {
+          "world": "mapping_example_1_cyan_tiles",
+          "mode": "natural-depletion",
+          "passed": true,
+          "elapsed_seconds": 80.544,
+          "natural_depletion_seconds": 80.544,
+          "battery_level": 0.0
+        },
+        {
+          "world": "mapping_example_1_cyan_tiles",
+          "mode": "no-camera",
+          "passed": true,
+          "elapsed_seconds": 1.008,
+          "battery_level": 99.37999981098368
+        },
+        {
+          "world": "world1",
+          "mode": "scoring",
+          "passed": true,
+          "elapsed_seconds": 8.784,
+          "scored_tokens": 5,
+          "final_score": 305.51,
+          "battery_level": 99.35999991954067
+        },
+        {
+          "world": "mapping_example_1_cyan_tiles",
+          "mode": "load",
+          "passed": true,
+          "elapsed_seconds": 1.008,
+          "battery_level": 99.38000026878733
+        },
+        {
+          "world": "mapping_example_1_cyan_tiles",
+          "mode": "contact",
+          "passed": true,
+          "elapsed_seconds": 6.368,
+          "replacement_stationary_seconds": 5.008,
+          "battery_level": 0.0
+        },
+        {
+          "world": "mapping_example_1_cyan_tiles",
+          "mode": "remote-tcp",
+          "passed": true,
+          "elapsed_seconds": 1.008,
+          "battery_level": 99.38000026878733
+        },
+        {
+          "world": "world3",
+          "mode": "load",
+          "passed": true,
+          "elapsed_seconds": 1.008,
+          "battery_level": 99.38000000528535
+        },
+        {
+          "world": "world2",
+          "mode": "load",
+          "passed": true,
+          "elapsed_seconds": 1.008,
+          "battery_level": 99.38000000489987
+        }
+      ]
+    },
+    "linux": {
+      "passed": true,
+      "case_count": 35,
+      "cases": [
+        {
+          "world": "mapping_example_1_cyan_tiles",
+          "mode": "remote-docker",
+          "passed": true,
+          "elapsed_seconds": 1.008,
+          "battery_level": 99.38000026878733
+        },
+        {
+          "world": ".Tests",
+          "mode": "load",
+          "passed": true,
+          "elapsed_seconds": 1.008,
+          "battery_level": 99.38000000490146
+        },
+        {
+          "world": "mapping_example_3",
+          "mode": "load",
+          "passed": true,
+          "elapsed_seconds": 1.008,
+          "battery_level": 99.38000000490146
+        },
+        {
+          "world": "world1",
+          "mode": "load",
+          "passed": true,
+          "elapsed_seconds": 1.008,
+          "battery_level": 99.38000000490146
+        },
+        {
+          "world": "world4",
+          "mode": "load",
+          "passed": true,
+          "elapsed_seconds": 1.008,
+          "battery_level": 99.38000000490146
+        },
+        {
+          "world": "mapping_example_1_cyan_tiles",
+          "mode": "custom-camera",
+          "passed": true,
+          "elapsed_seconds": 1.008,
+          "battery_level": 99.37999981004673
+        },
+        {
+          "world": "mapping_example_1_cyan_tiles",
+          "mode": "four-wheels",
+          "passed": true,
+          "elapsed_seconds": 1.008,
+          "battery_level": 98.75999987021488
+        },
+        {
+          "world": "mapping_example_1_cyan_tiles",
+          "mode": "full-match",
+          "passed": true,
+          "elapsed_seconds": 480.0,
+          "full_match_seconds": 480.0,
+          "battery_level": 99.35998363974463
+        },
+        {
+          "world": "mapping_example_1_cyan_tiles",
+          "mode": "all-sensors",
+          "passed": true,
+          "elapsed_seconds": 1.008,
+          "battery_level": 99.37999980966686
+        },
+        {
+          "world": "2027_d2r2",
+          "mode": "scoring",
+          "passed": true,
+          "elapsed_seconds": 75.264,
+          "scored_tokens": 29,
+          "final_score": 2193.11,
+          "battery_level": 99.35998853666426
+        },
+        {
+          "world": "2027_d1r2",
+          "mode": "scoring",
+          "passed": true,
+          "elapsed_seconds": 19.36,
+          "scored_tokens": 12,
+          "final_score": 1089.0,
+          "battery_level": 99.35999959017474
+        },
+        {
+          "world": "mapping_example_1_cyan_tiles",
+          "mode": "autonomous",
+          "passed": true,
+          "elapsed_seconds": 480.0,
+          "full_match_seconds": 480.0,
+          "battery_level": 33.12104458770905,
+          "measured_path_m": 0.6230750773493774
+        },
+        {
+          "world": "mapping_example_1_cyan_tiles",
+          "mode": "remote-autonomous",
+          "passed": true,
+          "elapsed_seconds": 480.0,
+          "full_match_seconds": 480.0,
+          "battery_level": 33.12104458770907,
+          "measured_path_m": 0.6230750773493311
+        },
+        {
+          "world": "2027_d2r2",
+          "mode": "load",
+          "passed": true,
+          "elapsed_seconds": 1.008,
+          "battery_level": 99.3800000048955
+        },
+        {
+          "world": "mapping_example_1_cyan_tiles",
+          "mode": "contact-ten",
+          "passed": true,
+          "elapsed_seconds": 11.36,
+          "replacement_stationary_seconds": 10.0,
+          "battery_level": 0.0
+        },
+        {
+          "world": "2027_d1r1",
+          "mode": "load",
+          "passed": true,
+          "elapsed_seconds": 1.008,
+          "battery_level": 99.2600000055526
+        },
+        {
+          "world": "mapping_example_1_cyan_tiles",
+          "mode": "remote-ipc",
+          "passed": true,
+          "elapsed_seconds": 1.008,
+          "battery_level": 99.38000026878733
+        },
+        {
+          "world": "mapping_example_1_cyan_tiles",
+          "mode": "real-time-limit",
+          "passed": true,
+          "elapsed_seconds": 1.008,
+          "real_time_boundary_seconds": 600,
+          "battery_level": 99.37000027441704
+        },
+        {
+          "world": "NewPassages",
+          "mode": "load",
+          "passed": true,
+          "elapsed_seconds": 1.008,
+          "battery_level": 99.38000000490146
+        },
+        {
+          "world": "mapping_example_1_cyan_tiles",
+          "mode": "swamp",
+          "passed": true,
+          "elapsed_seconds": 2.016,
+          "battery_level": 96.37000010574646
+        },
+        {
+          "world": "2027_d1r1",
+          "mode": "scoring",
+          "passed": true,
+          "elapsed_seconds": 20.832,
+          "scored_tokens": 13,
+          "final_score": 677.6,
+          "battery_level": 99.15999693338013
+        },
+        {
+          "world": "mapping_example_1",
+          "mode": "load",
+          "passed": true,
+          "elapsed_seconds": 1.008,
+          "battery_level": 99.38000026878733
+        },
+        {
+          "world": "mapping_example_1_cyan_tiles",
+          "mode": "legacy-model",
+          "passed": true,
+          "elapsed_seconds": 1.008,
+          "battery_level": 99.38000026878733
+        },
+        {
+          "world": "2027_d2r1",
+          "mode": "load",
+          "passed": true,
+          "elapsed_seconds": 1.008,
+          "battery_level": 99.38000000490146
+        },
+        {
+          "world": "mapping_example_2",
+          "mode": "load",
+          "passed": true,
+          "elapsed_seconds": 1.008,
+          "battery_level": 99.3800000048955
+        },
+        {
+          "world": "2027_d2r1",
+          "mode": "scoring",
+          "passed": true,
+          "elapsed_seconds": 34.656,
+          "scored_tokens": 21,
+          "final_score": 1385.45,
+          "battery_level": 99.35999769173596
+        },
+        {
+          "world": "2027_d1r2",
+          "mode": "load",
+          "passed": true,
+          "elapsed_seconds": 1.008,
+          "battery_level": 99.38000000489987
+        },
+        {
+          "world": "mapping_example_1_cyan_tiles",
+          "mode": "natural-depletion",
+          "passed": true,
+          "elapsed_seconds": 80.544,
+          "natural_depletion_seconds": 80.544,
+          "battery_level": 0.0
+        },
+        {
+          "world": "mapping_example_1_cyan_tiles",
+          "mode": "no-camera",
+          "passed": true,
+          "elapsed_seconds": 1.008,
+          "battery_level": 99.37999981098368
+        },
+        {
+          "world": "world1",
+          "mode": "scoring",
+          "passed": true,
+          "elapsed_seconds": 8.784,
+          "scored_tokens": 5,
+          "final_score": 305.51,
+          "battery_level": 99.35999991954067
+        },
+        {
+          "world": "mapping_example_1_cyan_tiles",
+          "mode": "load",
+          "passed": true,
+          "elapsed_seconds": 1.008,
+          "battery_level": 99.38000026878733
+        },
+        {
+          "world": "mapping_example_1_cyan_tiles",
+          "mode": "contact",
+          "passed": true,
+          "elapsed_seconds": 6.368,
+          "replacement_stationary_seconds": 5.008,
+          "battery_level": 0.0
+        },
+        {
+          "world": "mapping_example_1_cyan_tiles",
+          "mode": "remote-tcp",
+          "passed": true,
+          "elapsed_seconds": 1.008,
+          "battery_level": 99.38000026878733
+        },
+        {
+          "world": "world3",
+          "mode": "load",
+          "passed": true,
+          "elapsed_seconds": 1.008,
+          "battery_level": 99.38000000528535
+        },
+        {
+          "world": "world2",
+          "mode": "load",
+          "passed": true,
+          "elapsed_seconds": 1.008,
+          "battery_level": 99.38000000489987
+        }
+      ]
+    }
+  },
+  "scoring_and_timing_comparisons": {
+    "passed": true,
+    "checks": [
+      {
+        "platform": "windows",
+        "world": "mapping_example_1_cyan_tiles",
+        "mode": "full-match",
+        "field": "full_match_seconds",
+        "mac": 480.0,
+        "value": 480.0,
+        "passed": true
+      },
+      {
+        "platform": "windows",
+        "world": "2027_d2r2",
+        "mode": "scoring",
+        "field": "scored_tokens",
+        "mac": 29,
+        "value": 29,
+        "passed": true
+      },
+      {
+        "platform": "windows",
+        "world": "2027_d2r2",
+        "mode": "scoring",
+        "field": "final_score",
+        "mac": 2193.11,
+        "value": 2193.11,
+        "passed": true
+      },
+      {
+        "platform": "windows",
+        "world": "2027_d1r2",
+        "mode": "scoring",
+        "field": "scored_tokens",
+        "mac": 12,
+        "value": 12,
+        "passed": true
+      },
+      {
+        "platform": "windows",
+        "world": "2027_d1r2",
+        "mode": "scoring",
+        "field": "final_score",
+        "mac": 1089.0,
+        "value": 1089.0,
+        "passed": true
+      },
+      {
+        "platform": "windows",
+        "world": "mapping_example_1_cyan_tiles",
+        "mode": "autonomous",
+        "field": "full_match_seconds",
+        "mac": 480.0,
+        "value": 480.0,
+        "passed": true
+      },
+      {
+        "platform": "windows",
+        "world": "mapping_example_1_cyan_tiles",
+        "mode": "remote-autonomous",
+        "field": "full_match_seconds",
+        "mac": 480.0,
+        "value": 480.0,
+        "passed": true
+      },
+      {
+        "platform": "windows",
+        "world": "mapping_example_1_cyan_tiles",
+        "mode": "contact-ten",
+        "field": "replacement_stationary_seconds",
+        "mac": 10.0,
+        "value": 10.0,
+        "passed": true
+      },
+      {
+        "platform": "windows",
+        "world": "2027_d1r1",
+        "mode": "scoring",
+        "field": "scored_tokens",
+        "mac": 13,
+        "value": 13,
+        "passed": true
+      },
+      {
+        "platform": "windows",
+        "world": "2027_d1r1",
+        "mode": "scoring",
+        "field": "final_score",
+        "mac": 677.6,
+        "value": 677.6,
+        "passed": true
+      },
+      {
+        "platform": "windows",
+        "world": "2027_d2r1",
+        "mode": "scoring",
+        "field": "scored_tokens",
+        "mac": 21,
+        "value": 21,
+        "passed": true
+      },
+      {
+        "platform": "windows",
+        "world": "2027_d2r1",
+        "mode": "scoring",
+        "field": "final_score",
+        "mac": 1385.45,
+        "value": 1385.45,
+        "passed": true
+      },
+      {
+        "platform": "windows",
+        "world": "mapping_example_1_cyan_tiles",
+        "mode": "natural-depletion",
+        "field": "natural_depletion_seconds",
+        "mac": 80.544,
+        "value": 80.544,
+        "passed": true
+      },
+      {
+        "platform": "windows",
+        "world": "world1",
+        "mode": "scoring",
+        "field": "scored_tokens",
+        "mac": 5,
+        "value": 5,
+        "passed": true
+      },
+      {
+        "platform": "windows",
+        "world": "world1",
+        "mode": "scoring",
+        "field": "final_score",
+        "mac": 305.51,
+        "value": 305.51,
+        "passed": true
+      },
+      {
+        "platform": "windows",
+        "world": "mapping_example_1_cyan_tiles",
+        "mode": "contact",
+        "field": "replacement_stationary_seconds",
+        "mac": 5.008,
+        "value": 5.008,
+        "passed": true
+      },
+      {
+        "platform": "linux",
+        "world": "mapping_example_1_cyan_tiles",
+        "mode": "full-match",
+        "field": "full_match_seconds",
+        "mac": 480.0,
+        "value": 480.0,
+        "passed": true
+      },
+      {
+        "platform": "linux",
+        "world": "2027_d2r2",
+        "mode": "scoring",
+        "field": "scored_tokens",
+        "mac": 29,
+        "value": 29,
+        "passed": true
+      },
+      {
+        "platform": "linux",
+        "world": "2027_d2r2",
+        "mode": "scoring",
+        "field": "final_score",
+        "mac": 2193.11,
+        "value": 2193.11,
+        "passed": true
+      },
+      {
+        "platform": "linux",
+        "world": "2027_d1r2",
+        "mode": "scoring",
+        "field": "scored_tokens",
+        "mac": 12,
+        "value": 12,
+        "passed": true
+      },
+      {
+        "platform": "linux",
+        "world": "2027_d1r2",
+        "mode": "scoring",
+        "field": "final_score",
+        "mac": 1089.0,
+        "value": 1089.0,
+        "passed": true
+      },
+      {
+        "platform": "linux",
+        "world": "mapping_example_1_cyan_tiles",
+        "mode": "autonomous",
+        "field": "full_match_seconds",
+        "mac": 480.0,
+        "value": 480.0,
+        "passed": true
+      },
+      {
+        "platform": "linux",
+        "world": "mapping_example_1_cyan_tiles",
+        "mode": "remote-autonomous",
+        "field": "full_match_seconds",
+        "mac": 480.0,
+        "value": 480.0,
+        "passed": true
+      },
+      {
+        "platform": "linux",
+        "world": "mapping_example_1_cyan_tiles",
+        "mode": "contact-ten",
+        "field": "replacement_stationary_seconds",
+        "mac": 10.0,
+        "value": 10.0,
+        "passed": true
+      },
+      {
+        "platform": "linux",
+        "world": "2027_d1r1",
+        "mode": "scoring",
+        "field": "scored_tokens",
+        "mac": 13,
+        "value": 13,
+        "passed": true
+      },
+      {
+        "platform": "linux",
+        "world": "2027_d1r1",
+        "mode": "scoring",
+        "field": "final_score",
+        "mac": 677.6,
+        "value": 677.6,
+        "passed": true
+      },
+      {
+        "platform": "linux",
+        "world": "2027_d2r1",
+        "mode": "scoring",
+        "field": "scored_tokens",
+        "mac": 21,
+        "value": 21,
+        "passed": true
+      },
+      {
+        "platform": "linux",
+        "world": "2027_d2r1",
+        "mode": "scoring",
+        "field": "final_score",
+        "mac": 1385.45,
+        "value": 1385.45,
+        "passed": true
+      },
+      {
+        "platform": "linux",
+        "world": "mapping_example_1_cyan_tiles",
+        "mode": "natural-depletion",
+        "field": "natural_depletion_seconds",
+        "mac": 80.544,
+        "value": 80.544,
+        "passed": true
+      },
+      {
+        "platform": "linux",
+        "world": "world1",
+        "mode": "scoring",
+        "field": "scored_tokens",
+        "mac": 5,
+        "value": 5,
+        "passed": true
+      },
+      {
+        "platform": "linux",
+        "world": "world1",
+        "mode": "scoring",
+        "field": "final_score",
+        "mac": 305.51,
+        "value": 305.51,
+        "passed": true
+      },
+      {
+        "platform": "linux",
+        "world": "mapping_example_1_cyan_tiles",
+        "mode": "contact",
+        "field": "replacement_stationary_seconds",
+        "mac": 5.008,
+        "value": 5.008,
+        "passed": true
+      }
+    ]
+  },
+  "notes": [
+    "Mac qualification combines 32 core cases and two final endurance reruns.",
+    "TCP controllers ran as separate processes on the same host.",
+    "Linux includes the ordinary Docker controller.",
+    "Full logs and raw replay evidence are retained in the local Erebus dataset."
+  ],
+  "qualified_test_files_sha256": {
+    "tests/webots/ReleaseProbe.py": "0f43aa5801c6aa1cd4150f785a82d8a4d5ebc989a5929f6cd1e37fbb82b72616",
+    "tests/webots/autonomousController.py": "de8d5673abab40a6c048ade2ab62c25f146d90316d148885caeb675de8691b00",
+    "tests/webots/monitor.py": "95b0b7b8412c8a54436e7818bce62dcdbd7cc3ab8d9f460ce5cee34c075a29e1",
+    "tests/webots/prepare.py": "7ce986405c685f0919d217b7538fa636316a3d7cd25142fa48af07525a97b754",
+    "tests/webots/robot0Controller.py": "16ed7e94de5da57228dd49aac2c16dd0103081aa94c3e94b786eb0141f019f09",
+    "tests/webots/run_competition.py": "0f008af3baf827322e467266a3b2be16ada48d240a37b18f50d114cba2317d47",
+    ".github/workflows/competition.yml": "5226b0c8300e3ceeebc06fa17056ccba4c03897ddb5894bfe8b3604e516d1029"
+  }
+}

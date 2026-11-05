@@ -12,7 +12,7 @@ while time.monotonic()<deadline:
   if f.name not in reported:
    r=json.loads(f.read_text());print(f.name,'PASS' if r['passed'] else 'FAIL',r.get('error',''),flush=True);reported.add(f.name)
  if q['index']>=len(q['jobs']):break
- if args.webots_pid:
+ if args.webots_pid and os.name!='nt':
   try:os.kill(args.webots_pid,0)
   except ProcessLookupError:raise SystemExit('Webots exited before its validation queue completed; inspect the engine log.')
  i=q['index'];job=q['jobs'][i];ready=out/'runtime/remote-ready'
@@ -24,6 +24,7 @@ while time.monotonic()<deadline:
  if job['mode'].startswith('remote-') and i not in started and ready.exists() and ready.read_text()==str(i):
   log=(out/f'remote-{i}.txt').open('w')
   protocol=job['mode'].split('-')[1]
+  if protocol=='autonomous':protocol='tcp'
   controller_port=args.port
   if protocol=='secure':
    protocol='tcp';controller_port=str(int(args.port)+1)
@@ -60,10 +61,13 @@ while time.monotonic()<deadline:
    child=run_docker_container(SimpleNamespace(TIME_STEP=16,step=lambda ms:None),str(out/'docker-project'))
    assert child is not None, 'Docker controller did not start'
    children.append(child);active[i]=child;started.add(i);continue
-  command=[str((args.webots_home/'webots-controller') if (args.webots_home/'webots-controller').is_file() else (args.webots_home/'Contents/MacOS/webots-controller')),'--protocol='+protocol,'--port='+controller_port,'--robot-name=Erebus_Bot']
+  launchers=[args.webots_home/'webots-controller',args.webots_home/'webots-controller.exe',args.webots_home/'msys64/mingw64/bin/webots-controller.exe',args.webots_home/'Contents/MacOS/webots-controller']
+  launcher=next((path for path in launchers if path.is_file()),None)
+  assert launcher is not None,'Webots controller launcher not found'
+  command=[str(launcher),'--protocol='+protocol,'--port='+controller_port,'--robot-name=Erebus_Bot']
   if protocol=='tcp':command+=['--ip-address=127.0.0.1']
   command+=[str(out/'runtime/game/controllers/robot0Controller/robot0Controller.py')]
-  child=subprocess.Popen(command,stdout=log,stderr=subprocess.STDOUT,env=dict(os.environ,WEBOTS_HOME=str(args.webots_home)))
+  child=subprocess.Popen(command,stdout=log,stderr=subprocess.STDOUT,env=dict(os.environ,WEBOTS_HOME=str(args.webots_home),EREBUS_TEST_MODE=job['mode']))
   children.append(child);active[i]=child
   started.add(i)
  time.sleep(.25)

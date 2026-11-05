@@ -1,4 +1,17 @@
 """Exercise the real controller API and emitter/receiver packet path."""
+import os
+from pathlib import Path
+import json
+_mode=os.environ.get('EREBUS_TEST_MODE','')
+_parents=Path(__file__).resolve().parents
+_queue=_parents[4]/'queue.json' if len(_parents)>4 else None
+if not _mode and _queue is not None and _queue.is_file():
+    _jobs=json.loads(_queue.read_text())
+    _mode=_jobs['jobs'][_jobs['index']]['mode']
+if 'autonomous' in _mode:
+    from autonomousController import run
+    run()
+    raise SystemExit
 from controller import Robot,Node
 from pathlib import Path
 import json,struct,math,hashlib

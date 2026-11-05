@@ -15,7 +15,7 @@ job = queue['jobs'][queue['index']]
 mode = job['mode']
 scoring = mode in ('scoring','remote-secure-scoring')
 os.environ.update(EREBUS_TEST_MODE=mode, EREBUS_TEST_WORLD=job['world'], EREBUS_TEST_ENGINE='R2025a')
-for name in ('game-info.json','remote-ready','device-info.json'):
+for name in ('game-info.json','remote-ready','device-info.json','autonomous-info.json'):
     (root/name).unlink(missing_ok=True)
 
 result = dict(world=os.environ.get('EREBUS_TEST_WORLD'), engine=os.environ.get('EREBUS_TEST_ENGINE'), mode=mode, passed=False)
@@ -29,6 +29,9 @@ def advance(seconds):
         assert s._game_state == GameState.MATCH_RUNNING, 'Unexpected match termination'
 
 try:
+    if mode=='contact-ten':
+        config=root/'game/controllers/MainSupervisor/sensorEnergyConfig.txt'
+        config.write_text(config.read_text().replace('ChangeBatteryTime = 5','ChangeBatteryTime = 10'))
     s = Erebus()
     s.simulationSetMode(s.SIMULATION_MODE_FAST)
     result.update(world=s._get_current_world(), contacts=len(s.tile_manager.contacts), swamps=len(s.tile_manager.swamps), victims=len(s.victim_manager.victims), targets=len(s.victim_manager.targets))
@@ -75,7 +78,7 @@ try:
     if mode=='no-camera':assert not any(d['type']=='Camera' for d in result['devices'])
     if mode in ('custom-camera','all-sensors'):assert any(d.get('width')==256 and d.get('height')==128 for d in result['devices'])
     assert result['moving_battery'] < 99.9
-    assert all(v>1 for v in result['measured_speeds'])
+    assert all(v>(.1 if 'autonomous' in mode else 1) for v in result['measured_speeds'])
     info = json.loads((root/'game-info.json').read_text())
     assert info['kind']=='G' and 0<info['battery']<=100
     result['game_info'] = info
@@ -89,7 +92,26 @@ try:
     if scoring or mode=='full-match':
         s.robot_obj._wb_node.getField('customData').setSFString('stop')
         advance(.5)
-    if mode=='full-match':
+    if 'autonomous' in mode:
+        previous=s.robot_obj.position[:];last_position_time=s.time_elapsed;distance=0.
+        while s.robot_obj.in_simulation:
+            s.update()
+            if s.robot_obj.in_simulation and s.time_elapsed-last_position_time>=1:
+                current=s.robot_obj.position[:]
+                delta=math.hypot(current[0]-previous[0],current[2]-previous[2])
+                if delta<.06:distance+=delta
+                previous=current;last_position_time=s.time_elapsed
+            assert s.time_elapsed<=480.02
+        result['measured_path_m']=distance
+        assert distance>.25,distance
+        metrics=json.loads((root/'autonomous-info.json').read_text())
+        assert s.time_elapsed>=480 and s._game_state==GameState.MATCH_FINISHED,result
+        assert metrics['distance_m']>.25 and metrics['game_replies']>100,metrics
+        assert metrics['turn_steps']>10 and metrics['sensor_samples']>1000,metrics
+        assert s.robot_obj.battery.level>0
+        result['autonomous']=metrics
+        result['full_match_seconds']=s.time_elapsed
+    elif mode=='full-match':
         while s.robot_obj.in_simulation:
             s.update()
             assert s.time_elapsed <= 480.02
@@ -144,7 +166,7 @@ try:
         assert math.isclose(s.robot_obj.get_score(),with_exit+round(with_exit*1.2,2),rel_tol=1e-9)
         score=s.robot_obj.get_score();s._add_map_multiplier();assert s.robot_obj.get_score()==score
         result['final_score']=score
-    elif mode=='contact':
+    elif mode in ('contact','contact-ten'):
         assert result['contacts']>0 and any('k' in row for row in s._map_sol)
         tile=s.tile_manager.contacts[0]
         s.robot_obj._wb_node.getField('customData').setSFString('stop')
@@ -155,10 +177,11 @@ try:
         while not any(e[1]=='Battery replaced' for e in s.robot_obj.history.master_history):
             s.update()
             if s.robot_obj.battery._stationary_since is not None:started=s.robot_obj.battery._stationary_since
-            assert s.time_elapsed<10, 'No replacement'
+            assert s.time_elapsed<s.robot_obj.battery.change_battery_time+5, 'No replacement'
         result['replacement_stationary_seconds']=s.robot_obj.battery._last_send_time-started
         result['replaced_battery']=s.robot_obj.battery.level
-        assert 5<=result['replacement_stationary_seconds']<5.02 and result['replaced_battery']==100
+        expected=10 if mode=='contact-ten' else 5
+        assert expected<=result['replacement_stationary_seconds']<expected+.02 and result['replaced_battery']==100
         # Saved map diagnostics must preserve the new k cells and agree with scorer.
         import MapScorer, MapReview, numpy as np
         expected=np.asarray(s._map_sol).astype(str)
@@ -223,6 +246,9 @@ finally:
     if s is not None:
         import shutil
         shutil.copyfile(root/'game/proto_defaults/E-puck-custom-default-FLU.proto',root/'game/protos/custom_robot.proto')
+        if mode=='contact-ten':
+            config=root/'game/controllers/MainSupervisor/sensorEnergyConfig.txt'
+            config.write_text(config.read_text().replace('ChangeBatteryTime = 10','ChangeBatteryTime = 5'))
         if queue['index'] < len(queue['jobs']):
             s.worldLoad(str(root/'game/worlds'/(queue['jobs'][queue['index']]['world']+'.wbt')))
         else:

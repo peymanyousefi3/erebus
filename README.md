@@ -73,7 +73,6 @@ Choose the branch that matches your competition and Webots installation.
 | --- | --- | --- | --- |
 | [`2026_webots2023b`](https://github.com/peymanyousefi3/erebus/tree/2026_webots2023b) | 2026 | R2023b | Match Studio 26.2: match supervision, replay and map review. |
 | **[`2027_webots2025a`](https://github.com/peymanyousefi3/erebus/tree/2027_webots2025a)** (this branch) | 2027 draft | R2025a | Match Studio with battery consumption, cyan contact tiles and smiley victims. |
-| [`2028_webots2025a`](https://github.com/peymanyousefi3/erebus/tree/2028_webots2025a) | Future development | R2025a | Robot Designer and component library; under development. |
 
 ![Current 2027 Match Studio supervisor, captured at 360 CSS pixels with setup and match controls](docs/media/supervisor-overview.png)
 
@@ -283,7 +282,7 @@ python3.10 -m pip install -r requirements.txt
 
 ## Robot configuration
 
-Use the existing robot customizer with a **3,000-point component budget** for this edition. Robot Designer and its component library are part of the separate 2028 development branch.
+Use the existing robot customizer with a **3,000-point component budget** for this edition.
 
 ## Credits and licensing
 

@@ -4,9 +4,11 @@
 
 **Match Studio for Webots R2025a · RoboCupJunior Rescue Simulation 2027 draft rules**
 
-[![Edition: 27.0 draft](docs/media/badges/edition.svg)](docs/releases/27.0-draft.1.md) [![Webots R2025a](docs/media/badges/webots.svg)](https://cyberbotics.com/) [![Based on official Erebus 26.1](docs/media/badges/upstream.svg)](https://github.com/robocup-junior/erebus/tree/v26.1) [![Python 3.10](docs/media/badges/python.svg)](#quick-start) [![Licence status](docs/media/badges/license.svg)](NOTICE.md)
+[![Edition: 27.0.0-draft.1](docs/media/badges/edition.svg)](https://github.com/peymanyousefi3/erebus/releases/tag/v27.0.0-draft.1) [![Webots R2025a](docs/media/badges/webots.svg)](https://cyberbotics.com/) [![Based on official Erebus 26.1](docs/media/badges/upstream.svg)](https://github.com/robocup-junior/erebus/tree/v26.1) [![Python 3.10](docs/media/badges/python.svg)](#quick-start) [![Licence status](docs/media/badges/license.svg)](NOTICE.md)
 
 <h3><a href="#quick-start">Quick start · Install &amp; run</a></h3>
+
+**[Download 27.0.0-draft.1](https://github.com/peymanyousefi3/erebus/releases/download/v27.0.0-draft.1/Erebus-Match-Studio-27.0.0-draft.1-Webots-R2025a.zip)** · [Release notes](https://github.com/peymanyousefi3/erebus/releases/tag/v27.0.0-draft.1)
 
 [Match Studio](#match-studio) · [2027 rules](#2027-rules) · [Branch guide](#branch-guide) · [PDF guide](docs/README-2027.pdf)
 
@@ -245,7 +247,7 @@ Battery percentage is appended to the original fields. Older readers that requir
 | Software | Version | Download / setup |
 | --- | --- | --- |
 | **Webots** | **R2025a** | [Download](https://github.com/cyberbotics/webots/releases/tag/R2025a) · [Setup](https://cyberbotics.com/doc/guide/installation-procedure?version=R2025a) |
-| **Erebus Match Studio** | **2027** | [Download ZIP](https://github.com/peymanyousefi3/erebus/archive/refs/heads/2027_webots2025a.zip) |
+| **Erebus Match Studio** | **27.0.0-draft.1** | [Download ZIP](https://github.com/peymanyousefi3/erebus/releases/download/v27.0.0-draft.1/Erebus-Match-Studio-27.0.0-draft.1-Webots-R2025a.zip) · [Release notes](https://github.com/peymanyousefi3/erebus/releases/tag/v27.0.0-draft.1) |
 | **Python** | **3.10 · 64-bit** | [Download](https://www.python.org/downloads/release/python-31011/) · [Select in Webots](https://cyberbotics.com/doc/guide/using-python?version=R2025a) |
 | **Python packages** | [requirements.txt](requirements.txt) | [Install below](#install-python-packages) |
 
@@ -294,4 +296,4 @@ Use the existing robot customizer with a **3,000-point component budget** for th
 
 This is an independent edition of Erebus maintained by Peyman Yousefi. See [NOTICE.md](NOTICE.md) and the bundled [asset notices](game/plugins/robot_windows/MainSupervisorWindow/assets/) for licensing and attribution.
 
-[Changelog](CHANGELOG.md) · [Release notes](docs/releases/27.0-draft.1.md) · [Contributing](CONTRIBUTING.md) · [Report an issue in this fork](https://github.com/peymanyousefi3/erebus/issues)
+[Changelog](CHANGELOG.md) · [Release notes](https://github.com/peymanyousefi3/erebus/releases/tag/v27.0.0-draft.1) · [Contributing](https://github.com/peymanyousefi3/erebus/blob/v27.0.0-draft.1/CONTRIBUTING.md) · [Report an issue in this fork](https://github.com/peymanyousefi3/erebus/issues)

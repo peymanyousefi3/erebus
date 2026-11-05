@@ -2,11 +2,13 @@
 
 # Erebus Match Studio
 
-**Match Studio 26.2 · Webots R2023b · RoboCupJunior Rescue Simulation 2026**
+**Match Studio 26.2.0 · Webots R2023b · RoboCupJunior Rescue Simulation 2026**
 
-[![Edition: 26.2 preview](docs/media/badges/edition.svg)](docs/releases/26.2-studio.1.md) [![Based on official Erebus 26.1](docs/media/badges/upstream.svg)](https://github.com/robocup-junior/erebus/tree/v26.1) [![Webots R2023b](docs/media/badges/webots.svg)](https://cyberbotics.com/) [![Python 3.10](docs/media/badges/python.svg)](#quick-start) [![Licence status: see NOTICE](docs/media/badges/license.svg)](NOTICE.md)
+[![Edition: 26.2.0](docs/media/badges/edition.svg)](https://github.com/peymanyousefi3/erebus/releases/tag/v26.2.0) [![Based on official Erebus 26.1](docs/media/badges/upstream.svg)](https://github.com/robocup-junior/erebus/tree/v26.1) [![Webots R2023b](docs/media/badges/webots.svg)](https://cyberbotics.com/) [![Python 3.10](docs/media/badges/python.svg)](#quick-start) [![Licence status: see NOTICE](docs/media/badges/license.svg)](NOTICE.md)
 
 <h3><a href="#quick-start">Quick start · Install &amp; run</a></h3>
+
+**[Download 26.2.0](https://github.com/peymanyousefi3/erebus/releases/download/v26.2.0/Erebus-Match-Studio-26.2.0-Webots-R2023b.zip)** · [Release notes](https://github.com/peymanyousefi3/erebus/releases/tag/v26.2.0)
 
 [Branch guide](#branch-guide) · [Features](#match-studio-features) · [Changelog](CHANGELOG.md) · [Report an issue](https://github.com/peymanyousefi3/erebus/issues)
 
@@ -97,7 +99,7 @@ Recording, the HUD and map review work with your existing robot controller. Scor
 | Software | Version | Download / setup |
 | --- | --- | --- |
 | **Webots** | **R2023b** | [Download](https://github.com/cyberbotics/webots/releases/tag/R2023b) · [Setup](https://cyberbotics.com/doc/guide/installation-procedure?version=R2023b) |
-| **Erebus Match Studio** | **2026** | [Download ZIP](https://github.com/peymanyousefi3/erebus/archive/refs/heads/2026_webots2023b.zip) |
+| **Erebus Match Studio** | **26.2.0** | [Download ZIP](https://github.com/peymanyousefi3/erebus/releases/download/v26.2.0/Erebus-Match-Studio-26.2.0-Webots-R2023b.zip) · [Release notes](https://github.com/peymanyousefi3/erebus/releases/tag/v26.2.0) |
 | **Python** | **3.10 · 64-bit** | [Download](https://www.python.org/downloads/release/python-31011/) · [Select in Webots](https://cyberbotics.com/doc/guide/using-python?version=R2023b) |
 | **Python packages** | [requirements.txt](requirements.txt) | [Install below](#install-python-packages) |
 
@@ -292,4 +294,4 @@ Other scene dependencies may also be exported. The recording ZIP packages the re
 
 This is an independent edition of Erebus maintained by Peyman Yousefi. See [NOTICE.md](NOTICE.md) for source and asset licensing, including the bundled [IBM Plex Sans](game/plugins/robot_windows/MainSupervisorWindow/assets/OFL-IBM-Plex.txt), [DSEG](game/plugins/robot_windows/MainSupervisorWindow/assets/OFL-DSEG.txt) and [Lucide/Feather](game/plugins/robot_windows/MainSupervisorWindow/assets/LICENSE-Lucide.txt) notices.
 
-See the [changelog](CHANGELOG.md), [release notes](docs/releases/26.2-studio.1.md) and [contributing guide](CONTRIBUTING.md). Include your Webots version, operating system and steps to reproduce when [reporting an issue](https://github.com/peymanyousefi3/erebus/issues).
+See the [changelog](CHANGELOG.md), [release notes](https://github.com/peymanyousefi3/erebus/releases/tag/v26.2.0) and [contributing guide](https://github.com/peymanyousefi3/erebus/blob/v26.2.0/CONTRIBUTING.md). Include your Webots version, operating system and steps to reproduce when [reporting an issue](https://github.com/peymanyousefi3/erebus/issues).

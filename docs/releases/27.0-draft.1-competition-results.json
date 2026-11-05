@@ -1107,7 +1107,13 @@
     "tests/webots/monitor.py": "95b0b7b8412c8a54436e7818bce62dcdbd7cc3ab8d9f460ce5cee34c075a29e1",
     "tests/webots/prepare.py": "7ce986405c685f0919d217b7538fa636316a3d7cd25142fa48af07525a97b754",
     "tests/webots/robot0Controller.py": "16ed7e94de5da57228dd49aac2c16dd0103081aa94c3e94b786eb0141f019f09",
-    "tests/webots/run_competition.py": "0f008af3baf827322e467266a3b2be16ada48d240a37b18f50d114cba2317d47",
-    ".github/workflows/competition.yml": "5226b0c8300e3ceeebc06fa17056ccba4c03897ddb5894bfe8b3604e516d1029"
+    "tests/webots/run_competition.py": "0f008af3baf827322e467266a3b2be16ada48d240a37b18f50d114cba2317d47"
+  },
+  "qualified_workflow_sha256": "5226b0c8300e3ceeebc06fa17056ccba4c03897ddb5894bfe8b3604e516d1029",
+  "competition_workflow_entry": {
+    "file": ".github/workflows/checks.yml",
+    "ref": "2027_webots2025a",
+    "test_mode": "competition",
+    "reusable_workflow": ".github/workflows/competition.yml"
   }
 }

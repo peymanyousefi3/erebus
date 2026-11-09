@@ -1,3 +1,6 @@
+import json
+import re
+import math
 from Tools import *
 from ConsoleLog import Console
 
@@ -10,6 +13,21 @@ def generate_robot_proto(robot_json: dict) -> bool:
     Returns:
         bool: Generation success, True if the proto is generated successfully
     """
+
+    # Reject scene syntax before interpolating participant JSON into a PROTO.
+    if not isinstance(robot_json, dict):
+        Console.log_err("Robot JSON must contain a component dictionary.")
+        return False
+    for component in robot_json.values():
+        if not isinstance(component, dict):
+            Console.log_err("Invalid robot component.")
+            return False
+        name = component.get('customName', '')
+        coordinates = [component.get(key) for key in ('x', 'y', 'z', 'rx', 'ry', 'rz', 'a')]
+        if (not isinstance(name, str) or '%<' in name or '>%' in name or re.search(r'["\\\x00-\x1f\x7f]', name) or
+                any(type(value) not in (int, float) or abs(value) > 1e308 or not math.isfinite(value) for value in coordinates)):
+            Console.log_err("Component names must be plain text and poses must be finite numbers.")
+            return False
 
     # Hard coded, values from website
     component_max_counts: dict[str, int] = {
@@ -39,6 +57,7 @@ def generate_robot_proto(robot_json: dict) -> bool:
     }
 
     component_counts: dict[str, int] = {}
+    energy_sensors = ["Receiver", "Emitter"]
     
     close_bracket: str = "\n\t\t}\n"
 
@@ -125,6 +144,9 @@ def generate_robot_proto(robot_json: dict) -> bool:
             gen_err = True
             break
 
+        if robot_json[component]["name"] != "Wheel":
+            energy_sensors.append(robot_json[component]["name"].replace(" ", ""))
+
         if robot_json[component].get("name") == "Wheel":
             Console.log_info((
                 f"Adding motor... {robot_json[component].get('dictName')} "
@@ -185,7 +207,7 @@ def generate_robot_proto(robot_json: dict) -> bool:
                 resolution 0.00628  # (2 * pi) / 1000
                 }}
             ]
-            endPoint Solid {{
+            endPoint DEF EREBUS_WHEEL_{component_count} Solid {{
                 translation 0 0 0
                 rotation 0.707388 0 -0.707388 3.14
                 children [
@@ -498,6 +520,10 @@ def generate_robot_proto(robot_json: dict) -> bool:
             ]
             }}"""
 
+    # Supervisor-owned inventory; no unused Webots interface parameter.
+    proto_code = proto_code.replace('PROTO custom_robot [',
+        "# energy_sensors: " + json.dumps(energy_sensors) + "\nPROTO custom_robot [")
+
     proto_code += """DEF EPUCK_RING SolidPipe {
     translation 0 0.0393 0
     rotation -0.5773502691896258 0.5773502691896258 0.5773502691896258 2.0943951023931953
@@ -544,6 +570,17 @@ def generate_robot_proto(robot_json: dict) -> bool:
     """
     proto_code += "\n}"
     proto_code += close_bracket
+
+    header, body = proto_code.split("]\n{", 1)
+    header = re.sub(
+        r"^.*\bfield\s+\w+\s+(camera_\w+)\b.*\n",
+        lambda match: match[0] if re.search(r"\bIS\s+" + match[1] + r"\b", body) else "",
+        header, flags=re.MULTILINE)
+    proto_code = header + "]\n{" + body
+
+    if not re.search(r"endPoint DEF EREBUS_WHEEL_\d+", proto_code):
+        Console.log_err("The robot needs at least one powered wheel.")
+        return False
 
     if not gen_err:
         Console.log_succ("Your custom robot has been successfully generated!")

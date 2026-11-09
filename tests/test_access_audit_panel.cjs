@@ -1,0 +1,44 @@
+const assert=require('node:assert/strict');
+const fs=require('node:fs');
+const vm=require('node:vm');
+const source=fs.readFileSync('game/plugins/robot_windows/MainSupervisorWindow/MainSupervisorWindow.js','utf8');
+function node(){return {dataset:{},children:[],append(...children){this.children.push(...children);},replaceChildren(){this.children=[];},showModal(){this.open=true;this.shows=(this.shows||0)+1;},close(){this.open=false;},click(){},remove(){}};}
+const nodes=new Map();const get=id=>{if(!nodes.has(id))nodes.set(id,node());return nodes.get(id);};
+const sent=[];let blob,download;const stored=new Map();
+const context={document:{getElementById:get,createElement:node,body:{appendChild(link){download=link;}}},
+ robotWindow:{send(message){sent.push(message);}},sessionStorage:{getItem:key=>stored.get(key)||null,setItem:(key,value)=>stored.set(key,value)},Blob,URL:{createObjectURL(value){blob=value;return 'blob:test';},revokeObjectURL(){}},setTimeout(){}};
+context.window=context;
+vm.runInNewContext(source.slice(source.indexOf('let accessAuditSnapshot = null;')),context);
+const snapshot={session:'test',total:1,warnings:1,dropped:0,error:'',events:[{time:'2026-11-04T00:00:00Z',source:'Robot-window report',summary:'<script>unsafe</script>',trust:'browser-relayed-unverified',peer:'',warning:true}]};
+const normal={...snapshot,total:1,warnings:0,events:[{...snapshot.events[0],warning:false,source:'Referee interface'}],network:{state:'monitoring',message:'Monitoring active.'}};
+context.renderAccessAudit(normal);
+assert(get('accessAuditPanel').hidden && get('accessAuditIndicator').hidden);
+assert.equal(get('accessAuditEvents').children.length,0);
+assert(!get('accessAuditAlert').open,'Normal activity opened an alert');
+context.renderAccessAudit(snapshot);
+assert(get('accessAuditIndicator').textContent.includes('review 1'));
+const item=get('accessAuditEvents').children[0];
+assert.equal(item.children[0].textContent,'Robot-window report — <script>unsafe</script>');
+assert(!('innerHTML' in item.children[0]));
+assert(item.children[1].textContent.includes('Match Studio warning'));
+assert.equal(item.dataset.warning,'true');
+const dialog=get('accessAuditAlert');
+assert(dialog.open && dialog.shows===1);
+assert(get('accessAuditAlertEvents').children[0].children[1].textContent.includes('Robot-window report'));
+context.acknowledgeAccessAuditAlert();
+assert(!dialog.open);
+context.renderAccessAudit(snapshot);
+assert.equal(dialog.shows,1,'Acknowledged snapshot opened another popup');
+context.renderAccessAudit({...snapshot,total:2,warnings:2,events:[...snapshot.events,...snapshot.events]});
+assert(dialog.open && dialog.shows===2);
+context.renderAccessAudit({...snapshot,total:3,warnings:3,events:[...snapshot.events,...snapshot.events,...snapshot.events]});
+assert.equal(dialog.shows,2,'Warning burst opened multiple dialogs');
+context.acknowledgeAccessAuditAlert();
+assert.equal(JSON.parse(stored.get('erebus.auditAcknowledged.test')).warnings,3);
+const refreshed={...context};refreshed.window=refreshed;
+vm.runInNewContext(source.slice(source.indexOf('let accessAuditSnapshot = null;')),refreshed);
+refreshed.renderAccessAudit({...snapshot,warnings:3,total:3});
+assert(!dialog.open && dialog.shows===2,'Page refresh forgot the acknowledgement');
+
+context.exportAccessAudit();
+(async()=>{const result=JSON.parse(await blob.text());assert.equal(result.scope,'Warnings displayed by Match Studio.');assert.equal(download.download,'erebus-access-audit-test.json');console.log('PASS: red event flags, referee popup, acknowledgement persistence, coalesced warning bursts, safe rendering and export.');})().catch(error=>{console.error(error);process.exitCode=1;});

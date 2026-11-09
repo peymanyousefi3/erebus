@@ -17,3 +17,25 @@ game/protos/custom_robot.proto
 game/protos/textures/targets/
 
 game/controllers/robot0Controller/robot0Controller.py
+
+# Local inputs, generated results and operating-system caches.
+.DS_Store
+__pycache__/
+*.py[cod]
+/match-results/
+/recordings/
+/map-results/
+/game/logs/
+/game/controllers/robot0Controller/*
+!/game/controllers/robot0Controller/.gitkeep
+/game/worlds/.*.wbproj
+
+# Disposable simulator validation copies.
+/validation/runtime/
+/validation/*.log
+
+/validation/parity-baseline/
+/validation/parity-candidate/
+
+# Local research, simulator work copies and test captures.
+/validation/

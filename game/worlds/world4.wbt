@@ -1,4 +1,4 @@
-#VRML_SIM R2022b utf8
+#VRML_SIM R2025a utf8
         EXTERNPROTO "../protos/TexturedBackgroundLight.proto"
         EXTERNPROTO "../protos/TexturedBackground.proto"
         EXTERNPROTO "../protos/curvedWall.proto"
@@ -10,6 +10,7 @@
         EXTERNPROTO "../protos/worldTile.proto"
         EXTERNPROTO "../protos/Area4_1.proto"
         EXTERNPROTO "../protos/Area4_2.proto"
+        IMPORTABLE EXTERNPROTO "../protos/SolidPipe.proto"
         IMPORTABLE EXTERNPROTO "../protos/custom_robot.proto"
 
         WorldInfo {

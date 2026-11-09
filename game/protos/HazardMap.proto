@@ -1,4 +1,5 @@
-#VRML_SIM R2022b utf8
+#VRML_SIM R2025a utf8
+# template language: javascript
 # tags: static
 PROTO HazardMap [
     field SFVec3f    translation       0 0 0
@@ -9,49 +10,30 @@ PROTO HazardMap [
     field SFInt32    scoreWorth        10
 ]
 {
-    %{
-        if fields.type.value == "O" then
-            if fields.found.value then
-                filename = "\"./textures/placard-5.2-organic-peroxide_found.png\""   
-            else
-                filename = "\"./textures/placard-5.2-organic-peroxide.png\"" 
-            end
-        end
-        if fields.type.value == "F" then
-            if fields.found.value then
-                filename = "\"./textures/placard-2-flammable-gas_found.png\""    
-            else
-                filename = "\"./textures/placard-2-flammable-gas.png\""    
-            end
-        end
-        if fields.type.value == "P" then
-            if fields.found.value then
-                filename = "\"./textures/placard-6-poison_found.png\""  
-            else
-                filename = "\"./textures/placard-6-poison.png\""  
-            end
-        end
-        if fields.type.value == "C" then
-            if fields.found.value then
-                filename = "\"./textures/placard-8-corrosive_found.png\"" 
-            else
-                filename = "\"./textures/placard-8-corrosive.png\""  
-            end
-        end
-    }%
+%<
+// Preserve the original model geometry precision after template conversion.
+function modelNumber(value) {
+  return typeof value === "number" ? Number(value.toPrecision(14)) : value;
+}
+>%
+
+    %<
+        const names = {O: 'placard-5.2-organic-peroxide', F: 'placard-2-flammable-gas', P: 'placard-6-poison', C: 'placard-8-corrosive'};
+        const filename = './textures/' + (names[fields.type.value] || names.F) + (fields.found.value ? '_found' : '') + '.png';
+    >%
     Pose {
         translation IS translation
         rotation IS rotation
         children [
             Solid {
-               
+
                 translation 0 0 0
                 rotation 0 1 0 3.14159
                 children [
                     Shape {
                         appearance Appearance {
                             texture DEF human0texture ImageTexture {
-                                url [ %{= filename}% ]
+                                url [ "%<= modelNumber(filename) >%" ]
                             }
                         }
                         geometry DEF VICTIMPLANE Plane {

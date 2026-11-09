@@ -1,3 +1,4 @@
+# Erebus customizations by Peyman Yousefi; original RoboCupJunior credits retained.
 from __future__ import annotations
 from typing import Any, Optional
 from typing import TYPE_CHECKING
@@ -15,9 +16,12 @@ from controller import Field
 
 from Controller import Controller
 from ConsoleLog import Console
+from Recorder import Recorder
 from Tile import Checkpoint, StartTile, TileManager, Swamp
 from Config import Config
 from ErebusObject import ErebusObject
+from battery import Battery, WheelSpeedMonitor, sensor_types_from_proto
+from Tools import get_file_path
 
 
 
@@ -60,7 +64,6 @@ class RobotHistory(ErebusObject, Queue):
         self.master_history: list[tuple[str, str]] = []
 
         self.time_elapsed: float = 0.0
-        self.display_to_recording_label: bool = False
 
     def _update_master_history(self, data: str) -> tuple[str, str]:
         """Update the master history, storing data as (game time, event data)
@@ -93,14 +96,7 @@ class RobotHistory(ErebusObject, Queue):
         # Send the event data to the robot window to update the ui
         self._erebus.rws.send("historyUpdate", ",".join(record))
 
-        if self.display_to_recording_label:
-            history_label: str = ""
-            histories: list[tuple[str, str]] = list(
-                reversed(self.master_history))
-            for h in range(min(len(histories), 5)):
-                history_label = (f"[{histories[h][0]}] {histories[h][1]}\n"
-                                 f"{history_label}")
-            self._erebus.setLabel(2, history_label, 0.7, 0, 0.05, 0xfbc531, 0.2) # type: ignore
+        Recorder.update_events(self._erebus)
 
 
 class Robot(ErebusObject):
@@ -116,6 +112,8 @@ class Robot(ErebusObject):
         """
         super().__init__(erebus)
         
+        self.battery = Battery(0, self._erebus.rws)
+        self._wheel_monitor = None
         self._wb_node: Node
         self.wb_translationField: Field
         self.wb_rotationField: Field
@@ -172,6 +170,7 @@ class Robot(ErebusObject):
         """Stops the inertia of the robot and its descendants.
         """
         self._wb_node.resetPhysics()
+        self.battery.contact(None, False, self._erebus.time_elapsed)
         
     def remove_node(self) -> None:
         """Removes the robot from the Webots scene tree
@@ -187,6 +186,10 @@ class Robot(ErebusObject):
         self._wb_node: Node = node
         self.wb_translationField: Field = self._wb_node.getField('translation')
         self.wb_rotationField: Field = self._wb_node.getField('rotation')
+        self._wheel_monitor = WheelSpeedMonitor(node)
+        sensor_types = sensor_types_from_proto(get_file_path(
+            'protos/custom_robot.proto', '../../protos/custom_robot.proto'))
+        self.battery.reset(self._erebus.time_elapsed, sensor_types)
 
     def set_max_velocity(self, vel: float) -> None:
         """Set the max angular velocity the robot can move at.
@@ -338,12 +341,15 @@ class Robot(ErebusObject):
         """
 
         # Get length of bytes
+        self.message = []
         data_len: int = len(received_data)
         Console.log_debug(f"Data: {received_data} with length {data_len}")
         try:
             if data_len == 1:
                 tup = struct.unpack('c', received_data)
-                self.message = [tup[0].decode("utf-8")]
+                command = tup[0].decode("utf-8")
+                if command in ("E", "M", "L", "G"):
+                    self.message = [command]
             # Victim identification bytes data should be of length = 9
             elif data_len == 9:
                 # Unpack data
@@ -402,7 +408,6 @@ class Robot(ErebusObject):
         Args:
             config (Config): Config object
         """
-        self.history.display_to_recording_label = config.recording
         self.controller.update_keep_controller_config(config)
 
     def reset_proto(self, manual: bool = False) -> None:
@@ -465,24 +470,16 @@ class Robot(ErebusObject):
                                 multiplier=TileManager.ROOM_MULT[room_num])
 
     def update_in_swamp(self, in_swamp: Swamp, default_multiplier: float) -> None:
-        """Updates the game's timer countdown multiplier when in a swamp.
-
-        Args:
-            in_swamp (Swamp): A Swamp object if the robot has entered a swamp, None otherwise
-            default_multiplier (float): Default time multiplier
-        """
-        # Check if robot is in swamp
-        if self.in_swamp != in_swamp:
+        """Swamps affect battery drain, never the 2027 match clock."""
+        if self.in_swamp is not in_swamp:
             self.in_swamp = in_swamp
-            if self.in_swamp is not None:
-                # Update time multiplier 
-                self._erebus.set_time_multiplier(in_swamp.multiplier)
-                # Update history
-                self.history.enqueue(f"Entered swamp (multiplier: {in_swamp.multiplier})")
-                # Increment swamp multiplier
-                in_swamp.increment_multiplier()
-            else:
-                # Reset time multiplier
-                self._erebus.set_time_multiplier(default_multiplier)
-                # Update history
-                self.history.enqueue("Exited swamp,")
+            self.history.enqueue("Entered swamp" if in_swamp else "Exited swamp")
+
+    def update_battery(self, time_elapsed: float) -> None:
+        self._measured_wheel_speeds = self._wheel_monitor.speeds()
+        self.battery.update(time_elapsed, self._measured_wheel_speeds,
+                            self.in_swamp is not None)
+
+    def update_in_contact(self, tile) -> None:
+        if self.battery.contact(tile, self._is_stopped(), self._erebus.time_elapsed):
+            self.history.enqueue("Battery replaced")

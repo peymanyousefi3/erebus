@@ -1,6 +1,93 @@
+// Erebus interface customizations by Peyman Yousefi.
 import RobotWindow from 'https://cyberbotics.com/wwi/R2023a/RobotWindow.js';
 
-let historyHtml = "";
+let matchStarted = false;
+let dockerStarting = false;
+
+function setMatchState(state) {
+    const labels = {connecting: 'Connecting', ready: 'Ready', starting: 'Starting', running: 'Running', pausing: 'Pausing', paused: 'Paused', resetting: 'Resetting', finished: 'Finished'};
+    const status = document.getElementById('matchState');
+    status.textContent = labels[state];
+    status.setAttribute('data-state', state);
+}
+
+function setFileState(id, message, loaded) {
+    const field = document.getElementById(id === 0 ? 'controllerFileState' : 'robotFileState');
+    field.textContent = message;
+    field.title = message;
+    field.setAttribute('data-loaded', String(loaded));
+}
+
+let selectedWorld = '';
+
+const preparationPanels = {
+    setup: ['setup', 'setup-panel'],
+    settings: ['advancedSetup', 'settings-panel'],
+    worlds: ['worlds', 'worlds-panel']
+};
+let activePanel = null;
+
+function setPreparationPanel(name) {
+    for (const [key, [buttonId, panelId]] of Object.entries(preparationPanels)) {
+        const panel = document.getElementById(panelId);
+        const button = document.getElementById(buttonId);
+        const open = key === name;
+        if (!open && panel.contains(document.activeElement)) button.focus({preventScroll: true});
+        panel.hidden = !open;
+        panel.inert = !open;
+        button.setAttribute('aria-expanded', String(open));
+    }
+    activePanel = name;
+    document.querySelector('.preparation').dataset.active = name || '';
+    document.querySelector('.preparation-reveal').dataset.expanded = String(!!name);
+}
+window.closeWorkspace = function () { setPreparationPanel(null); };
+window.togglePanel = function (name) {
+    setPreparationPanel(activePanel === name ? null : name);
+};
+
+window.filterWorlds = function () {
+    const query = document.getElementById('worldSearch').value.trim().toLowerCase();
+    const buttons = document.querySelectorAll('#worlds_div .world-button');
+    let visible = 0;
+    for (const button of buttons) {
+        button.hidden = !button.textContent.toLowerCase().includes(query);
+        if (!button.hidden) visible++;
+    }
+    document.getElementById('worldsEmpty').hidden = visible !== 0;
+    document.getElementById('worldResults').textContent = visible + (visible === 1 ? ' world' : ' worlds') + (query ? ' matching your search' : ' available');
+};
+
+window.selectWorld = function (name) {
+    selectedWorld = name;
+    document.getElementById('selectedWorldName').textContent = name.replace(/\.wbt$/, '').replace(/_/g, ' ');
+    document.getElementById('loadSelectedWorld').disabled = false;
+    for (const button of document.querySelectorAll('#worlds_div .world-button')) button.setAttribute('aria-pressed', String(button.getAttribute('data-world') === name));
+};
+
+window.loadSelectedWorld = function () {
+    if (!selectedWorld) return;
+    window.robotWindow.send('loadWorld,' + selectedWorld);
+    window.closeWorkspace();
+};
+
+function showSourceStatus(message, error = false) {
+    const status = document.getElementById("sourceReloadStatus");
+    status.textContent = message;
+    if (error) { window.closeWorkspace(); setSetupExpanded(true); }
+    status.classList.toggle("source-error", error);
+    status.setAttribute("role", error ? "alert" : "status");
+}
+
+function updateBattery(value) {
+    const percent = Number(value);
+    if (!Number.isFinite(percent)) return;
+    const level = Math.max(0, Math.min(100, percent));
+    document.getElementById('robotBattery').value = level;
+    document.querySelector('.battery-display').setAttribute('data-state', level === 0 ? 'empty' : level <= 20 ? 'low' : 'normal');
+    document.getElementById('batteryPercentage').textContent = level.toFixed(1) + '%';
+    document.getElementById('batteryStatus').textContent = level === 0 ? 'Depleted' : level <= 20 ? 'Low battery' : 'Remaining';
+}
 
 function receive (message){
 	//Receive message from the python supervisor
@@ -11,6 +98,13 @@ function receive (message){
 	//If there is a message
 	if (parts.length > 0){			
 		switch (parts[0]){
+            case "accessAudit":
+                try { renderAccessAudit(JSON.parse(parts.slice(1).join(','))); }
+                catch (error) { console.warn('Invalid warning status'); }
+                break;
+            case "batteryUpdate":
+                if (parts[1] === "0") updateBattery(parts[2]);
+                break;
 			case "startup":
 				//Call for set up the robot window
 				startup();
@@ -19,10 +113,52 @@ function receive (message){
 				//Update the information on the robot window every frame (of game time)
 				update(parts.slice(1,parts.length + 1));
 				break;
-			case "config":
+            case "mapReviewAvailable":
+                document.getElementById('viewMapReview').disabled = false;
+                document.getElementById('mapReviewNotice').textContent = 'Map evaluated. Use Save and open map result at any time, including after the match.';
+                document.getElementById('mapReviewNotice').setAttribute('role', 'status');
+                break;
+            case "mapReviewSaved":
+                document.getElementById('viewMapReview').disabled = false;
+                document.getElementById('mapReviewNotice').textContent = 'Map result saved: ' + parts.slice(1).join(',');
+                document.getElementById('mapReviewNotice').setAttribute('role', 'status');
+                break;
+            case "mapReviewError":
+                document.getElementById('viewMapReview').disabled = false;
+                document.getElementById('mapReviewNotice').textContent = parts.slice(1).join(',');
+                document.getElementById('mapReviewNotice').setAttribute('role', 'alert');
+                break;
+            case "config":
 				//Load config data
 				updateConfig(parts.slice(1,parts.length + 1));
 				break;
+            case "sourcePath":
+                if (parts[1] === '0') document.getElementById("controllerSource").value = decodeURIComponent(parts.slice(2).join(','));
+                break;
+            case "sourceReloadStatus":
+                showSourceStatus(parts.slice(1).join(','));
+                break;
+            case "sourceFileError":
+                showSourceStatus(parts.slice(1).join(','), true);
+                setFileState(1, 'Robot JSON could not be loaded', false);
+                break;
+            case "sourceReloadError":
+                matchStarted = false;
+                setMatchState('ready');
+                setEnableButton("recording", true);
+                showSourceStatus(parts.slice(1).join(','), true);
+                setEnableButton("runButton", true);
+                setEnableButton("load0", true);
+                setEnableButton("unload0", true);
+                setEnableButton("load1", true);
+                setEnableButton("unload1", true);
+                setEnableButton("pauseButton", false);
+                setEnableButton("runDockerButton", true);
+                setEnableButton("remoteMode", true);
+                setEnableButton("dockerPath", true);
+                setEnableButton("giveupB", false);
+                setEnableButton("lopButton", false);
+                break;
 			case "unloaded0":
 				//Robot 0's controller has been unloaded
 				unloadedController(0);
@@ -48,115 +184,179 @@ function receive (message){
 				updateHistory(history0)
 				break;
 			case "latest":
-				document.getElementById("versionInfo").style.color = "#27ae60";
-				document.getElementById("versionInfo").innerHTML = `Ver. ${parts[1]} (Latest)`;
+				document.getElementById("versionInfo").style.color = "#236648";
+				document.getElementById("versionInfo").innerHTML = `Ver. ${parts[1]} — Match Studio (Latest)`;
 				break;
 			case "version":
-				document.getElementById("versionInfo").innerHTML = `Ver. ${parts[1]}`;
+				document.getElementById("versionInfo").innerHTML = `Ver. ${parts[1]} — Match Studio`;
 				break;
 			case "outdated":
-				document.getElementById("versionInfo").style.color = "#c0392b";
-				document.getElementById("versionInfo").innerHTML = `Ver. ${parts[1]} (Outdated)`;
+				document.getElementById("versionInfo").style.color = "#a3273b";
+				document.getElementById("versionInfo").innerHTML = `Ver. ${parts[1]} — Match Studio (Outdated)`;
 				document.getElementById("newVersion").innerHTML = `New version: ${parts[2]} is available. Please update it!`;
 				break;
 			case "unreleased":
-				document.getElementById("versionInfo").style.color = "#e67e22";
-				document.getElementById("versionInfo").innerHTML = `Ver. ${parts[1]} (Unreleased)`;
+				document.getElementById("versionInfo").style.color = "#9c5313";
+				document.getElementById("versionInfo").innerHTML = `Ver. ${parts[1]} — Match Studio`;
 				break;
 				
 			case "worlds":
 				updateWorld(parts.slice(1));
 				break;
 
+			// Older running supervisors may replay these UI actions on refresh.
+			// Only a user's Load click should open a file picker.
 			case "loadControllerPressed":
-				window.openLoadController(parts[1]);
-				break;
 			case "unloadControllerPressed":
-				window.unloadedController(parts[1]);
 				break;
 			case "runPressed":
-				window.runPressed();
+				preRun();
+                setMatchState('running');
 				break;
 			case "runDockerPressed":
-				window.runDockerPressed();
+				preRun();
+                setMatchState('running');
 				break;
 			case "pausedPressed":
-				window.pausePressed();
+                setMatchState('paused');
+				setEnableButton("pauseButton", false);
+                setEnableButton("runButton", true);
+                setEnableButton("lopButton", false);
 				break;
 			case "remoteEnabled":
-				window.enableRemotePressed();
+				if (!matchStarted) {
+                    setEnableButton("load0", false);
+                    setEnableButton("unload0", false);
+                }
+                setDisableRemoteBtn();
 				break;
 			case "remoteDisabled":
-				window.disableRemotePressed();
+				if (!matchStarted) {
+                    setEnableButton("load0", true);
+                    setEnableButton("unload0", true);
+                }
+                setEnableRemoteBtn();
 				break;
+            case "dockerError":
+                setDockerStarting(false);
+                setMatchState('ready');
+                showSourceStatus(parts.slice(1).join(','), true);
+                break;
 			case "dockerSuccess":
 				preRun();
+                setMatchState('running');
 				break;
 			case "currentWorld":
 				enableTestButton(parts[1]);
+                document.getElementById('currentWorldName').textContent = parts.slice(1).join(',').replace(/\.wbt$/, '').replace(/_/g, ' ');
 				break;
 		}
 	}
 }
 
-function updateWorld(worlds_str){
-	//reset worlds
-	document.getElementById("worlds_div").innerHTML = "";
-
-	var worlds_array_str = String(worlds_str)
-	let worlds = worlds_array_str.split(",");
-	for (let i = 0; i < worlds.length; i ++){
-		let button = document.createElement("button");
-		button.innerHTML = worlds[i];
-		button.onclick = function(){
-			window.robotWindow.send(`loadWorld,${worlds[i]}`);
-		};
-		button.setAttribute("class","btn-world");
-
-		// Add thumbnail to button
-		let thumbnail = document.createElement("img");
-		// Strip .wbt from name
-		thumbnail.src = "./thumbnails/"+worlds[i].replace(/\.[^/.]+$/, "")+".png";
-		thumbnail.height = 20;
-		thumbnail.style = "vertical-align: middle;margin: 5px;";
-		thumbnail.onerror = () => thumbnail.src = "./thumbnails/missing.png";
-		button.appendChild(thumbnail)
-
-		document.getElementById("worlds_div").appendChild(button);
-		
-	}
+function updateWorld(worlds) {
+    const container = document.getElementById('worlds_div');
+    container.replaceChildren();
+    const names = String(worlds).split(',').filter(name => name.trim());
+    if (!names.includes(selectedWorld)) {
+        selectedWorld = '';
+        document.getElementById('selectedWorldName').textContent = 'Choose a world above';
+        document.getElementById('loadSelectedWorld').disabled = true;
+    }
+    if (!names.length) {
+        const empty = document.createElement('p');
+        empty.textContent = 'No worlds are available. Try Reload worlds.';
+        container.appendChild(empty);
+        window.filterWorlds();
+        return;
+    }
+    for (const name of names) {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'world-button';
+        button.setAttribute('data-world', name);
+        button.setAttribute('aria-pressed', String(selectedWorld === name));
+        button.onclick = () => window.selectWorld(name);
+        const thumbnail = document.createElement('img');
+        thumbnail.src = './thumbnails/' + name.replace(/\.[^/.]+$/, '') + '.png';
+        thumbnail.alt = '';
+        thumbnail.width = 68; thumbnail.height = 52;
+        thumbnail.loading = 'lazy';
+        thumbnail.onerror = () => {
+            thumbnail.onerror = null;
+            thumbnail.src = './thumbnails/missing.png';
+        };
+        const label = document.createElement('span');
+        label.textContent = name.replace(/\.wbt$/, '').replace(/_/g, ' ');
+        const icon = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+        icon.setAttribute('class', 'icon');
+        icon.setAttribute('aria-hidden', 'true');
+        const use = document.createElementNS('http://www.w3.org/2000/svg', 'use');
+        use.setAttribute('href', '#i-check');
+        icon.appendChild(use);
+        button.append(thumbnail, label, icon);
+        container.appendChild(button);
+    }
+    window.filterWorlds();
 }
 
-
-function updateHistory(history0){
-	let html = "<tr>";
-	if(history0[0].indexOf(":") != -1){
-		if(history0[1].indexOf("+") != -1){
-			html += `<td style='font-size:18px;color:#2980b9;width:'>${history0[0]}</td><td style='font-size:18px;color:#2980b9;'>${history0[1]}</td>`;
-		}else if(history0[1].indexOf("-") != -1){
-			html += `<td style='font-size:18px;color:#c0392b;'>${history0[0]}</td><td style='font-size:18px;color:#c0392b;'>${history0[1]}</td>`;
-		}
-		else if(history0[1].indexOf("WARNING") != -1) {
-			html += `<td style='font-size:18px;color:#d98236;'>${history0[0]}</td><td style='font-size:18px;color:#d98236;'>${history0[1]}</td>`;
-		}
-		else{
-			html += `<td style='font-size:18px;color:#2c3e50;'>${history0[0]}</td><td style='font-size:18px;color:#2c3e50;'>${history0[1]}</td>`;
-		}
-	}
-	html += "</tr>";
-	historyHtml = html + historyHtml;
-	document.getElementById("history").innerHTML = historyHtml;
+function updateEventScrollHint() {
+    const region = document.getElementById('historyRegion');
+    document.getElementById('eventScrollHint').hidden = region.hidden || region.scrollHeight <= region.clientHeight + 1;
 }
+
+function updateHistory(history) {
+    if (!history[0] || !history[0].includes(':')) return;
+    const message = history.slice(1).join(',');
+    const row = document.createElement('tr');
+    const tone = message.includes('WARNING') ? 'warning' : message.includes('+') ? 'positive' : message.includes('-') ? 'negative' : 'neutral';
+    row.setAttribute('data-tone', tone);
+    for (const text of [history[0], message]) {
+        const cell = document.createElement('td');
+        cell.textContent = text;
+        row.appendChild(cell);
+    }
+    const body = document.getElementById('history');
+    body.prepend(row);
+    const count = body.children.length;
+    document.getElementById('exportEventCsv').disabled = false;
+    document.getElementById('eventCount').textContent = count + (count === 1 ? ' event' : ' events');
+    document.getElementById('historyEmpty').hidden = true;
+    document.getElementById('historyRegion').hidden = false;
+    updateEventScrollHint();
+}
+
+window.exportEventCsv = function () {
+    const rows = [...document.querySelectorAll('#history tr')].reverse();
+    if (!rows.length) return;
+    const records = [['Timestamp', 'Event'], ...rows.map(row => [...row.cells].map(cell => cell.textContent))];
+    const csv = '\uFEFF' + records.map(record => record.map(value => '"' + value.replace(/"/g, '""') + '"').join(',')).join('\r\n') + '\r\n';
+    const url = URL.createObjectURL(new Blob([csv], {type: 'text/csv;charset=utf-8'}));
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'erebus-events-' + new Date().toISOString().replace(/[:.]/g, '-') + '.csv';
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+};
 
 function resetHistory() {
-	historyHtml = "";
-	document.getElementById("history").innerHTML = "";
+    document.getElementById('exportEventCsv').disabled = true;
+    document.getElementById('history').replaceChildren();
+    document.getElementById('eventCount').textContent = '0 events';
+    document.getElementById('historyEmpty').hidden = false;
+    document.getElementById('historyRegion').hidden = true;
+    updateEventScrollHint();
 }
 
 function loadedController(id){
+    showSourceStatus("");
 	//A controller has been loaded into a robot id is 0 or 1 and name is the name of the robot
 	//Set name and toggle to unload button for robot 0
 	if (document.getElementById("keepRemote").checked && id == 0) return
+    const filename = document.getElementById('robot' + id + 'Controller').files?.[0]?.name;
+    setFileState(id, filename || (id === 0 ? 'Controller loaded' : 'Robot JSON loaded'), true);
 	document.getElementById("load"+ id).style.display = "none";
 	document.getElementById("unload"+ id).style.display = "inline-block";
 	if (id == 0)
@@ -164,6 +364,7 @@ function loadedController(id){
 }
 
 function unloadedController(id){
+    setFileState(id, id === 0 ? 'No controller loaded' : 'No robot JSON loaded', false);
 	//A controller has been unloaded for robot of the given id
 	//Reset name and toggle to load button for robot 0
 	document.getElementById("robot"+ id +"Controller").value = "";
@@ -172,15 +373,19 @@ function unloadedController(id){
 }
 
 function setEnableRemoteBtn() {
-	document.getElementById("disableRemote").style.display = "none";
-	document.getElementById("enableRemote").style.display = "inline-block";
+    document.getElementById('remoteMode').checked = false;
 }
 function setDisableRemoteBtn() {
-	document.getElementById("enableRemote").style.display = "none";
-	document.getElementById("disableRemote").style.display = "inline-block";
+    document.getElementById('remoteMode').checked = true;
 }
 
 function startup (){
+    updateBattery(100);
+    dockerStarting = false;
+    setMatchState('ready');
+    setEnableButton("recording", true);
+    matchStarted = false;
+    showSourceStatus("");
 	resetHistory();
 	unloadedController(0);
 	unloadedController(1);
@@ -197,8 +402,7 @@ function startup (){
 	setEnableButton("unload1", true);
 	setEnableButton("giveupB", false);
 
-	setEnableButton("enableRemote", true);
-	setEnableButton("disableRemote", true);
+	setEnableButton("remoteMode", true);
 	setEnableButton("dockerPath", true);
 	setEnableRemoteBtn();
 	getWorlds();
@@ -212,7 +416,10 @@ window.getWorlds = function() {
 function update (data){
 	//Update the ui each frame of the simulation
 	//Sets the the timer
-	document.getElementById("score0").innerHTML = String(data[0]);
+	const score = String(data[0]);
+    const displayScore = score.includes('.') ? score : score + '.00';
+    document.getElementById("score0").textContent = displayScore;
+    document.getElementById('score0').setAttribute('data-digits', displayScore.length > 6 ? 'long' : 'short');
 
 	//The total time at the start
 	let maxTime = 8 * 60; 
@@ -222,7 +429,16 @@ function update (data){
 	maxTime = parseInt(maxTime);
 	let maxRealTime = Math.max(maxTime + 60, maxTime * 1.25);
 	document.getElementById("timer").innerHTML = calculateTimeRemaining(data[1], maxTime);
-	document.getElementById("realWorldTimer").innerHTML = calculateTimeRemaining(data[3], maxRealTime);
+	document.getElementById("realWorldTimer").textContent = calculateTimeRemaining(data[3], maxRealTime);
+    document.getElementById('simulationLimit').textContent = calculateTimeRemaining(0, maxTime) + ' total';
+    document.getElementById('realWorldLimit').textContent = calculateTimeRemaining(0, maxRealTime) + ' total';
+    const simulationRemaining = Math.max(0, maxTime - Math.floor(Number(data[1]) || 0));
+    const realRemaining = Math.max(0, maxRealTime - Math.floor(Number(data[3]) || 0));
+    const difference = realRemaining - simulationRemaining;
+    document.getElementById('realWorldAllowance').textContent = (difference < 0 ? '−' : '+') + calculateTimeRemaining(0, Math.abs(difference));
+    document.getElementById('allowanceLabel').textContent = difference < 0 ? 'Real-world time shorter by' : 'Real-world allowance';
+    document.getElementById('realWorldAllowance').title = 'Real-world remaining: ' + calculateTimeRemaining(0, realRemaining);
+
 }
 
 function updateTestBtnState(state) {
@@ -237,16 +453,19 @@ function updateConfig (data){
 	document.getElementById("autoCam").checked = Boolean(Number(data[3]));
 	if (data.length >= 5) {
 		document.getElementById("keepRemote").checked = Boolean(Number(data[4]));
-		if (Boolean(Number(data[4]))) window.enableRemotePressed()
-		else window.disableRemotePressed()
 		document.getElementById("enableDebugging").checked = Boolean(Number(data[5]))
-		document.getElementById("dockerPath").value = String(data[6])
+		const dockerPath = String(data[6] || "");
+        document.getElementById("dockerPath").value = dockerPath.startsWith("uri:") ? decodeURIComponent(dockerPath.slice(4)) : dockerPath;
 	}
 
+    document.getElementById("autoReloadSources").checked = data[7] === '1';
+    document.getElementById("controllerSource").value = decodeURIComponent(data[8] || '');
+    document.getElementById("showHud").checked = data[10] !== '0';
+    document.getElementById("generateMapReview").checked = data[11] === '1';
 	updateTestBtnState(Boolean(Number(data[0])))
 }
 
-window.configChanged = function(){
+window.configChanged = function(changedSetting){
 	let data = [0,0,0,0,0,0,""];
 	data[0] = String(Number(document.getElementById("autoRemoveFiles").checked));
 	data[1] = String(Number(document.getElementById("autoLoP").checked));
@@ -254,12 +473,19 @@ window.configChanged = function(){
 	data[3] = String(Number(document.getElementById("autoCam").checked));
 	data[4] = String(Number(document.getElementById("keepRemote").checked));
 	data[5] = String(Number(document.getElementById("enableDebugging").checked))
-	data[6] = String(document.getElementById("dockerPath").value)
-	if (document.getElementById("keepRemote").checked) window.enableRemotePressed()
-	else window.disableRemotePressed()
+	data[6] = "uri:" + encodeURIComponent(document.getElementById("dockerPath").value)
+    if (!matchStarted && changedSetting === 'keepRemote') {
+        if (document.getElementById("keepRemote").checked) window.enableRemotePressed();
+        else window.disableRemotePressed();
+    }
 
 	updateTestBtnState(document.getElementById("autoRemoveFiles").checked)
-	window.robotWindow.send(`config,${data.join(',')}`);
+    data[7] = String(Number(document.getElementById("autoReloadSources").checked));
+    data[8] = encodeURIComponent(document.getElementById("controllerSource").value.trim());
+    data[9] = ''; // Preserve the HUD index; JSON is loaded only through its browser button.
+    data[10] = String(Number(document.getElementById("showHud").checked));
+    data[11] = String(Number(document.getElementById("generateMapReview").checked));
+    window.robotWindow.send(`config,${data.join(',')}`);
 }
 
 function calculateTimeRemaining(done, maxTime){
@@ -267,7 +493,7 @@ function calculateTimeRemaining(done, maxTime){
 	//Convert to an integer
 	done = Math.floor(done);
 	//Calculate number of seconds remaining
-	var remaining = maxTime - done;
+	var remaining = Math.max(0, maxTime - done);
 	//Calculate seconds part of the time
 	var seconds = Math.floor(remaining % 60);
 	//Calculate the minutes part of the time
@@ -290,6 +516,11 @@ function calculateTimeRemaining(done, maxTime){
 }
 
 function preRun() {
+    dockerStarting = false;
+    window.closeWorkspace();
+    setSetupExpanded(false);
+    setEnableButton("recording", false);
+    matchStarted = true;
 	//Disable all the loading buttons (cannot change loaded controllers once simulation starts)
 	setEnableButton("load0", false);
 	setEnableButton("unload0", false);
@@ -309,23 +540,40 @@ function preRun() {
 
 	setEnableButton("giveupB", true);
 
-	setEnableButton("enableRemote", false);
-	setEnableButton("disableRemote", false);
+	setEnableButton("remoteMode", false);
 
 	setEnableButton("dockerPath", false);
 }
 
 window.runPressed = function(){
+    setMatchState('starting');
+    showSourceStatus("");
 	preRun();
 	window.robotWindow.send("run");
 }
 
+function setDockerStarting(starting) {
+    dockerStarting = starting;
+    disableWhileSending(starting);
+    for (const id of ['runDockerButton', 'dockerPath', 'remoteMode']) setEnableButton(id, !starting);
+    if (!starting && document.getElementById('remoteMode').checked) {
+        setEnableButton('load0', false);
+        setEnableButton('unload0', false);
+    }
+}
 window.runDockerPressed = function(){
-	let docker_input = document.getElementById("dockerPath");
-	window.robotWindow.send("runDocker,"+docker_input.value);
+    if (dockerStarting || matchStarted) return;
+    const path = document.getElementById('dockerPath').value.trim();
+    if (!path) { showSourceStatus('Enter a Docker project folder before starting Docker.', true); return; }
+    showSourceStatus('');
+    setDockerStarting(true);
+    setMatchState('starting');
+    window.closeWorkspace();
+    window.robotWindow.send('runDocker,' + path);
 }
 
 window.pausePressed = function(){
+    setMatchState('pausing');
 	//When the pause button is pressed
 	//Turn off pause button, on run button and send signal to pause
 	setEnableButton("pauseButton", false);
@@ -335,6 +583,7 @@ window.pausePressed = function(){
 }
 
 window.resetPressed = function(){
+    setMatchState('resetting');
 	//When the reset button is pressed
 	//Disable all buttons
 	setEnableButton("runButton", false);
@@ -362,8 +611,9 @@ window.giveupPressed = function(){
 
 window.openLoadController = function(id){
 	//When a load button is pressed - opens the file explorer window
-	document.getElementById("robot"+id+"Controller").click();
-	window.robotWindow.send("loadControllerPressed,"+id);
+	const input = document.getElementById("robot"+id+"Controller");
+	input.value = ""; // Allow selecting the same file again after an upload error.
+	input.click();
 }
 
 function setEnableButton(name, state){
@@ -378,17 +628,45 @@ function setEnableButton(name, state){
 //Set the onload command for the window
 window.onload = function(){
 	//Connect the window
+    // Match actions return the interface to its live view before running their existing handler.
+    document.getElementById('match-controls').addEventListener('click', event => {
+        if (event.target.closest('button:not(:disabled)')) {
+            window.closeWorkspace();
+            setSetupExpanded(false);
+        }
+    }, true);
+    document.addEventListener('keydown', event => {
+        if (event.key === 'Escape') window.closeWorkspace();
+    });
+    document.querySelector('.preparation-tabs').addEventListener('keydown', event => {
+        const buttons = [...event.currentTarget.querySelectorAll('button')];
+        const index = buttons.indexOf(document.activeElement);
+        const next = event.key === 'ArrowRight' ? (index + 1) % buttons.length :
+            event.key === 'ArrowLeft' ? (index + buttons.length - 1) % buttons.length :
+            event.key === 'Home' ? 0 : event.key === 'End' ? buttons.length - 1 : -1;
+        if (next >= 0) { event.preventDefault(); buttons[next].focus(); }
+    });
+    const historyObserver = new ResizeObserver(updateEventScrollHint);
+    historyObserver.observe(document.getElementById('historyRegion'));
 	window.robotWindow = new RobotWindow();
+    document.getElementById('accessAuditAlert').addEventListener('cancel', event => {
+        event.preventDefault();
+        window.acknowledgeAccessAuditAlert();
+    });
 	//Set the title
 	window.robotWindow.setTitle('Erebus Simulation Controls');
 	//Set which function handles the recieved messages
 	window.robotWindow.receive = receive;
 	//Set timer to inital time value
-	document.getElementById("timer").innerHTML = 'Initializing'
+	document.getElementById("timer").textContent = '--:--'
+    setMatchState('connecting');
 	window.robotWindow.send("rw_reload");
 };
 
 function endGame(){
+    setMatchState('finished');
+    setEnableButton('giveupB', false);
+    setEnableButton("recording", true);
 	//Once the game is over turn off both the run and pause buttons
 	setEnableButton("runButton", false)
 	setEnableButton("pauseButton", false);
@@ -399,7 +677,6 @@ window.unloadPressed = function(id){
 	//Unload button pressed
 	//Send the signal for an unload for the correct robot
 	window.robotWindow.send("robot"+id+"Unload");
-	window.robotWindow.send("unloadControllerPressed,"+id);
 }
 
 function disableWhileSending(disabled) {
@@ -428,7 +705,7 @@ window.fileOpened = function(filesId, acceptTypes, location, id){
 		//If there are parts to the name
 		if (nameParts.length >= 1){
 			//If the file extension is valid
-			if(nameParts.length == 1 || acceptTypes.indexOf(nameParts[nameParts.length - 1]) != -1 ){
+			if(nameParts.length == 1 || acceptTypes.includes(nameParts[nameParts.length - 1].toLowerCase()) ){
 				const fd = new FormData();
 				for (let i = 0; i < files.length; i++) {
 					const f = files[i];
@@ -438,23 +715,26 @@ window.fileOpened = function(filesId, acceptTypes, location, id){
 				let xmlhttp = new XMLHttpRequest();
 				xmlhttp.onreadystatechange = function () {
 					if (xmlhttp.readyState == 4 && xmlhttp.status != 200) {
-						console.log(xmlhttp.status);
-						alert(xmlhttp.responseText);
+						disableWhileSending(false);
+						showSourceStatus(xmlhttp.responseText || "Controller upload failed. Please try again.", true);
+                        setFileState(id, 'Controller upload failed', false);
 					}
 					if (xmlhttp.readyState == 4 && xmlhttp.status == 200) {
 						loadedController(id);
+						window.robotWindow.send("controllerUploaded," + id);
 					}
 				};
+                setFileState(id, 'Uploading controller…', false);
 				disableWhileSending(true);
 				xmlhttp.open("POST", "http://127.0.0.1:60520/"+location+"/", true);
 				xmlhttp.send(fd);
 			}else{
 				//Tell the user to select a program
-				alert("Please select a controller with a valid file type from: .py, .exe, .class, .jar, .bsg, .m or no extension (for Linux/Mac users)");
+				showSourceStatus("Please select a controller with a valid file type: .py, .exe, .class, .jar, .bsg, .m or no extension.", true);
 			}
 		}else{
 			//Tell the user to select a program
-			alert("Please select a controller program");
+			showSourceStatus("Please select a controller program.", true);
 		}
 
 	}
@@ -475,7 +755,7 @@ window.openJsonFile = function(){
 		//If there are parts to the name
 		if (nameParts.length > 1){
 			//If the last part is "json" - a json file
-			if(nameParts[nameParts.length - 1] == "json"){
+			if(nameParts[nameParts.length - 1].toLowerCase() == "json"){
 				//Create a file reader
 				var reader = new FileReader();
 				
@@ -487,15 +767,17 @@ window.openJsonFile = function(){
 					}
 				})(reader);
 				
-				//Read the file as udf-8 text
-				reader.readAsText(file);
+				reader.onerror = () => {showSourceStatus("The JSON file could not be read. Please select it again.", true);setFileState(1, 'Robot JSON could not be read', false);};
+				//Read the file as UTF-8 text
+				setFileState(1, 'Loading robot JSON…', false);
+                reader.readAsText(file);
 			}else{
 				//Tell the user to select a json file
-				alert("Please select a json file.");
+				showSourceStatus("Please select a JSON file.", true);
 			}
 		}else{
 			//Tell the user to select a json file
-			alert("Please select a json file.");
+			showSourceStatus("Please select a JSON file.", true);
 		}
 		
 	}
@@ -529,7 +811,146 @@ window.disableRemotePressed = function() {
 function enableTestButton(world_name) {
 	if (world_name != ".Tests"){ 
 		document.getElementById("dev-tests").style.display = "none";
+        document.getElementById("dev-tests").hidden = true;
 		return;
 	}
 	document.getElementById("dev-tests").style.display = "block";
+    document.getElementById("dev-tests").hidden = false;
 }
+
+// Save and open on the computer running Webots; never send a Run or Reset.
+window.openMapReview = function () {
+    document.getElementById('viewMapReview').disabled = true;
+    document.getElementById('mapReviewNotice').textContent = 'Saving map result…';
+    window.robotWindow.send('showMapReview');
+};
+
+// Browser-native popup request; the browser retains control of window placement.
+let compactWindow = null;
+window.openCompactWindow = function () {
+    if (compactWindow && !compactWindow.closed) {
+        compactWindow.focus();
+        return;
+    }
+    const url = new URL(window.location.href);
+    url.searchParams.set('compact', '1');
+    const width = Math.min(740, window.screen.availWidth);
+    const height = Math.min(900, window.screen.availHeight);
+    compactWindow = window.open(url.href, '_blank', `popup=yes,width=${width},height=${height},resizable=yes,scrollbars=yes`);
+    const status = document.getElementById('compactWindowStatus');
+    if (compactWindow) {
+        compactWindow.opener = null;
+        compactWindow.focus();
+        status.textContent = 'Compact supervisor opened in a separate window.';
+    } else {
+        status.textContent = 'The browser blocked the window. Allow popups for this Webots address, then try again. You can keep using this page.';
+    }
+};
+if (new URL(window.location.href).searchParams.get('compact') === '1') {
+    document.getElementById('openCompact').hidden = true;
+}
+
+function setSetupExpanded(expanded) {
+    if (expanded) setPreparationPanel('setup');
+    else if (activePanel === 'setup') setPreparationPanel(null);
+}
+
+
+let accessAuditSnapshot = null;
+function renderAccessAudit(snapshot) {
+    if (!snapshot || !Array.isArray(snapshot.events)) return;
+    snapshot = {...snapshot, events:snapshot.events.filter(event => event.warning)};
+    accessAuditSnapshot = snapshot;
+    const incomplete = Boolean(snapshot.error || snapshot.dropped);
+    const warnings = Number(snapshot.warnings) || 0;
+    const status = incomplete ? 'Warning list incomplete. ' + (snapshot.error || snapshot.dropped + ' warnings could not be queued.') : warnings + (warnings === 1 ? ' warning for review.' : ' warnings for review.');
+    document.getElementById('accessAuditStatus').textContent = status;
+    const panel = document.getElementById('accessAuditPanel');
+    const visible = incomplete || warnings > 0;
+    panel.hidden = !visible;
+    panel.dataset.warning = visible ? 'true' : 'false';
+    const indicator = document.getElementById('accessAuditIndicator');
+    indicator.hidden = !visible;
+    indicator.dataset.warning = panel.dataset.warning;
+    indicator.textContent = incomplete ? 'Warnings · incomplete' : 'Warnings · review ' + warnings;
+    document.getElementById('accessAuditCount').textContent = warnings + (warnings === 1 ? ' flagged observation' : ' flagged observations');
+    document.getElementById('accessAuditEmpty').hidden = snapshot.events.length > 0;
+    document.getElementById('exportAccessAudit').disabled = false;
+    document.getElementById('accessAuditEvidence').textContent = 'Export the displayed warnings to save a copy.';
+    const list = document.getElementById('accessAuditEvents');
+    list.replaceChildren();
+    for (const event of [...snapshot.events].reverse()) {
+        const item = document.createElement('li');
+        item.dataset.warning = event.warning ? 'true' : 'false';
+        const title = document.createElement('strong');
+        title.textContent = event.source + ' — ' + event.summary;
+        const detail = document.createElement('p');
+        const confidence = 'Match Studio warning';
+        detail.textContent = event.time + ' · ' + confidence + (event.peer ? ' · ' + event.peer : '');
+        item.append(title, detail);
+        list.append(item);
+    }
+    showAccessAuditAlert(snapshot);
+}
+window.openAccessAudit = function() {
+    const panel = document.getElementById('accessAuditPanel');
+    document.getElementById('accessAuditDetails').open = true;
+    panel.scrollIntoView({block:'start',behavior:'auto'});
+    panel.querySelector('summary').focus({preventScroll:true});
+};
+window.exportAccessAudit = function() {
+    if (!accessAuditSnapshot) return;
+    const data = {...accessAuditSnapshot, scope:'Warnings displayed by Match Studio.'};
+    const blob = new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'erebus-access-audit-' + accessAuditSnapshot.session + '.json';
+    document.body.appendChild(link);
+    link.click();link.remove();
+    setTimeout(()=>URL.revokeObjectURL(url),1000);
+};
+
+
+const accessAuditAcknowledgements = new Map();
+let pendingAccessAuditAlert = null;
+function showAccessAuditAlert(snapshot) {
+    const key = 'erebus.auditAcknowledged.' + snapshot.session;
+    let acknowledged = accessAuditAcknowledgements.get(key);
+    if (!acknowledged) {
+        try { acknowledged = JSON.parse(sessionStorage.getItem(key)); } catch (error) { /* Storage may be disabled. */ }
+        if (!acknowledged || !Number.isFinite(acknowledged.warnings)) acknowledged = {warnings:0, issue:''};
+        accessAuditAcknowledgements.set(key, acknowledged);
+    }
+    const warnings = Number(snapshot.warnings) || 0;
+    const issue = snapshot.error || snapshot.dropped ? (snapshot.error || '') + '/' + (snapshot.dropped || 0) : '';
+    if (warnings <= acknowledged.warnings && (!issue || issue === acknowledged.issue)) return;
+    pendingAccessAuditAlert = {key, warnings, issue};
+    const count = Math.max(0, warnings - acknowledged.warnings);
+    document.getElementById('accessAuditAlertTitle').textContent = issue ? 'Warning list incomplete' : 'Warning reported';
+    document.getElementById('accessAuditAlertSummary').textContent = issue
+        ? (snapshot.error || snapshot.dropped + ' observations could not be queued.') + ' Review the warning details.'
+        : count + (count === 1 ? ' new warning needs referee review.' : ' new warnings need referee review.');
+    const list = document.getElementById('accessAuditAlertEvents');
+    list.replaceChildren();
+    for (const event of snapshot.events.filter(item => item.warning).slice(-Math.min(count || 5, 5)).reverse()) {
+        const item = document.createElement('li');
+        const title = document.createElement('strong');
+        title.textContent = event.summary;
+        const details = document.createElement('span');
+        details.textContent = event.source + ' · ' + event.time;
+        item.append(title, details);
+        list.append(item);
+    }
+    const dialog = document.getElementById('accessAuditAlert');
+    if (!dialog.open) dialog.showModal();
+}
+window.acknowledgeAccessAuditAlert = function() {
+    if (!pendingAccessAuditAlert) return;
+    const {key, warnings, issue} = pendingAccessAuditAlert;
+    const acknowledged = {warnings, issue};
+    accessAuditAcknowledgements.set(key, acknowledged);
+    try { sessionStorage.setItem(key, JSON.stringify(acknowledged)); } catch (error) { /* In-memory acknowledgement still applies. */ }
+    pendingAccessAuditAlert = null;
+    document.getElementById('accessAuditAlert').close();
+};

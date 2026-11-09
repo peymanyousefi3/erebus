@@ -1,108 +1,53 @@
+# Erebus customizations by Peyman Yousefi; original RoboCupJunior credits retained.
 from __future__ import annotations
 
-from Tools import *
-
+import textwrap
 from typing import TYPE_CHECKING
 
-if TYPE_CHECKING:    
+if TYPE_CHECKING:
     from MainSupervisor import Erebus
 
-class Recorder:
-    """Helper class for recording Erebus simulation runs
-    """
 
-    COLOR_WHITE: int = 0xdff9fb
-    COLOR_GREEN: int = 0x4cd137
-    COLOR_RED: int = 0xe74c3c
+class Recorder:
+    """Live HUD labels also captured by Webots HTML replay export."""
 
     ID_SCORE: int = 0
     ID_CLOCK: int = 1
-    ID_COUNT_DOWN: int = 4
+    ID_EVENTS: int = 2
 
     @staticmethod
-    def reset_countdown(erebus: Erebus):
-        """Reset/remove the countdown label
+    def update_hud(erebus: Erebus):
+        """Display match score and elapsed/maximum time live and in HTML replays."""
+        elapsed = max(0, min(int(erebus.time_elapsed), int(erebus.max_time)))
+        minutes, seconds = divmod(elapsed, 60)
+        max_minutes, max_seconds = divmod(int(erebus.max_time), 60)
+        score = f"Score: {erebus.robot_obj.get_score():.2f}"
+        clock = f"Time: {minutes:02d}:{seconds:02d} / {max_minutes:02d}:{max_seconds:02d}"
+        # Webots renders each line at half the label size; leave a 0.005 gap.
+        Recorder.set_label(erebus, Recorder.ID_SCORE, score, 0.02, 0.02, 0.13, 0xffffff, 0, "Arial")
+        Recorder.set_label(erebus, Recorder.ID_CLOCK, clock, 0.02, 0.09, 0.11, 0xffffff, 0, "Arial")
 
-        Args:
-            erebus (Erebus): Erebus game supervisor object
-        """
-        erebus.setLabel(Recorder.ID_COUNT_DOWN, "", 
-                        0.2, 0, 0.4, Recorder.COLOR_RED, 0)
-
-    @staticmethod
-    def start_recording(erebus: Erebus):
-        """Start recording. Recordings are stored in the Erebus root directory
-        as `recording.mp4`.
-
-        Args:
-            erebus (Erebus): Erebus game supervisor object
-        """
-        path: str = get_file_path("../recording.mp4", "../../../recording.mp4")
-        
-        platform_ver: str = f'Platform Version: {erebus.version}'
-        max_clock: str = ("Clock: " + 
-                          str(int(int(erebus.max_time)/60)).zfill(2) + ":" + 
-                          str(int(int(erebus.max_time) % 60)).zfill(2))
-
-        erebus.movieStartRecording(
-            path, width=1280, height=720, quality=70,
-            codec=0, acceleration=1, caption=False,
-        )
-
-        erebus.setLabel(Recorder.ID_SCORE, platform_ver, 
-                        0, 0, 0.05, Recorder.COLOR_WHITE, 0)
-        erebus.wait(0.5)
-        erebus.setLabel(Recorder.ID_COUNT_DOWN, "3", 0.4,
-                        0, 0.7, Recorder.COLOR_RED, 0)
-        erebus.wait(1)
-        erebus.setLabel(Recorder.ID_COUNT_DOWN, "2", 0.4,
-                        0, 0.7, Recorder.COLOR_RED, 0)
-        erebus.wait(1)
-        erebus.setLabel(Recorder.ID_COUNT_DOWN, "1", 0.4,
-                        0, 0.7, Recorder.COLOR_RED, 0)
-        erebus.wait(1)
-        erebus.setLabel(Recorder.ID_COUNT_DOWN, "START",
-                        0.2, 0, 0.7, Recorder.COLOR_RED, 0)
-        erebus.wait(1)
-        erebus.setLabel(Recorder.ID_SCORE, "Score: 0",
-                        0.15, 0, 0.15, Recorder.COLOR_GREEN, 0)
-        erebus.setLabel(Recorder.ID_CLOCK, max_clock,
-                        0.4, 0, 0.15, Recorder.COLOR_GREEN, 0)
+        Recorder.update_events(erebus)
 
     @staticmethod
-    def update(erebus: Erebus):
-        """Update the recording score and clock labels
-
-        Args:
-            erebus (Erebus): Erebus game supervisor object
-        """
-        timeRemaining: int = erebus.max_time - int(erebus.time_elapsed)
-        score: str = "Score: " + str(round(erebus.robot_obj.get_score(), 2))
-        clock: str = ("Clock: " + 
-                      str(int(int(timeRemaining)/60)).zfill(2) + ":" + 
-                      str(int(int(timeRemaining) % 60)).zfill(2))
-        
-        erebus.setLabel(Recorder.ID_SCORE, score, 
-                        0.15, 0, 0.15, Recorder.COLOR_GREEN, 0)
-        erebus.setLabel(Recorder.ID_CLOCK, clock, 
-                        0.4, 0, 0.15, Recorder.COLOR_GREEN, 0)
+    def update_events(erebus: Erebus):
+        """Keep the latest three timestamped events visible, newest first."""
+        text = Recorder.event_text(erebus.robot_obj.history.master_history)
+        Recorder.set_label(erebus, Recorder.ID_EVENTS, text, 0.02, 0.15, 0.055,
+                        0xfbc531, 0, "Arial")
 
     @staticmethod
-    def stop_recording(erebus: Erebus):
-        """Stops the recording. Displays the final score and time.
+    def event_text(history):
+        """Use the same three-event layout live and in the final exported frame."""
+        return "\n".join(textwrap.fill(f"[{stamp}] {text}", width=64,
+                                     subsequent_indent="        ", break_long_words=False,
+                                     break_on_hyphens=False)
+                         for stamp, text in reversed(history[-3:])) or "No events yet"
 
-        Args:
-            erebus (Erebus): Erebus game supervisor object
-        """
-        score: str = "Score: " + str(round(erebus.robot_obj.get_score(), 2))
-        game_time: str = ("Game time: " + 
-                          str(int(int(erebus.time_elapsed)/60)).zfill(2) + ":" + 
-                          str(int(int(erebus.time_elapsed) % 60)).zfill(2))
-        
-        
-        erebus.setLabel(Recorder.ID_SCORE, score, 
-                        0.15, 0.3, 0.3, Recorder.COLOR_RED, 0)
-        erebus.setLabel(Recorder.ID_CLOCK, game_time, 
-                        0.15, 0.45, 0.3, Recorder.COLOR_RED, 0)
-        erebus.wait(5)
-        erebus.movieStopRecording()
+    @staticmethod
+    def set_label(erebus: Erebus, label_id, text, x, y, size, color,
+                  transparency=0, font="Arial"):
+        # Transparent labels preserve the replay clock/event timeline when hidden.
+        if not erebus.config.show_hud:
+            transparency = 1
+        erebus.setLabel(label_id, text, x, y, size, color, transparency, font)

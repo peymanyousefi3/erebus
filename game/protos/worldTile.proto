@@ -1,4 +1,5 @@
-#VRML_SIM R2022b utf8
+#VRML_SIM R2025a utf8
+# template language: javascript
 
 EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/50c3f419b5da49a2af606297049ee91e8adbc92e/projects/objects/apartment_structure/protos/Wall.proto"
 EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/50c3f419b5da49a2af606297049ee91e8adbc92e/projects/appearances/protos/CorrodedMetal.proto"
@@ -8,9 +9,9 @@ PROTO worldTile [
       field SFInt32 xPos 0
       field SFInt32 zPos 0
       field SFBool floor FALSE
-      field SFInt32 rightWall 0 # divisible by 2 means shortened on north end, divisble by 3 means shortened on south end 
+      field SFInt32 rightWall 0 # divisible by 2 means shortened on north }, divisble by 3 means shortened on south }
       field SFInt32 bottomWall 0 # divisible by 2 means shortened, divisible by 3 means extended, possible vals 0, 1, 2, 3, 6
-	  field SFInt32 topWall 0 
+	  field SFInt32 topWall 0
 	  field SFInt32 leftWall 0
 	  field SFBool topExternal FALSE
 	  field SFBool leftExternal FALSE
@@ -20,6 +21,7 @@ PROTO worldTile [
 	  field SFBool trap FALSE
 	  field SFBool checkpoint FALSE
 	  field SFBool swamp FALSE
+	  field SFBool contact FALSE
 	  field SFBool obstacle FALSE
 	  field SFRotation obstacleRotation 0 1 0 2.477
 	  field SFVec2f obstacleOffset 0 0
@@ -35,9 +37,20 @@ PROTO worldTile [
 	  field SFInt32 room 0
 ]
 {
+%<
+// Preserve the original model geometry precision after template conversion.
+function modelNumber(value) {
+  return typeof value === "number" ? Number(value.toPrecision(14)) : value;
+}
+>%
+
       DEF TILE Solid {
-	name "solid%{=fields.id.value}%"
-	  %{
+	name "solid%<= modelNumber(fields.id.value) >%"
+	  %<
+	  let scaleX, scaleY, scaleZ, xStart, zStart, x, z;
+	  let wallThickness, wallHeight, tileThickness;
+	  let x_shift, z_shift, x_size, z_size, y_size, y_shift;
+	  let obs_xoff, obs_yoff;
 	  scaleX = fields.xScale.value
 	  scaleY = fields.yScale.value
 	  scaleZ = fields.zScale.value
@@ -50,49 +63,49 @@ PROTO worldTile [
 	  wallHeight = .15
 	  tileThickness = .02
 
-	  if fields.isHalf.value == true then -- half tiles are halved in scale, so must double wall thickness to make it match regular
+	  if (fields.isHalf.value == true) { // half tiles are halved in scale, so must double wall thickness to make it match regular
 	  	wallThickness = wallThickness * 2
 		wallHeight = wallHeight * 2
 		tileThickness = tileThickness * 2
-      end
-	  
-	  }%
+      }
 
-	  translation %{=x}% 0 %{=z}%
+	  >%
+
+	  translation %<= modelNumber(x) >% 0 %<= modelNumber(z) >%
 	  contactMaterial "TILE"
 
       children[
 		  DEF TILE_SHAPES_GROUP Group {
 			  children [
 
-				%{if fields.floor.value == true then
+				%<if (fields.floor.value == true) {
 					x_shift = 0
 					z_shift = 0
 					x_size = .3
 					z_size = .3
 
-					if fields.topExternal.value == true then
+					if (fields.topExternal.value == true) {
 						z_shift = z_shift + wallThickness/2/2
 						z_size = z_size -wallThickness/2
-					end
-					if fields.bottomExternal.value == true then
+					}
+					if (fields.bottomExternal.value == true) {
 						z_shift = z_shift - wallThickness/2/2
 						z_size = z_size -wallThickness/2
-					end
-					if fields.leftExternal.value == true then
+					}
+					if (fields.leftExternal.value == true) {
 						x_shift = x_shift + wallThickness/2/2
 						x_size = x_size -wallThickness/2
-					end
-					if fields.rightExternal.value == true then
+					}
+					if (fields.rightExternal.value == true) {
 						x_shift = x_shift - wallThickness/2/2
 						x_size = x_size -wallThickness/2
-					end
+					}
 
-				
-				}%
-					%{if fields.checkpoint.value == false and fields.swamp.value == false and fields.start.value == false then}%
+
+				>%
+					%<if (fields.checkpoint.value == false && fields.swamp.value == false && fields.start.value == false && fields.contact.value == false) {>%
 						DEF FLOOR Transform {
-							translation %{=x_shift * scaleX}% %{=-0.085 * scaleY}% %{=z_shift * scaleZ}%
+							translation %<= modelNumber(x_shift * scaleX) >% %<= modelNumber(-0.085 * scaleY) >% %<= modelNumber(z_shift * scaleZ) >%
 							children [
 								Shape {
 									appearance Appearance {
@@ -101,31 +114,31 @@ PROTO worldTile [
 										}
 									}
 									geometry DEF FLOORBOX Box {
-										size %{=x_size * scaleX}% %{=tileThickness * scaleY}% %{=z_size * scaleZ}%
+										size %<= modelNumber(x_size * scaleX) >% %<= modelNumber(tileThickness * scaleY) >% %<= modelNumber(z_size * scaleZ) >%
 									}
 									isPickable  FALSE
 								}
 							]
 						}
-					%{end}%
-					%{if fields.checkpoint.value == true then}%
+					%<}>%
+					%<if (fields.checkpoint.value == true) {>%
 						DEF CHECKPOINT Transform {
-							translation %{=x_shift * scaleX}% %{=-0.085 * scaleY}% %{=z_shift * scaleZ}%
+							translation %<= modelNumber(x_shift * scaleX) >% %<= modelNumber(-0.085 * scaleY) >% %<= modelNumber(z_shift * scaleZ) >%
 									children [
 										Shape {
 											appearance CorrodedMetal  {
 											}
 											geometry Box {
-												size %{=x_size * scaleX}% %{=tileThickness * scaleY}% %{=z_size * scaleZ}%
+												size %<= modelNumber(x_size * scaleX) >% %<= modelNumber(tileThickness * scaleY) >% %<= modelNumber(z_size * scaleZ) >%
 											}
 											isPickable  FALSE
 										}
 									]
 						}
-					%{end}%
-					%{if fields.swamp.value == true then}%
+					%<}>%
+					%<if (fields.swamp.value == true) {>%
 						DEF FLOOR Transform {
-							translation %{=x_shift * scaleX}% %{=-0.085 * scaleY}% %{=z_shift * scaleZ}%
+							translation %<= modelNumber(x_shift * scaleX) >% %<= modelNumber(-0.085 * scaleY) >% %<= modelNumber(z_shift * scaleZ) >%
 									children [
 										Shape {
 											appearance Appearance {
@@ -134,16 +147,34 @@ PROTO worldTile [
 												}
 											}
 											geometry Box {
-												size %{=x_size * scaleX}% %{=tileThickness * scaleY}% %{=z_size * scaleZ}%
+												size %<= modelNumber(x_size * scaleX) >% %<= modelNumber(tileThickness * scaleY) >% %<= modelNumber(z_size * scaleZ) >%
 											}
 											isPickable  FALSE
 										}
 									]
 						}
-					%{end}%
-					%{if fields.start.value == true then}%
+					%<}>%
+					%<if (fields.contact.value == true) {>%
+						DEF FLOOR Transform {
+							translation %<= modelNumber(x_shift * scaleX) >% %<= modelNumber(-0.085 * scaleY) >% %<= modelNumber(z_shift * scaleZ) >%
+							children [
+								Shape {
+									appearance Appearance {
+										material Material {
+											diffuseColor 0 0.635 0.635
+										}
+									}
+									geometry Box {
+										size %<= modelNumber(x_size * scaleX) >% %<= modelNumber(tileThickness * scaleY) >% %<= modelNumber(z_size * scaleZ) >%
+									}
+									isPickable FALSE
+								}
+							]
+						}
+					%<}>%
+					%<if (fields.start.value == true) {>%
 						DEF START Transform {
-							translation %{=x_shift * scaleX}% %{=-0.085 * scaleY}% %{=z_shift * scaleZ}%
+							translation %<= modelNumber(x_shift * scaleX) >% %<= modelNumber(-0.085 * scaleY) >% %<= modelNumber(z_shift * scaleZ) >%
 									children [
 										Shape {
 											appearance Appearance {
@@ -155,36 +186,36 @@ PROTO worldTile [
 
 											}
 											geometry Box {
-												size %{=x_size * scaleX}% %{=tileThickness * scaleY}% %{=z_size * scaleZ}%
+												size %<= modelNumber(x_size * scaleX) >% %<= modelNumber(tileThickness * scaleY) >% %<= modelNumber(z_size * scaleZ) >%
 											}
 											isPickable  FALSE
 										}
 									]
 						}
-					%{end}%
-				%{end}%
-				%{if fields.rightWall.value > 0 then
+					%<}>%
+				%<}>%
+				%<if (fields.rightWall.value > 0) {
 					z_size = .3
 					z_shift = 0
-					y_size = wallHeight 
+					y_size = wallHeight
 					y_shift = 0
 
-					if fields.rightWall.value % 2 == 0 then
+					if (fields.rightWall.value % 2 == 0) {
 						z_size = z_size - wallThickness/2
-						z_shift = z_shift + wallThickness/2/2 
-					end 
-					if fields.rightWall.value % 3 == 0 then
+						z_shift = z_shift + wallThickness/2/2
+					}
+					if (fields.rightWall.value % 3 == 0) {
 						z_size = z_size - wallThickness/2
-						z_shift = z_shift - wallThickness/2/2 
-					end					
-					if fields.rightExternal.value == true then
+						z_shift = z_shift - wallThickness/2/2
+					}
+					if (fields.rightExternal.value == true) {
 						y_size = wallHeight + tileThickness
 						y_shift = -tileThickness/2
-					end
-				
-				}%
+					}
+
+				>%
 					DEF RIGHTWALL Transform {
-						translation %{=.15 * scaleX}% %{=y_shift * scaleY}% %{=z_shift * scaleZ}%
+						translation %<= modelNumber(.15 * scaleX) >% %<= modelNumber(y_shift * scaleY) >% %<= modelNumber(z_shift * scaleZ) >%
 						children [
 							Shape {
 								appearance Appearance {
@@ -193,40 +224,40 @@ PROTO worldTile [
 									}
 								}
 								geometry DEF BACKWALLBOX Box {
-								size %{=wallThickness * scaleX}% %{=y_size * scaleY}% %{=z_size * scaleY}%
+								size %<= modelNumber(wallThickness * scaleX) >% %<= modelNumber(y_size * scaleY) >% %<= modelNumber(z_size * scaleY) >%
 								}
 								isPickable  FALSE
 							}
 						]
 					}
-				%{end}%
-				%{if fields.bottomWall.value > 0 then
+				%<}>%
+				%<if (fields.bottomWall.value > 0) {
 					x_size = .3
 					x_shift = 0
 					y_size = wallHeight
 					y_shift = 0
 
-					if fields.bottomWall.value % 2 == 0 then
+					if (fields.bottomWall.value % 2 == 0) {
 						x_size = x_size - wallThickness/2
-						x_shift = x_shift + wallThickness/2/2 
-					end 
-					if fields.bottomWall.value % 3 == 0 then
+						x_shift = x_shift + wallThickness/2/2
+					}
+					if (fields.bottomWall.value % 3 == 0) {
 						x_size = x_size + wallThickness/2
-						x_shift = x_shift + wallThickness/2/2 
-					end					
-					if fields.bottomExternal.value == true then
+						x_shift = x_shift + wallThickness/2/2
+					}
+					if (fields.bottomExternal.value == true) {
 						y_size = wallHeight + tileThickness
 						y_shift = -tileThickness/2
-					end
-					
-					if fields.bottomWall.value % 5 == 0 then
+					}
+
+					if (fields.bottomWall.value % 5 == 0) {
 						x_size = x_size + wallThickness/2
 						x_shift = x_shift - wallThickness/2/2
-					end
-				
-				}%
+					}
+
+				>%
 					DEF FRONTWALL Transform {
-						translation %{=x_shift * scaleX}% %{=y_shift * scaleY}% %{=.15 * scaleZ}%
+						translation %<= modelNumber(x_shift * scaleX) >% %<= modelNumber(y_shift * scaleY) >% %<= modelNumber(.15 * scaleZ) >%
 						children [
 							Shape {
 								appearance Appearance {
@@ -235,16 +266,16 @@ PROTO worldTile [
 									}
 								}
 								geometry DEF BACKWALLBOX Box {
-								size %{=x_size * scaleX}% %{=y_size * scaleY}% %{=wallThickness * scaleZ}%
+								size %<= modelNumber(x_size * scaleX) >% %<= modelNumber(y_size * scaleY) >% %<= modelNumber(wallThickness * scaleZ) >%
 								}
 								isPickable  FALSE
 							}
 						]
 					}
-					%{if fields.rightWall.value > 0 and fields.rightExternal.value == true and fields.bottomExternal.value == false then}%
+					%<if (fields.rightWall.value > 0 && fields.rightExternal.value == true && fields.bottomExternal.value == false) {>%
 
 					Transform {
-						translation %{=.15 * scaleX}% %{=(-wallHeight/2-tileThickness/2) * scaleY}% %{=.15 * scaleZ}%
+						translation %<= modelNumber(.15 * scaleX) >% %<= modelNumber((-wallHeight/2-tileThickness/2) * scaleY) >% %<= modelNumber(.15 * scaleZ) >%
 						children [
 								Shape {
 									appearance Appearance {
@@ -253,40 +284,40 @@ PROTO worldTile [
 										}
 									}
 									geometry DEF BACKWALLBOX Box {
-										size %{=wallThickness * scaleX}% %{=tileThickness * scaleY}% %{=wallThickness * scaleZ}%
+										size %<= modelNumber(wallThickness * scaleX) >% %<= modelNumber(tileThickness * scaleY) >% %<= modelNumber(wallThickness * scaleZ) >%
 									}
 									isPickable  FALSE
 								}
 							]
 					}
-					%{end}%
-				%{end}%
-				%{if fields.topWall.value > 0 then
+					%<}>%
+				%<}>%
+				%<if (fields.topWall.value > 0) {
 
 					x_size = .3
 					x_shift = 0
 					y_size = wallHeight
 					y_shift = 0
 
-					if fields.topWall.value % 2 == 0 then
+					if (fields.topWall.value % 2 == 0) {
 						x_size = x_size - wallThickness/2
-						x_shift = x_shift + wallThickness/2/2 
-					end 
-					if fields.topWall.value % 3 == 0 then
+						x_shift = x_shift + wallThickness/2/2
+					}
+					if (fields.topWall.value % 3 == 0) {
 						x_size = x_size + wallThickness/2
-						x_shift = x_shift + wallThickness/2/2 
-					end				
-					if fields.leftWall.value == 1  or fields.leftWall.value == 3 then --special case for top left corner
+						x_shift = x_shift + wallThickness/2/2
+					}
+					if (fields.leftWall.value == 1  || fields.leftWall.value == 3) { //special case for top left corner
 						x_size = x_size + wallThickness/2
-						x_shift = x_shift - wallThickness/2/2	
-					end
-					if fields.topExternal.value == true then
+						x_shift = x_shift - wallThickness/2/2
+					}
+					if (fields.topExternal.value == true) {
 						y_size = wallHeight + tileThickness
 						y_shift = -tileThickness/2
-					end
-				}%
+					}
+				>%
 					Transform {
-						translation %{=x_shift * scaleX}% %{=y_shift * scaleY}% %{=-.15 * scaleZ}%
+						translation %<= modelNumber(x_shift * scaleX) >% %<= modelNumber(y_shift * scaleY) >% %<= modelNumber(-.15 * scaleZ) >%
 						children [
 								Shape {
 									appearance Appearance {
@@ -295,39 +326,39 @@ PROTO worldTile [
 										}
 									}
 									geometry DEF BACKWALLBOX Box {
-										size %{=x_size * scaleX}% %{=y_size * scaleY}% %{=wallThickness * scaleZ}%
+										size %<= modelNumber(x_size * scaleX) >% %<= modelNumber(y_size * scaleY) >% %<= modelNumber(wallThickness * scaleZ) >%
 									}
 									isPickable  FALSE
 								}
 							]
 					}
-				%{end}%
-				%{if fields.leftWall.value > 0 then
-				
+				%<}>%
+				%<if (fields.leftWall.value > 0) {
+
 					z_size = .3
 					z_shift = 0
 					y_size = wallHeight
 					y_shift = 0
 
-					if fields.leftWall.value % 2 == 0 then
+					if (fields.leftWall.value % 2 == 0) {
 						z_size = z_size - wallThickness/2
-						z_shift = z_shift + wallThickness/2/2 
-					end 
-					if fields.leftWall.value % 3 == 0 then
+						z_shift = z_shift + wallThickness/2/2
+					}
+					if (fields.leftWall.value % 3 == 0) {
 						z_size = z_size + wallThickness/2
-						z_shift = z_shift + wallThickness/2/2 
-					end					
-					if fields.topWall.value == 1 or fields.topWall.value == 3 then --special case for top left corner
+						z_shift = z_shift + wallThickness/2/2
+					}
+					if (fields.topWall.value == 1 || fields.topWall.value == 3) { //special case for top left corner
 						z_size = z_size - wallThickness/2
-						z_shift = z_shift + wallThickness/2/2	
-					end
-					if fields.leftExternal.value == true then
+						z_shift = z_shift + wallThickness/2/2
+					}
+					if (fields.leftExternal.value == true) {
 						y_size = wallHeight + tileThickness
 						y_shift = -tileThickness/2
-					end
-				}%
+					}
+				>%
 					Transform {
-						translation %{=-.15 * scaleX}% %{=y_shift * scaleY}% %{=z_shift * scaleZ}%
+						translation %<= modelNumber(-.15 * scaleX) >% %<= modelNumber(y_shift * scaleY) >% %<= modelNumber(z_shift * scaleZ) >%
 						rotation 0 1 0 1.570796
 						children [
 									Shape {
@@ -337,17 +368,17 @@ PROTO worldTile [
 											}
 										}
 										geometry DEF BACKWALLBOX Box {
-											size %{=z_size * scaleX}% %{=y_size * scaleY}% %{=wallThickness * scaleZ}%
+											size %<= modelNumber(z_size * scaleX) >% %<= modelNumber(y_size * scaleY) >% %<= modelNumber(wallThickness * scaleZ) >%
 										}
 										isPickable  FALSE
 									}
 								]
 					}
-				%{end}%
-				%{if fields.trap.value == true then}%
+				%<}>%
+				%<if (fields.trap.value == true) {>%
 
 							DEF FLOOR Transform {
-								translation 0 %{=-0.205 * scaleY}% 0
+								translation 0 %<= modelNumber(-0.205 * scaleY) >% 0
 								children [
 									Shape {
 										appearance Appearance {
@@ -356,14 +387,14 @@ PROTO worldTile [
 											}
 										}
 										geometry DEF FLOORBOX Box {
-											size %{=0.3 * scaleX}% %{=0.02 * scaleY}% %{=0.3 * scaleZ}%
+											size %<= modelNumber(0.3 * scaleX) >% %<= modelNumber(0.02 * scaleY) >% %<= modelNumber(0.3 * scaleZ) >%
 										}
 										isPickable  FALSE
 									}
 								]
 							}
 							Transform {
-							  translation 0 %{=-0.1350125 * scaleY}% %{=-0.13 * scaleZ}%
+							  translation 0 %<= modelNumber(-0.1350125 * scaleY) >% %<= modelNumber(-0.13 * scaleZ) >%
 							  rotation 0 1 0 -1.5707953071795862
 							  children [
 								Shape {
@@ -374,78 +405,75 @@ PROTO worldTile [
 									}
 								  }
 								  geometry DEF TRAPEDGEBOX Box {
-									size %{=0.04 * scaleX}% %{=0.12 * scaleY}% %{=0.3 * scaleZ}%
+									size %<= modelNumber(0.04 * scaleX) >% %<= modelNumber(0.12 * scaleY) >% %<= modelNumber(0.3 * scaleZ) >%
 								  }
 								  isPickable  FALSE
 								}
 							  ]
 							}
 							Transform {
-							  translation 0 %{=-0.1350125 * scaleY}% %{=0.13 * scaleZ}%
+							  translation 0 %<= modelNumber(-0.1350125 * scaleY) >% %<= modelNumber(0.13 * scaleZ) >%
 							  rotation 0 1 0 -1.5707953071795862
 							  children [
 								Shape {
 								  appearance USE TRAPAPP
 								  geometry DEF TRAPEDGEBOX Box {
-									size %{=0.04 * scaleX}% %{=0.12 * scaleY}% %{=0.3 * scaleZ}%
+									size %<= modelNumber(0.04 * scaleX) >% %<= modelNumber(0.12 * scaleY) >% %<= modelNumber(0.3 * scaleZ) >%
 								  }
 								  isPickable  FALSE
 								}
 							  ]
 							}
 							Transform {
-							  translation %{=-0.13 * scaleY}% %{=-0.1350125 * scaleY}% 0
+							  translation %<= modelNumber(-0.13 * scaleY) >% %<= modelNumber(-0.1350125 * scaleY) >% 0
 							  rotation 0 1 0 3.14159
 							  children [
 								Shape {
 								  appearance USE TRAPAPP
 								  geometry DEF TRAPEDGEBOX Box {
-									size %{=0.04 * scaleX}% %{=0.12 * scaleY}% %{=0.3 * scaleZ}%
+									size %<= modelNumber(0.04 * scaleX) >% %<= modelNumber(0.12 * scaleY) >% %<= modelNumber(0.3 * scaleZ) >%
 								  }
 								  isPickable  FALSE
 								}
 							  ]
 							}
 							Transform {
-							  translation %{=0.13 * scaleY}% %{=-0.1350125 * scaleY}% 0
+							  translation %<= modelNumber(0.13 * scaleY) >% %<= modelNumber(-0.1350125 * scaleY) >% 0
 							  rotation 0 1 0 3.14159
 							  children [
 								Shape {
 								  appearance USE TRAPAPP
 								  geometry DEF TRAPEDGEBOX Box {
-									size %{=0.04 * scaleX}% %{=0.12 * scaleY}% %{=0.3 * scaleZ}%
+									size %<= modelNumber(0.04 * scaleX) >% %<= modelNumber(0.12 * scaleY) >% %<= modelNumber(0.3 * scaleZ) >%
 								  }
 								  isPickable  FALSE
 								}
 							  ]
 							}
-				%{end}%
-				%{if fields.curveDir.value > 0 then}%
+				%<}>%
+				%<if (fields.curveDir.value > 0) {>%
 					curvedWall {
-						rot %{= fields.curveDir.value}%
-						isHalf %{= fields.isHalf.value and "TRUE" or "FALSE"}%
-						xScale %{=scaleX}%
-						yScale %{=scaleY}%
-						zScale %{=scaleZ}%
+						rot %<= modelNumber(fields.curveDir.value) >%
+						isHalf %<= modelNumber(fields.isHalf.value && "TRUE" || "FALSE") >%
+						xScale %<= modelNumber(scaleX) >%
+						yScale %<= modelNumber(scaleY) >%
+						zScale %<= modelNumber(scaleZ) >%
 					}
-				%{end}%
-				%{if fields.obstacle.value == true then}%
-					%{
-						function clamp(x, h, l) 
-							if (x > h) then
-								return h
-							elseif (x < l) then
-								return l
-							end
-							return x
-						end
+				%<}>%
+				%<if (fields.obstacle.value == true) {>%
+					%<
+						const clamp = (x, h, l) => {
+                        if (x > h) { return h; }
+                        else if (x < l) { return l; }
+                        return x;
+                    };
 
 						obs_xoff = clamp(fields.obstacleOffset.value.x, .15, -.15)
 						obs_yoff = clamp(fields.obstacleOffset.value.y, .15, -.15)
-						
-					}%
+
+					>%
 					DEF OBSTACLE Transform {
-						translation %{=obs_xoff * scaleX}% 0 %{=obs_yoff * scaleZ}% 
+						translation %<= modelNumber(obs_xoff * scaleX) >% 0 %<= modelNumber(obs_yoff * scaleZ) >%
 						rotation IS obstacleRotation
 						children [
 							Shape {
@@ -455,17 +483,17 @@ PROTO worldTile [
 									}
 								}
 								geometry DEF OBSTACLEBOX Box {
-									size %{=0.1 * scaleX}% %{=0.18 * scaleY}% %{=0.084 * scaleZ}%
+									size %<= modelNumber(0.1 * scaleX) >% %<= modelNumber(0.18 * scaleY) >% %<= modelNumber(0.084 * scaleZ) >%
 								}
 							}
 						]
 					}
-				%{end}%
+				%<}>%
 			  ]
 		  }
 	        ]
-				%{if not(fields.topWall.value == 0) or not(fields.rightWall.value == 0) or not(fields.bottomWall.value==0) or not(fields.leftWall.value==0) or not(fields.floor.value==false) then}%
+				%<if (!(fields.topWall.value == 0) || !(fields.rightWall.value == 0) || !(fields.bottomWall.value==0) || !(fields.leftWall.value==0) || !(fields.floor.value==false)) {>%
 					boundingObject USE TILE_SHAPES_GROUP
-				%{end}%
+				%<}>%
       }
 }

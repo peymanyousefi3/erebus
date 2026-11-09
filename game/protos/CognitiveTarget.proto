@@ -1,4 +1,5 @@
-#VRML_SIM R2022b utf8
+#VRML_SIM R2025a utf8
+# template language: javascript
 # tags: static
 PROTO CognitiveTarget [
     field SFVec3f    translation       0 0 0
@@ -10,33 +11,41 @@ PROTO CognitiveTarget [
     field SFString   texture           "blank"
 ]
 {
-    %{
-        if fields.found.value then
-            filename = fields.texture.value .. "_found"
-        else
-            filename = fields.texture.value
-        end
-    }%
+%<
+// Preserve the original model geometry precision after template conversion.
+function modelNumber(value) {
+  return typeof value === "number" ? Number(value.toPrecision(14)) : value;
+}
+>%
+
+    %<
+        let filename;
+        if (fields.found.value) {
+            filename = fields.texture.value + "_found";
+        } else {
+            filename = fields.texture.value;
+        }
+    >%
     Pose {
         translation IS translation
         rotation IS rotation
         children [
             Solid {
-               
+
                 translation 0 0 0
                 rotation 0 1 0 3.14159
                 children [
                     Shape {
                         appearance Appearance {
                             texture DEF human0texture ImageTexture {
-                                url [ "./textures/%{= filename}%.png" ]
+                                url [ "./textures/%<= modelNumber(filename) >%.png" ]
                                 repeatS FALSE
                                 repeatT FALSE
                                 filtering 0
                             }
                         }
                         geometry DEF VICTIMPLANE Plane {
-                            size 0.04 0.04
+                            size 0.05 0.05
                         }
                         isPickable  FALSE
                     }

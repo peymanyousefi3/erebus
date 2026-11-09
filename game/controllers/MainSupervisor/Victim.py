@@ -113,12 +113,12 @@ class VictimObject(ABC):
         """
         ...
 
-    def check_position(self, pos: list[float], radius: float = 0.09) -> bool:
+    def check_position(self, pos: list[float], radius: float = 0.06) -> bool:
         """Check if a position is within a specified radius of the victim
 
         Args:
             pos (list[float]): Position to check
-            radius (float, optional): Radius of search. Defaults to 0.09.
+            radius (float, optional): Radius of search. Defaults to 0.06.
 
         Returns:
             bool: Whether the given position is within the specified range of 
@@ -222,7 +222,7 @@ class Victim(VictimObject):
         elif self._victim_type == Victim.STABLE:
             return 'S'
         else:
-            return self._victim_type
+            return ''
     
 
 class CognitiveTarget(VictimObject):
@@ -292,6 +292,9 @@ class VictimManager(ErebusObject):
             victim_node: Node = victim_nodes.getMFNode(i) # type: ignore
 
             victim_type: str = victim_node.getField('type').getSFString()
+            # Three-dimensional decoys have no found field and never score.
+            if victim_type not in Victim.VICTIM_TYPES:
+                continue
             score_worth: int = victim_node.getField('scoreWorth').getSFInt32()
 
             # Create victim Object from node info

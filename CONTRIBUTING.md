@@ -1,3 +1,5 @@
+> **Fork contributions:** this edition is maintained by Peyman Yousefi. Report fork-specific issues in [this repository](https://github.com/peymanyousefi3/erebus/issues), include your Webots/Python/OS versions, and run `python scripts/check_customizations.py`. Do not submit private robot controllers, logs or match recordings. Read [NOTICE.md](NOTICE.md) before contributing or reusing code. The original upstream technical guide follows.
+
 # Technical Docs
 
 Erebus is build on Webots, an open source robot simulator. You can find out more about Webots [here](https://github.com/cyberbotics/webots), and read the User Guide [here](https://www.cyberbotics.com/doc/guide/getting-started-with-webots). It's recommended to familiarise yourself with Webots beforehand.

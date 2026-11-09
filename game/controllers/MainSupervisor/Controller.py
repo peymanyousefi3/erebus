@@ -1,9 +1,11 @@
+# Erebus customizations by Peyman Yousefi; original RoboCupJunior credits retained.
 from __future__ import annotations
 
 import os
 import shutil
 import glob
 import stat
+import ControllerUploader
 
 from ErebusObject import ErebusObject
 
@@ -52,7 +54,8 @@ class Controller(ErebusObject):
 
         files: list[str] = glob.glob(os.path.join(path, "*"))
         if self.keep_controller and not manual:
-            if len(files) > 0:
+            # reset_file creates an empty Webots placeholder, not a loaded program.
+            if any(file.stat().st_size > 0 for file in ControllerUploader.controller_files(path)):
                 self._erebus.rws.send("loaded0")
             return
 

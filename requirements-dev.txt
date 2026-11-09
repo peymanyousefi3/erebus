@@ -1,0 +1,4 @@
+# Dependencies needed by the portable regression checks.
+numpy==2.2.6
+requests==2.32.5
+termcolor==3.3.0

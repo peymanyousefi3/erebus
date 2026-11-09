@@ -1,3 +1,29 @@
+# Fork changelog
+
+## 26.2 Preview 2
+
+- Recover the missing initial node states in Webots R2023b streaming-mode HTML recordings using the exported scene.
+- Preserve later motion frames, labels, timing and the original simulation-step behavior.
+- Add regression checks for malformed initial update arrays and reject unrelated corruption without rewriting the source export.
+- Verify a real streaming match, recording ZIP, direct-file replay and forward/backward seeking on macOS.
+
+
+## Erebus Match Studio 26.2 (unreleased)
+
+Independent changes by Peyman Yousefi, based on official Erebus v26.1. See [release notes](docs/releases/26.2-studio.1.md) and [attribution](NOTICE.md).
+
+- Add a first-checkout preparation command that preserves existing robot models.
+- Add automatic HTML replay recording and per-match ZIPs; remove the MP4 recording path.
+- Add saved score breakdowns and playback-synchronized timestamped events.
+- Add configurable score/time/event HUD and interactive submitted-map review.
+- Redesign the supervisor panel and add chronological Match Events CSV export.
+- Add optional controller-path refresh, missing-file guards and recoverable upload/JSON errors.
+- Preserve Remote mode during unrelated setting changes; repair Docker path transport and pending-start handling.
+
+---
+
+## Upstream changelog
+
 # Changelog
 All notable changes to this project will be documented in this file
 

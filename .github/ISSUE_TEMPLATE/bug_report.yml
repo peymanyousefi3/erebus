@@ -1,0 +1,31 @@
+name: Bug report
+description: Report a reproducible problem with this Erebus fork.
+body:
+  - type: markdown
+    attributes:
+      value: Please remove private controller code, tokens and personal paths from anything you share.
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: Include the fork version/commit, Webots, Python, OS and browser versions.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: Include the relevant Keep Files, Reload, Recording, HUD and Remote settings.
+    validations:
+      required: true
+  - type: textarea
+    id: behavior
+    attributes:
+      label: Expected and actual behavior
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Relevant error or screenshot
+      description: Share only the minimum non-private evidence needed to reproduce the issue.

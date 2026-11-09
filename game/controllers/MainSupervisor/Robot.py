@@ -1,3 +1,4 @@
+# Erebus customizations by Peyman Yousefi; original RoboCupJunior credits retained.
 from __future__ import annotations
 from typing import Any, Optional
 from typing import TYPE_CHECKING
@@ -15,6 +16,7 @@ from controller import Field
 
 from Controller import Controller
 from ConsoleLog import Console
+from Recorder import Recorder
 from Tile import Checkpoint, StartTile, TileManager, Swamp
 from Config import Config
 from ErebusObject import ErebusObject
@@ -60,7 +62,6 @@ class RobotHistory(ErebusObject, Queue):
         self.master_history: list[tuple[str, str]] = []
 
         self.time_elapsed: float = 0.0
-        self.display_to_recording_label: bool = False
 
     def _update_master_history(self, data: str) -> tuple[str, str]:
         """Update the master history, storing data as (game time, event data)
@@ -93,14 +94,7 @@ class RobotHistory(ErebusObject, Queue):
         # Send the event data to the robot window to update the ui
         self._erebus.rws.send("historyUpdate", ",".join(record))
 
-        if self.display_to_recording_label:
-            history_label: str = ""
-            histories: list[tuple[str, str]] = list(
-                reversed(self.master_history))
-            for h in range(min(len(histories), 5)):
-                history_label = (f"[{histories[h][0]}] {histories[h][1]}\n"
-                                 f"{history_label}")
-            self._erebus.setLabel(2, history_label, 0.7, 0, 0.05, 0xfbc531, 0.2) # type: ignore
+        Recorder.update_events(self._erebus)
 
 
 class Robot(ErebusObject):
@@ -402,7 +396,6 @@ class Robot(ErebusObject):
         Args:
             config (Config): Config object
         """
-        self.history.display_to_recording_label = config.recording
         self.controller.update_keep_controller_config(config)
 
     def reset_proto(self, manual: bool = False) -> None:

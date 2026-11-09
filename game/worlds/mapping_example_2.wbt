@@ -781,5 +781,5 @@ DEF MAINSUPERVISOR Robot {
   controller "MainSupervisor"
   customData "480"
   supervisor TRUE
-  window "<none>"
+  window "MainSupervisorWindow"
 }

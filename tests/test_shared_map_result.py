@@ -13,10 +13,9 @@ show=next(n for n in cls.body if isinstance(n,ast.FunctionDef) and n.name=='_sav
 module=ast.fix_missing_locations(ast.Module(body=[evaluate,show],type_ignores=[]))
 messages=[];opens=[]
 console=NS(DEBUG_MODE=False,log_err=lambda *a:None,log_info=lambda *a:None)
-scope=dict(np=np,json=json,MapScorer=MapScorer,MapReview=MapReview,Console=console,os=NS(environ={}))
+scope=dict(np=np,json=json,MapScorer=MapScorer,MapReview=MapReview,Console=console)
 exec(compile(module,'<actual accepted-map/manual methods>','exec'),scope)
-class Supervisor:
- def __init__(self):self.referee_service=NS(open_report=lambda path:opens.append(Path(path)))
+class Supervisor:pass
 Supervisor.evaluate=scope['evaluate'];Supervisor._save_and_open_map_review=scope['_save_and_open_map_review']
 MapReview.open_review=lambda path:opens.append(Path(path))
 answer=np.array([['1','1','1'],['0','5','0'],['0','1','0']])
@@ -54,11 +53,6 @@ with TemporaryDirectory() as temp:
  s.evaluate();assert s.robot_obj.sent_maps and s.robot_obj.map_score_percent==1 and s._submitted_map is not None
  assert messages[-1].startswith('mapReviewError,') and not opens
  MapReview.save_review=original;s._save_and_open_map_review();assert opens and messages[-1].startswith('mapReviewSaved,')
- # Isolated servers export for the organizer without opening a local browser.
- scope['os'].environ['EREBUS_ISOLATED_SERVER']='1';opens.clear();messages.clear()
- s._save_and_open_map_review();assert not opens and messages[-1].startswith('mapReviewSaved,')
- assert (s._match_folder/'map/map-review.html').is_file()
- scope['os'].environ.clear()
  # Empty or invalid maps never create a result or change the normal rejection behaviour.
  for raw in [np.array([]),np.full((3,3),'0')]:
   messages.clear();s.robot_obj.sent_maps=False;s.robot_obj.map_data=raw;s._submitted_map=None

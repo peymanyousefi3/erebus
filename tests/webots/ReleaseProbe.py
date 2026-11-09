@@ -5,15 +5,13 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]/'MainSupervisor'))
 import ControllerUploader
 ControllerUploader.start = lambda **kwargs: None  # No upload server needed for this automated fixture.
 from MainSupervisor import Erebus, GameState
-from RefereeService import RefereeService
-RefereeService.open_url = lambda *args: None  # Automated tests retain the private service without opening a browser.
 Erebus._get_erebus_version = lambda self: self.rws.send('version', self.version)
 root = Path(__file__).resolve().parents[3]
 queue_path = root.parent / 'queue.json'
 queue = json.loads(queue_path.read_text())
 job = queue['jobs'][queue['index']]
 mode = job['mode']
-scoring = mode in ('scoring','remote-secure-scoring')
+scoring = mode == 'scoring'
 os.environ.update(EREBUS_TEST_MODE=mode, EREBUS_TEST_WORLD=job['world'], EREBUS_TEST_ENGINE='R2025a')
 for name in ('game-info.json','remote-ready','device-info.json','autonomous-info.json'):
     (root/name).unlink(missing_ok=True)

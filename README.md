@@ -4,11 +4,11 @@
 
 **Match Studio for Webots R2025a · RoboCupJunior Rescue Simulation 2027 draft rules**
 
-[![Edition: 27.0.0-draft.1](docs/media/badges/edition.svg)](https://github.com/peymanyousefi3/erebus/releases/tag/v27.0.0-draft.1) [![Webots R2025a](docs/media/badges/webots.svg)](https://cyberbotics.com/) [![Based on official Erebus 26.1](docs/media/badges/upstream.svg)](https://github.com/robocup-junior/erebus/tree/v26.1) [![Python 3.10](docs/media/badges/python.svg)](#quick-start) [![Licence status](docs/media/badges/license.svg)](NOTICE.md)
+[![Edition: 27.0.0-draft.2](docs/media/badges/edition.svg)](https://github.com/peymanyousefi3/erebus/releases/tag/v27.0.0-draft.2) [![Webots R2025a](docs/media/badges/webots.svg)](https://cyberbotics.com/) [![Based on official Erebus 26.1](docs/media/badges/upstream.svg)](https://github.com/robocup-junior/erebus/tree/v26.1) [![Python 3.10](docs/media/badges/python.svg)](#quick-start) [![Licence status](docs/media/badges/license.svg)](NOTICE.md)
 
 <h3><a href="#quick-start">Quick start · Install &amp; run</a></h3>
 
-**[Download 27.0.0-draft.1](https://github.com/peymanyousefi3/erebus/releases/download/v27.0.0-draft.1/Erebus-Match-Studio-27.0.0-draft.1-Webots-R2025a.zip)** · [Release notes](https://github.com/peymanyousefi3/erebus/releases/tag/v27.0.0-draft.1)
+**[Download 27.0.0-draft.2](https://github.com/peymanyousefi3/erebus/releases/download/v27.0.0-draft.2/Erebus-Match-Studio-27.0.0-draft.2-Webots-R2025a.zip)** · [Release notes](https://github.com/peymanyousefi3/erebus/releases/tag/v27.0.0-draft.2)
 
 [Match Studio](#match-studio) · [2027 rules](#2027-rules) · [Branch guide](#branch-guide) · [PDF guide](docs/README-2027.pdf)
 
@@ -54,12 +54,7 @@ Keep files after Reset and optionally reload local source before each match.
 </td>
 </tr>
 <tr>
-<td width="50%" valign="top">
-<img src="docs/media/feature-icons/circle-alert.svg" width="24" height="24" alt=""><br>
-<strong><a href="#security-and-unauthorized-access-detection">Unauthorized access detection</a></strong><br>
-Monitors for unauthorized data transfers between participant code, the supervisor and Webots.
-</td>
-<td width="50%" valign="top">
+<td colspan="2" valign="top">
 <img src="docs/media/feature-icons/flag.svg" width="24" height="24" alt=""><br>
 <strong><a href="#2027-rules">2027 rules</a></strong><br>
 Motor-based battery consumption, configurable replacement on cyan tiles, smiley victims and updated scoring.
@@ -181,10 +176,6 @@ match-results/<start-time>/
 
 Recordings and map reviews are saved independently. The recording ZIP contains the `recording/` folder; archive the `map/` folder separately to keep the map review.
 
-## Security and unauthorized access detection
-
-When Wireshark is installed and configured on the referee’s computer, Match Studio monitors for unauthorized data transfers between participant code, the Erebus supervisor and Webots, and alerts the referee when detected.
-
 ## 2027 rules
 
 See the [RoboCupJunior Rescue Simulation 2027 draft rules](https://junior.robocup.org/wp-content/uploads/2026/09/RCJRescueSimulation2027-draft.pdf) for the full competition requirements. Key match settings and reporting requirements are summarized below.
@@ -247,13 +238,12 @@ Battery percentage is appended to the original fields. Older readers that requir
 | Software | Version | Download / setup |
 | --- | --- | --- |
 | **Webots** | **R2025a** | [Download](https://github.com/cyberbotics/webots/releases/tag/R2025a) · [Setup](https://cyberbotics.com/doc/guide/installation-procedure?version=R2025a) |
-| **Erebus Match Studio** | **27.0.0-draft.1** | [Download ZIP](https://github.com/peymanyousefi3/erebus/releases/download/v27.0.0-draft.1/Erebus-Match-Studio-27.0.0-draft.1-Webots-R2025a.zip) · [Release notes](https://github.com/peymanyousefi3/erebus/releases/tag/v27.0.0-draft.1) |
+| **Erebus Match Studio** | **27.0.0-draft.2** | [Download ZIP](https://github.com/peymanyousefi3/erebus/releases/download/v27.0.0-draft.2/Erebus-Match-Studio-27.0.0-draft.2-Webots-R2025a.zip) · [Release notes](https://github.com/peymanyousefi3/erebus/releases/tag/v27.0.0-draft.2) |
 | **Python** | **3.10 · 64-bit** | [Download](https://www.python.org/downloads/release/python-31011/) · [Select in Webots](https://cyberbotics.com/doc/guide/using-python?version=R2025a) |
 | **Python packages** | [requirements.txt](requirements.txt) | [Install below](#install-python-packages) |
 
 On Windows, enable **Add Python to PATH** during installation. Select Python 3.10 in **Webots preferences → General → Python command**.
 
-**Optional for referees:** [Wireshark download](https://www.wireshark.org/download.html) · [Setup](https://www.wireshark.org/docs/wsug_html_chunked/ChapterBuildInstall.html). Erebus runs without it; unauthorized-transfer monitoring requires it.
 
 ### Install Python packages
 
@@ -296,4 +286,4 @@ Use the existing robot customizer with a **3,000-point component budget** for th
 
 This is an independent edition of Erebus maintained by Peyman Yousefi. See [NOTICE.md](NOTICE.md) and the bundled [asset notices](game/plugins/robot_windows/MainSupervisorWindow/assets/) for licensing and attribution.
 
-[Changelog](CHANGELOG.md) · [Release notes](https://github.com/peymanyousefi3/erebus/releases/tag/v27.0.0-draft.1) · [Contributing](https://github.com/peymanyousefi3/erebus/blob/v27.0.0-draft.1/CONTRIBUTING.md) · [Report an issue in this fork](https://github.com/peymanyousefi3/erebus/issues)
+[Changelog](CHANGELOG.md) · [Release notes](https://github.com/peymanyousefi3/erebus/releases/tag/v27.0.0-draft.2) · [Contributing](https://github.com/peymanyousefi3/erebus/blob/v27.0.0-draft.2/CONTRIBUTING.md) · [Report an issue in this fork](https://github.com/peymanyousefi3/erebus/issues)

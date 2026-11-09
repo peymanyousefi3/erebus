@@ -15,14 +15,13 @@ class RWSender(ErebusObject):
     robot window is reloaded)  
     """
 
-    def __init__(self, erebus: Erebus, access_audit=None):
+    def __init__(self, erebus: Erebus):
         """Initialises a new robot window message sensor object
 
         Args:
             erebus (Erebus): Erebus supervisor game object
         """
         super().__init__(erebus)
-        self.access_audit = access_audit
         self.history: list[list[str]] = []
         self.log_history: list[str] = []
 

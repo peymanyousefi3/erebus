@@ -7,7 +7,7 @@ on:
       test_mode:
         description: Native test group
         type: choice
-        options: [all, competition, portable-only, server-only, legacy-model, scoring, remote-secure-scoring, full-match, real-time-limit, natural-depletion, remote-docker]
+        options: [all, competition, portable-only, legacy-model, scoring, full-match, real-time-limit, natural-depletion, remote-docker]
         default: all
 env:
   PYTHONUTF8: '1'
@@ -15,7 +15,7 @@ permissions:
   contents: read
 jobs:
   regression:
-    if: inputs.test_mode != 'server-only' && inputs.test_mode != 'competition'
+    if: inputs.test_mode != 'competition'
     strategy:
       fail-fast: false
       matrix:
@@ -31,9 +31,8 @@ jobs:
       - run: python scripts/check_customizations.py
       - run: node tests/test_interface_contract.cjs
       - run: node tests/test_access_audit_panel.cjs
-      - run: node tests/test_referee_transport.cjs
   webots-r2025a:
-    if: (github.ref == 'refs/heads/2027_webots2025a' || github.event_name == 'pull_request') && inputs.test_mode != 'portable-only' && inputs.test_mode != 'server-only' && inputs.test_mode != 'competition'
+    if: (github.ref == 'refs/heads/2027_webots2025a' || github.event_name == 'pull_request') && inputs.test_mode != 'portable-only' && inputs.test_mode != 'competition'
     runs-on: ubuntu-22.04
     timeout-minutes: 35
     env:
@@ -76,25 +75,6 @@ jobs:
             validation/release/results/
             validation/release/remote-*.txt
             validation/webots-r2025a.log
-          retention-days: 14
-
-  server-isolation:
-    if: (github.ref == 'refs/heads/2027_webots2025a' || (github.event_name == 'workflow_dispatch' && inputs.test_mode == 'server-only')) && inputs.test_mode != 'portable-only' && inputs.test_mode != 'competition'
-    runs-on: ubuntu-22.04
-    timeout-minutes: 30
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
-      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0
-        with:
-          python-version: '3.10'
-      - name: Verify private organizer network and public controller traffic
-        run: python tests/integration/check_server_isolation.py
-      - name: Save isolation evidence
-        if: always()
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
-        with:
-          name: server-isolation-validation
-          path: validation/server-isolation/
           retention-days: 14
 
   competition:

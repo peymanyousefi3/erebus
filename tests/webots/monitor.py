@@ -26,23 +26,6 @@ while time.monotonic()<deadline:
   protocol=job['mode'].split('-')[1]
   if protocol=='autonomous':protocol='tcp'
   controller_port=args.port
-  if protocol=='secure':
-   protocol='tcp';controller_port=str(int(args.port)+1)
-   gateway_log=(out/'gateway.log').open('w')
-   gateway=subprocess.Popen([sys.executable,str(Path(__file__).resolve().parents[2]/'scripts/controller_gateway.py'),'--port',controller_port,'--backend-port',args.port],stdout=gateway_log,stderr=subprocess.STDOUT)
-   atexit.register(gateway.terminate)
-   until=time.monotonic()+5
-   while True:
-    try:
-     with socket.create_connection(('127.0.0.1',int(controller_port)),timeout=.1):break
-    except OSError:
-     assert gateway.poll() is None and time.monotonic()<until,'Gateway startup failed'
-     time.sleep(.05)
-   # The known organizer preview must remain inaccessible through this port.
-   with socket.create_connection(('127.0.0.1',int(controller_port)),timeout=2) as attempt:
-    attempt.sendall(b'GET /robot_windows/MainSupervisorWindow/thumbnails/world4.png HTTP/1.1\r\nHost: localhost\r\n\r\n')
-    try:assert attempt.recv(100)==b''
-    except ConnectionResetError:pass
   if protocol=='docker':
    import sys
    from types import SimpleNamespace

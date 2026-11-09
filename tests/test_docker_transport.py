@@ -38,13 +38,3 @@ assert self.rws.messages[-1][0]=='dockerError'
 scope['_process_rw_message'](self,'runDocker,')
 assert self.rws.messages[-1][0]=='dockerError'
 print('PASS: legacy/encoded paths, comma-preserving launch, duplicate-start guard and failure messages.')
-
-from unittest.mock import patch
-with patch.dict(os.environ,{'EREBUS_ISOLATED_SERVER':'1'}):
- self._game_state=State.MATCH_NOT_STARTED;calls.clear()
- scope['_process_rw_message'](self,'runDocker,/tmp/project')
- assert not calls and self.rws.messages[-1][0]=='dockerError'
- self._remote_enabled=False
- scope['_process_rw_message'](self,'remoteDisable')
- assert self._remote_enabled and self.rws.messages[-1][0]=='remoteEnabled'
-print('PASS: isolated organizer server cannot switch to native participant code or build participant containers.')
